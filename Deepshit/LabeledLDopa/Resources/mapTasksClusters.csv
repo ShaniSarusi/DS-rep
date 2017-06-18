@@ -1,0 +1,19 @@
+Task,TaskClusterId,TaskClusterName
+Sitting,1,Rest
+Rest finger to nose,1,Rest
+Rest alternating hand movements,1,Rest
+Standing,1,Rest
+Sit to stand,6,Sit to stand
+Walking,5,walking
+Active finger to nose,4,Periodic hand movement
+Active alternating hand movements,4,Periodic hand movement
+Walking while counting,5,Walking
+Walk through a narrow passageway,5,Walking
+Going up stairs,5,Walking
+Going down stairs,5,Walking
+Drawing and writing on a paper,3,Fine upper limb
+Typing on computer keyboard,3,Fine upper limb
+Assembling nuts and bolts,3,Fine upper limb
+Take a glass of water & drink,2,Gross upper limb
+Organize sheets in folder,2,Gross upper limb
+Folding towels,2,Gross upper limb
