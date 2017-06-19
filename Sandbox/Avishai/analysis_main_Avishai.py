@@ -106,8 +106,8 @@ task_ids = tags_df.TaskID[cond==True]
 '''
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
-optimized_model = classifier.optimize_hyper_params(features, labels, patients, 'logistic_regression',
-                                        hyper_params=None, scoring_measure = 'f1',eval_iterations = 50)
+optimized_model = classifier.optimize_hyper_params(features, labels, patients, 'xgboost',
+                                        hyper_params=None, scoring_measure = None,eval_iterations = 50)
 
 '''
 Make predictions for each segment in the data.

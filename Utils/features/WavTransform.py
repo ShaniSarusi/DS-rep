@@ -42,7 +42,7 @@ class wavtransform():
        for j in range(J):
            res[j] = np.sqrt(np.sum(x[j]**2))        
        if rel == True:
-           res = res/np.sum(res)
+           res = res/np.sum(res + 10**(-10))
            res = np.log(float(1)/(1-res))       
        return res
     
