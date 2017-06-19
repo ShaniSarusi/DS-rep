@@ -21,7 +21,7 @@ os.chdir(os.getcwd()+"/DataScientists")
 Itzik's settings:
 '''
 data_path = 'C:\\Users\\imazeh\\Itzik\\Health_prof\\L_Dopa\\Large_data\\'
-os.chdir('C:\\Users\\imazeh/Itzik/Health_prof/git4/DataScientists')
+os.chdir('C:\\Users\\imazeh/Itzik/Health_prof/git_team/DataScientists')
     
 from Utils.features import WavTransform
 import Utils.preprocessing.projections as projections
@@ -105,7 +105,7 @@ task_ids = tags_df.TaskID[cond==True]
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
 optimized_model = classifier.optimize_hyper_params(features, labels, patients, 'random_forest',
-                                        hyper_params=None, scoring_measure = None,eval_iterations = 30)
+                                        hyper_params=None, scoring_measure = None, eval_iterations = 30)
 
 '''
 Make predictions for each segment in the data.
@@ -134,7 +134,7 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
                                                    model_name='random_forest_for_agg',
                                                    hyper_params=None, scoring_measure=None,eval_iterations = 30)
-final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments)
+final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments, binary_class_thresh=0.5)
 
 
 '''
