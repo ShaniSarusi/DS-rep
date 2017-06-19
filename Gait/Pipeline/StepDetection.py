@@ -324,7 +324,7 @@ class StepDetection:
             val = 60*self.res.iloc[i]['sc_ensemble']/self.res.iloc[i]['duration']
             self.res.set_value(res_idx, 'cadence', val)
 
-    def plot_results(self, which, idx=None, save_name=None, show=True, p_rmse=False):
+    def plot_results(self, which, ptype=1, idx=None, save_name=None, show=True, p_rmse=False):
         if idx is None:
             sc_alg = self.res[which]
             sc_true = self.res['sc_true']
@@ -332,16 +332,30 @@ class StepDetection:
             sc_alg = self.res.loc[idx][which]
             sc_true = self.res.loc[idx]['sc_true']
 
-        plt.scatter(sc_alg, sc_true, color='b')
-        plt.xlabel('Algorithm step count', fontsize=22)
-        plt.ylabel('Visual step count', fontsize=22)
-        highest = max(max(sc_alg), max(sc_true))
-        ax_max = int(ceil(highest / 10.0)) * 10
-        plt.ylim(0, ax_max)
-        plt.xlim(0, ax_max)
+        if ptype == 1:
+            plt.scatter(sc_alg, sc_true, color='b')
+            plt.ylabel('Visual step count', fontsize=22)
+            plt.xlabel('Algorithm step count', fontsize=22)
+            highest = max(max(sc_alg), max(sc_true))
+            ax_max = int(ceil(highest / 10.0)) * 10
+            plt.ylim(0, ax_max)
+            plt.xlim(0, ax_max)
+            x = np.arange(0, ax_max)
+            plt.plot(x, x)
+        else:
+            diff = sc_alg-sc_true
+            n_max = max(abs(diff))
+            plt.scatter(sc_true, diff, color='b')
+            plt.ylabel('Algorithm steps - visual steps', fontsize=22)
+            plt.ylim(-n_max- 2, n_max + 2)
+            plt.xlim(min(sc_true) - 5, max(sc_true) + 5)
+            plt.xlabel('Visual step count', fontsize=22)
+            plt.axhline(0, color='r')
+            highest = max(max(sc_alg), max(sc_true))
+            ax_max = int(ceil(highest / 10.0)) * 10
+
         plt.tick_params(axis='both', which='major', labelsize=18)
-        x = np.arange(0, ax_max)
-        plt.plot(x, x)
+
 
         # calculate rms
         rmse = sqrt(mean_squared_error(sc_true, sc_alg))
