@@ -1,11 +1,11 @@
 from Gait.Pipeline.StepDetection import StepDetection
 from os.path import join
 import pickle
-import Gait.config as config
+import Gait.config as c
 
-with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp:
+with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
-with open(join(config.pickle_path, 'acc'), 'rb') as fp:
+with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     acc = pickle.load(fp)
 
 id = 23

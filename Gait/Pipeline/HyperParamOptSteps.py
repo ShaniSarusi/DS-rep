@@ -1,7 +1,7 @@
 from Gait.Pipeline.StepDetection import StepDetection
 from os.path import join
 import pickle
-import Gait.config as config
+import Gait.config as c
 import numpy as np
 import copy
 import random
@@ -75,12 +75,12 @@ if __name__ == '__main__':
         # 'weak_signal_thresh': np.arange(-1, 0.25, 0.5)
       }
 
-    with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp:
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
         sample = pickle.load(fp)
-    with open(join(config.pickle_path, 'acc'), 'rb') as fp:
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
         acc = pickle.load(fp)
     id_nums = sample[sample['StepCount'].notnull()].index.tolist()  # use only samples with step count
     hyp = HyperParamOptSteps(acc, sample, single_side_params, id_nums)
-    save_path = join(config.results_path, 'single_side_hyp_opt.csv')
+    save_path = join(c.results_path, 'single_side_hyp_opt.csv')
     hyp.random_search(n=5, p_path=save_path)
 

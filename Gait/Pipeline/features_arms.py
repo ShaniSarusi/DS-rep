@@ -3,16 +3,16 @@ from os.path import join
 
 import pandas as pd
 
-import Gait.Utils.algorithms as ft
-import Gait.config as config
+import Gait.GaitUtils.algorithms as ft
+import Gait.config as c
 
 
 def extract_arm_swing_features():
     # load data
-    with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
-    with open(join(config.pickle_path, 'gyr'), 'rb') as fp: gyr = pickle.load(fp)
-    with open(join(config.pickle_path, 'acc'), 'rb') as fp: acc = pickle.load(fp)
-    with open(join(config.pickle_path, 'time'), 'rb') as fp: time = pickle.load(fp)
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
+    with open(join(c.pickle_path, 'gyr'), 'rb') as fp: gyr = pickle.load(fp)
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp: acc = pickle.load(fp)
+    with open(join(c.pickle_path, 'time'), 'rb') as fp: time = pickle.load(fp)
 
     # TODO using only z axis for gyro calculation. Maybe norm or the euler stuff is better
     col = ['mean_range', 'mean_max_angular_velocity']
@@ -22,10 +22,10 @@ def extract_arm_swing_features():
         df_lhs = ft.single_arm_ft(gyr[i]['lhs']['z'].as_matrix(), acc[i]['lhs']['n'], time[i]['lhs'])
         df_rhs = ft.single_arm_ft(gyr[i]['rhs']['z'].as_matrix(), acc[i]['rhs']['n'], time[i]['rhs'])
 
-        ft_arm_lhs.iloc[i]['mean_range'] = df_lhs['degrees'].mean()*config.radian
-        ft_arm_lhs.iloc[i]['mean_max_angular_velocity'] = df_lhs['max_velocity'].mean() * config.radian
-        ft_arm_rhs.iloc[i]['mean_range'] = df_rhs['degrees'].mean()*config.radian
-        ft_arm_rhs.iloc[i]['mean_max_angular_velocity'] = df_rhs['max_velocity'].mean() * config.radian
+        ft_arm_lhs.iloc[i]['mean_range'] = df_lhs['degrees'].mean()*c.radian
+        ft_arm_lhs.iloc[i]['mean_max_angular_velocity'] = df_lhs['max_velocity'].mean() * c.radian
+        ft_arm_rhs.iloc[i]['mean_range'] = df_rhs['degrees'].mean()*c.radian
+        ft_arm_rhs.iloc[i]['mean_max_angular_velocity'] = df_rhs['max_velocity'].mean() * c.radian
 
     # TODO implement the funcion below: (ASA, variability/symmetry, etc.
     col = ['asa', 'other']
@@ -35,9 +35,9 @@ def extract_arm_swing_features():
         ft_arm_both.iloc[i]['other'] = 1234  # just a temporary placeholder
 
     # save results
-    with open(join(config.pickle_path, 'ft_arm_lhs'), 'wb') as fp: pickle.dump(ft_arm_lhs, fp)
-    with open(join(config.pickle_path, 'ft_arm_rhs'), 'wb') as fp: pickle.dump(ft_arm_rhs, fp)
-    with open(join(config.pickle_path, 'ft_arm_both'), 'wb') as fp: pickle.dump(ft_arm_both, fp)
+    with open(join(c.pickle_path, 'ft_arm_lhs'), 'wb') as fp: pickle.dump(ft_arm_lhs, fp)
+    with open(join(c.pickle_path, 'ft_arm_rhs'), 'wb') as fp: pickle.dump(ft_arm_rhs, fp)
+    with open(join(c.pickle_path, 'ft_arm_both'), 'wb') as fp: pickle.dump(ft_arm_both, fp)
 
 if __name__ == '__main__':
     extract_arm_swing_features()

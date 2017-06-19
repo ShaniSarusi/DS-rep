@@ -6,7 +6,7 @@ import scipy.integrate as sp
 import matplotlib.pyplot as plt
 import scipy.signal as sig
 import peakutils
-import Utils.Utils as Utils
+from Utils import Utils as Utils
 
 
 def add_feature(df, sensor, sensor_name, axes, sides, what):

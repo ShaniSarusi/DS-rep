@@ -3,11 +3,11 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import numpy as np
 from os.path import join
-import Gait.config as config
+import Gait.config as c
 
-with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp:
+with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
-with open(join(config.pickle_path, 'features_generic'), 'rb') as fp:
+with open(join(c.pickle_path, 'features_generic'), 'rb') as fp:
     ft = pickle.load(fp)
 
 

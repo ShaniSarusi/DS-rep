@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 
-import Gait.Utils.algorithms as uts
-import Gait.config as config
+import Gait.GaitUtils.algorithms as uts
+import Gait.config as c
 # our imports
 from Utils import PreProcessing as Pre
 from Utils import Utils as Utils
@@ -19,7 +19,7 @@ class StepDetection:
     def __init__(self, p_acc, p_sample):
         self.acc = p_acc
         self.summary_table = []
-        self.sampling_rate = config.sampling_rate
+        self.sampling_rate = c.sampling_rate
         self.lhs = []
         self.rhs = []
         self.both = []
@@ -70,7 +70,7 @@ class StepDetection:
                 self.rhs.append(self.acc[i]['rhs']['n'])
 
     def mva(self, p_type='nans', win_size=30, which=None):
-        print("\rRunning: Moving average", end=" ")
+        print("\rRunning: Moving average")
         for i in range(len(self.lhs)):
             if which == 'combined':
                 if p_type == 'regular':
@@ -88,13 +88,13 @@ class StepDetection:
                     self.rhs[i] = uts.mva_no_nans(self.rhs[i], win_size)
 
     def combine_signals(self):
-        print("\rRunning: Combine signals", end=" ")
+        print("\rRunning: Combine signals")
         for i in range(len(self.lhs)):
             self.both.append(self.lhs[i] + self.rhs[i])
             self.both_abs.append(np.abs(self.lhs[i]) + np.abs(self.rhs[i]))
 
     def mean_normalization(self):
-        print("\rRunning: Mean normalization", end=" ")
+        print("\rRunning: Mean normalization")
         for i in range(len(self.lhs)):
             self.lhs[i] = self.lhs[i] - self.lhs[i].mean()
             self.rhs[i] = self.rhs[i] - self.rhs[i].mean()
@@ -112,7 +112,7 @@ class StepDetection:
             return
         for i in range(len(self.lhs)):
             print("\rRunning: Step detect single side (" + s + ") - wpd method, sample " + str(i + 1) + " from "
-                  + str(len(self.lhs)), end=" ")
+                  + str(len(self.lhs)))
             idx = uts.detect_peaks(data[i], peak_type, p1, p2)
             if idx is not None:
                 self.res.set_value(self.res.index[i], col, [j for j in idx])
@@ -122,7 +122,7 @@ class StepDetection:
     def step_detect_overlap_method(self, win_merge, win_size_remove_adjacent_peaks, peak_type='scipy', p1=2, p2=15):
         for i in range(len(self.lhs)):
             print("\rRunning: Step detect two wrist devices - overlap method, sample " + str(i + 1) + ' from '
-                  + str(len(self.lhs)), end=" ")
+                  + str(len(self.lhs)))
             # detect peaks in each side. Go for high recall and low precision
             idx_l = uts.detect_peaks(self.lhs[i], peak_type, p1, p2)
             idx_r = uts.detect_peaks(self.rhs[i], peak_type, p1, p2)
@@ -136,11 +136,11 @@ class StepDetection:
                                            p2=30):
         for i in range(len(self.lhs)):
             print("\rRunning: Step detect - combined signal method, sample " + str(i + 1) + ' from '
-                  + str(len(self.lhs)), end=" ")
+                  + str(len(self.lhs)))
             # choose which of 2 combined signal options to use. Choose by looking for most sine-like signal
             # 1) lhs + rhs     2) abs(lhs) + abs(rhs)
-            sco1 = uts.score_max_peak(self.both[i], config.sampling_rate, min_hz, max_hz, show=False)
-            sco2 = uts.score_max_peak(self.both_abs[i], config.sampling_rate, min_hz, max_hz, show=False)
+            sco1 = uts.score_max_peak(self.both[i], c.sampling_rate, min_hz, max_hz, show=False)
+            sco2 = uts.score_max_peak(self.both_abs[i], c.sampling_rate, min_hz, max_hz, show=False)
             if (factor*sco1) > sco2:
                 cb = self.both[i].as_matrix()
             else:
@@ -151,7 +151,7 @@ class StepDetection:
 
     def ensemble_result_v1(self, win_size_merge_lhs_rhs, win_merge_lr_both):
         for i in range(len(self.lhs)):
-            print("\rRunning: Integrating peaks, sample " + str(i + 1) + ' from ' + str(len(self.lhs)), end=" ")
+            print("\rRunning: Integrating peaks, sample " + str(i + 1) + ' from ' + str(len(self.lhs)))
             lhs = pd.DataFrame({'idx': self.res.iloc[i]['idx3_lhs'],
                                 'maxsignal': self.lhs[i][self.res.iloc[i]['idx3_lhs']].tolist()})
             rhs = pd.DataFrame({'idx': self.res.iloc[i]['idx4_rhs'],
@@ -163,7 +163,7 @@ class StepDetection:
 
     def ensemble_result_v2(self, win_size=20, thresh=2, w1=1.0, w2=1.0, w3=1.0, w4=1.0):
         for i in range(len(self.lhs)):
-            print("\rRunning: Ensembl result " + str(i + 1) + ' from ' + str(len(self.lhs)), end=" ")
+            print("\rRunning: Ensembl result " + str(i + 1) + ' from ' + str(len(self.lhs)))
             num_t = len(self.lhs[i])
             s1 = np.zeros(num_t); s2 = np.zeros(num_t); s3 = np.zeros(num_t); s4 = np.zeros(num_t)
             s1[self.res.iloc[i]['idx1_comb']] = 1
@@ -182,20 +182,20 @@ class StepDetection:
 
     def remove_weak_signals(self, thresh=0):
         for j in range(len(self.lhs)):
-            print("\rRunning: Removing weak signals, sample " + str(j + 1) + ' from ' + str(len(self.lhs)), end=" ")
+            print("\rRunning: Removing weak signals, sample " + str(j + 1) + ' from ' + str(len(self.lhs)))
             maxsig = [max(self.lhs[j][i], self.rhs[j][i]) for i in self.res.iloc[j]['idx_ensemble']]
             val = [i for i, maxval in zip(self.res.iloc[j]['idx_ensemble'], maxsig) if maxval > thresh]
             self.res.set_value(self.res.index[j], 'idx_ensemble', val)
 
     def calculate_lhs_to_rhs_signal_ratio(self, which):
-        print("\rRunning: Adding left to right signal ratio to determine step side", end=" ")
+        print("\rRunning: Adding left to right signal ratio to determine step side")
         for i in range(len(self.lhs)):
             idx = self.res.iloc[i][which]
             ratio = self.lhs[i][idx] / self.rhs[i][idx]
             self.res.set_value(self.res.index[i], 'idx_lhs2rhs_ratio', ratio.as_matrix())
 
     def add_gait_metrics(self):
-        print("\rRunning: Adding gait metrics", end=" ")
+        print("\rRunning: Adding gait metrics")
         self.add_total_step_count()
         self.add_gait_cadence()
         self.add_step_and_stride_durations()
@@ -208,7 +208,7 @@ class StepDetection:
     def add_step_and_stride_durations(self):
         # TODO currently using number of indices as time to calculate step and stride durations.
         # TODO Need to add timestamp later on
-        print("\rRunning: Adding step and stride durations", end=" ")
+        print("\rRunning: Adding step and stride durations")
         for i in range(self.res.shape[0]):
             res_idx = self.res.index[i]
             step_durations = np.diff(sc.res.loc[res_idx]['idx_ensemble'])
@@ -223,7 +223,7 @@ class StepDetection:
             self.res.set_value(res_idx, 'stride_dur_side2', np.asarray(stride_durations[1::2]))
 
     def add_step_and_stride_time_variability(self):
-        print("\rRunning: Adding stride and step time variability", end=" ")
+        print("\rRunning: Adding stride and step time variability")
         for i in range(self.res.shape[0]):
             res_idx = self.res.index[i]
             self.res.set_value(res_idx, 'step_time_var_side1', Utils.cv(self.res.loc[res_idx]['step_dur_side1']))
@@ -232,7 +232,7 @@ class StepDetection:
             self.res.set_value(res_idx, 'stride_time_var_side2', Utils.cv(self.res.loc[res_idx]['stride_dur_side2']))
 
     def add_step_and_stride_time_asymmetry(self):
-        print("\rRunning: Adding stride and step time asymmetry", end=" ")
+        print("\rRunning: Adding stride and step time asymmetry")
         for i in range(self.res.shape[0]):
             res_idx = self.res.index[i]
             # step
@@ -288,7 +288,7 @@ class StepDetection:
 
         # Asymmetry - stride and step time
         # df.set_value('Stride time asymmetry (%)', 'alg',
-        # Utils.mean_and_std(self.res.loc[ids]['stride_time_asymmetry']))
+        # GaitUtils.mean_and_std(self.res.loc[ids]['stride_time_asymmetry']))
         df.set_value('Step time asymmetry (%)', 'alg', Utils.mean_and_std(self.res.loc[ids]['step_time_asymmetry']))
 
         # Variability - stride and step time
@@ -308,7 +308,7 @@ class StepDetection:
             pickle.dump(self, f)
 
     def add_total_step_count(self):
-        print("\rRunning: Adding step count", end=" ")
+        print("\rRunning: Adding step count")
         for i in range(self.res.shape[0]):
             res_idx = self.res.index[i]
             self.res.set_value(res_idx, 'sc1_comb', len(self.res.iloc[i]['idx1_comb']))
@@ -318,13 +318,13 @@ class StepDetection:
             self.res.set_value(res_idx, 'sc_ensemble', len(self.res.iloc[i]['idx_ensemble']))
 
     def add_gait_cadence(self):
-        print("\rRunning: Adding cadence", end=" ")
+        print("\rRunning: Adding cadence")
         for i in range(self.res.shape[0]):
             res_idx = self.res.index[i]
             val = 60*self.res.iloc[i]['sc_ensemble']/self.res.iloc[i]['duration']
             self.res.set_value(res_idx, 'cadence', val)
 
-    def plot_results(self, which, idx=None, save_name=None, show=True, p_rmse=False):
+    def plot_results(self, which, ptype=1, idx=None, save_name=None, show=True, p_rmse=False):
         if idx is None:
             sc_alg = self.res[which]
             sc_true = self.res['sc_true']
@@ -332,16 +332,30 @@ class StepDetection:
             sc_alg = self.res.loc[idx][which]
             sc_true = self.res.loc[idx]['sc_true']
 
-        plt.scatter(sc_alg, sc_true, color='b')
-        plt.xlabel('Algorithm step count', fontsize=22)
-        plt.ylabel('Visual step count', fontsize=22)
-        highest = max(max(sc_alg), max(sc_true))
-        ax_max = int(ceil(highest / 10.0)) * 10
-        plt.ylim(0, ax_max)
-        plt.xlim(0, ax_max)
+        if ptype == 1:
+            plt.scatter(sc_alg, sc_true, color='b')
+            plt.ylabel('Visual step count', fontsize=22)
+            plt.xlabel('Algorithm step count', fontsize=22)
+            highest = max(max(sc_alg), max(sc_true))
+            ax_max = int(ceil(highest / 10.0)) * 10
+            plt.ylim(0, ax_max)
+            plt.xlim(0, ax_max)
+            x = np.arange(0, ax_max)
+            plt.plot(x, x)
+        else:
+            diff = sc_alg-sc_true
+            n_max = max(abs(diff))
+            plt.scatter(sc_true, diff, color='b')
+            plt.ylabel('Algorithm steps - visual steps', fontsize=22)
+            plt.ylim(-n_max- 2, n_max + 2)
+            plt.xlim(min(sc_true) - 5, max(sc_true) + 5)
+            plt.xlabel('Visual step count', fontsize=22)
+            plt.axhline(0, color='r')
+            highest = max(max(sc_alg), max(sc_true))
+            ax_max = int(ceil(highest / 10.0)) * 10
+
         plt.tick_params(axis='both', which='major', labelsize=18)
-        x = np.arange(0, ax_max)
-        plt.plot(x, x)
+
 
         # calculate rms
         rmse = sqrt(mean_squared_error(sc_true, sc_alg))
@@ -402,9 +416,9 @@ class StepDetection:
 
 
 if __name__ == "__main__":
-    with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp:
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
         sample = pickle.load(fp)
-    with open(join(config.pickle_path, 'acc'), 'rb') as fp:
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
         acc = pickle.load(fp)
     id_nums = sample[sample['StepCount'].notnull()].index.tolist()  # use only samples with step count
 
@@ -434,4 +448,4 @@ if __name__ == "__main__":
 
     # create results output
     sc.add_gait_metrics()
-    sc.save(path=join(config.common_path, 'steps', 'sc_alg1'))
+    sc.save(path=join(c.pickle_path, 'sc_alg'))
