@@ -5,11 +5,11 @@ from sklearn.metrics import roc_auc_score
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from os.path import join
-import Gait.config as config
+import Gait.config as c
 
-with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp:
+with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
-with open (join(config.pickle_path, 'features_generic'), 'rb') as fp:
+with open (join(c.pickle_path, 'features_generic'), 'rb') as fp:
     ft = pickle.load(fp)
 
 # set labels

@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import scipy.stats as st
 import math as m
 from os.path import join
-import Gait.config as config
+import Gait.config as c
 
-with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp:
+with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
-with open(join(config.pickle_path, 'features_armswing'), 'rb') as fp:
+with open(join(c.pickle_path, 'features_armswing'), 'rb') as fp:
     swing_features = pickle.load(fp)
 
 

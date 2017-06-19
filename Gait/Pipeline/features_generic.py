@@ -1,18 +1,18 @@
 import pickle
 from os.path import join
 
-import Gait.Utils.preprocessing as pre
+import Gait.GaitUtils.preprocessing as pre
 import pandas as pd
 
-import Gait.Utils.algorithms as alg
-import Gait.config as config
+import Gait.GaitUtils.algorithms as alg
+import Gait.config as c
 
 
 def extract_generic_features():
     # load metadata and sensor data
-    with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
-    with open(join(config.pickle_path, 'acc'), 'rb') as fp: acc = pickle.load(fp)
-    with open(join(config.pickle_path, 'gyr'), 'rb') as fp: gyr = pickle.load(fp)
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp: acc = pickle.load(fp)
+    with open(join(c.pickle_path, 'gyr'), 'rb') as fp: gyr = pickle.load(fp)
 
     # pre-processing - truncate
     fr_pct = 10
@@ -46,7 +46,7 @@ def extract_generic_features():
     ft = alg.add_feature(ft, sensor=gyr, sensor_name='gyr', axes=['x', 'y', 'z', 'n'], sides=['both'], what='cross_corr')
 
     # save features
-    with open(join(config.pickle_path, 'features_generic'), 'wb') as fp:
+    with open(join(c.pickle_path, 'features_generic'), 'wb') as fp:
         pickle.dump(ft, fp)
 
 if __name__ == '__main__':

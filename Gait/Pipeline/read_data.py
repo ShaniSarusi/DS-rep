@@ -2,33 +2,40 @@ import pickle
 import pandas as pd
 import h5py
 from os import listdir
-import Gait.config as config
-from os.path import isfile, join, isdir
+import Gait.config as c
+from os.path import isfile, join, isdir, split
 from Utils.Utils import make_df
 from Utils.data_handling import reading_files_and_directories as rd
 
 # params and global variables
-sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(config.lhs_wrist_sensor) + "/"},
-         {"name": 'rhs', "sensor": "/Sensors/" + str(config.rhs_wrist_sensor) + "/"}]
+sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
+         {"name": 'rhs', "sensor": "/Sensors/" + str(c.rhs_wrist_sensor) + "/"}]
 
 
 def pickle_metadata():
     # Make metadata data frame
-    sample = pd.read_excel(join(config.common_path, 'SampleData.xlsx'))  # TODO - work with csv
-    subject = pd.read_excel(join(config.common_path, 'SubjectData.xlsx'))
-    with open(join(config.pickle_path, 'metadata_sample'), 'wb') as fp:
+    rd.pickle_excel_file(input_path=join(c.common_path, 'SampleData.xlsx'), output_name='metadata_sample',
+                         output_path=c.pickle_path)
+    rd.pickle_excel_file(input_path=join(c.common_path, 'SubjectData.xlsx'), output_name='metadata_subject',
+                         output_path=c.pickle_path)
+    rd.pickle_excel_file(input_path=join(c.common_path, 'TaskFilters.xlsx'), output_name='task_filters',
+                         output_path=c.pickle_path)
+
+    sample = pd.read_excel(join(c.common_path, 'SampleData.xlsx'))
+    subject = pd.read_excel(join(c.common_path, 'SubjectData.xlsx'))
+    with open(join(c.pickle_path, 'metadata_sample'), 'wb') as fp:
         pickle.dump(sample, fp)
-    with open(join(config.pickle_path, 'metadata_subject'), 'wb') as fp:
+    with open(join(c.pickle_path, 'metadata_subject'), 'wb') as fp:
         pickle.dump(subject, fp)
 
 
 def read_input_files_names():
     # Get all input file paths, sorted by chronologically by subject, then by test
     input_files = []
-    subjects = [f for f in listdir(config.input_path) if isdir(join(config.input_path, f))]
+    subjects = [f for f in listdir(c.input_path) if isdir(join(c.input_path, f))]
     subjects = sorted(subjects)
     for i in range(len(subjects)):
-        subject_path = join(config.input_path, subjects[i])
+        subject_path = join(c.input_path, subjects[i])
         # csv_files = rd.all_files_in_directory(subject_path, "csv")
         if isdir(join(subject_path, 'rawData')):
             subject_path = join(subject_path, 'rawData')
@@ -44,7 +51,7 @@ def extract_sensor_data(input_files):
     for i in range(len(input_files)):
         print('In file ' + str(i + 1) + ' of ' + str(len(input_files)))  # TODO - use logger
         # print('\r', 'In file ' + str(i + 1) + ' of ' + str(len(input_files)), end=" ")  # TODO - use logger
-        f = h5py.File(join(config.common_path, input_files[i]), 'r')
+        f = h5py.File(join(c.common_path, input_files[i]), 'r')
 
         # read sensor data and convert to pandas format
         sensors = {"name":"Accelerometer",
@@ -99,18 +106,18 @@ def add_ts_to_sensor_data(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
 
 def metadata_truncate_start_label(p_time, distance=8):
     # read data
-    with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
     for i in sample['SampleId']:
         val = (p_time[i]['rhs'].iloc[-1] - p_time[i]['rhs'].iloc[sample.iloc[i]['CropStartIndex']])[0].total_seconds()
         sample.set_value(i, 'DurationWithCrop', val)
         sample.set_value(i, 'CadenceWithCrop', sample.iloc[i]['StepCount']*60/sample.iloc[i]['DurationWithCrop'])
         if pd.notnull(sample['Speed'][i]):
             sample.set_value(i, 'SpeedWithCrop', distance/sample.iloc[i]['DurationWithCrop'])
-    with open(join(config.pickle_path, 'metadata_sample'), 'wb') as fp: pickle.dump(sample, fp)
+    with open(join(c.pickle_path, 'metadata_sample'), 'wb') as fp: pickle.dump(sample, fp)
 
 
 def truncate_start_sensor_data(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
-    with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
     for i in sample['SampleId']:
         for side in sides:
             idx = sample['CropStartIndex'].iloc[i]
@@ -124,22 +131,22 @@ def truncate_start_sensor_data(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
 
 
 def pickle_sensor_data(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
-    with open(join(config.pickle_path, 'acc'), 'wb') as fp: pickle.dump(p_acc, fp)
-    with open(join(config.pickle_path, 'bar'), 'wb') as fp: pickle.dump(p_bar, fp)
-    with open(join(config.pickle_path, 'gyr'), 'wb') as fp: pickle.dump(p_gyr, fp)
-    with open(join(config.pickle_path, 'mag'), 'wb') as fp: pickle.dump(p_mag, fp)
-    with open(join(config.pickle_path, 'temp'), 'wb') as fp: pickle.dump(p_temp, fp)
-    with open(join(config.pickle_path, 'time'), 'wb') as fp: pickle.dump(p_time, fp)
+    with open(join(c.pickle_path, 'acc'), 'wb') as fp: pickle.dump(p_acc, fp)
+    with open(join(c.pickle_path, 'bar'), 'wb') as fp: pickle.dump(p_bar, fp)
+    with open(join(c.pickle_path, 'gyr'), 'wb') as fp: pickle.dump(p_gyr, fp)
+    with open(join(c.pickle_path, 'mag'), 'wb') as fp: pickle.dump(p_mag, fp)
+    with open(join(c.pickle_path, 'temp'), 'wb') as fp: pickle.dump(p_temp, fp)
+    with open(join(c.pickle_path, 'time'), 'wb') as fp: pickle.dump(p_time, fp)
 
 
 def load_sensor_data():
-    with open(join(config.pickle_path, 'metadata_sample'), 'rb') as fp: p_sample = pickle.load(fp)
-    with open(join(config.pickle_path, 'time'), 'rb') as fp: p_time = pickle.load(fp)
-    with open(join(config.pickle_path, 'acc'), 'rb') as fp: p_acc = pickle.load(fp)
-    with open(join(config.pickle_path, 'bar'), 'rb') as fp: p_bar = pickle.load(fp)
-    with open(join(config.pickle_path, 'gyr'), 'rb') as fp: p_gyr = pickle.load(fp)
-    with open(join(config.pickle_path, 'mag'), 'rb') as fp: p_mag = pickle.load(fp)
-    with open(join(config.pickle_path, 'temp'), 'rb') as fp: p_temp = pickle.load(fp)
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp: p_sample = pickle.load(fp)
+    with open(join(c.pickle_path, 'time'), 'rb') as fp: p_time = pickle.load(fp)
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp: p_acc = pickle.load(fp)
+    with open(join(c.pickle_path, 'bar'), 'rb') as fp: p_bar = pickle.load(fp)
+    with open(join(c.pickle_path, 'gyr'), 'rb') as fp: p_gyr = pickle.load(fp)
+    with open(join(c.pickle_path, 'mag'), 'rb') as fp: p_mag = pickle.load(fp)
+    with open(join(c.pickle_path, 'temp'), 'rb') as fp: p_temp = pickle.load(fp)
     return p_acc, p_bar, p_gyr, p_mag, p_temp, p_time, p_sample
 
 
