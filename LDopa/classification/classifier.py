@@ -16,7 +16,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 def optimize_hyper_params(features_df, labels, patients, model_name,
-                          hyper_params=None, scoring_measure = None,eval_iterations =20):
+                          hyper_params=None, scoring_measure=None, eval_iterations=20):
     if model_name == 'svm':
         model = svm.SVC(kernel ='rbf')
         hyper_params = {'C': hp.choice('C', [0.1, 1, 10]), 'gamma': hp.uniform('gamma',0,5)}
@@ -93,7 +93,7 @@ def make_cv_predictions_prob_for_all_segments(features_df, labels, patients, mod
 
 
 '''
-This the old version of the function crating the features for each aggregated segment:
+This is the old version of the function crating the features for each aggregated segment:
 
 def create_features_for_aggregated_segments(all_predictions, labels, task_ids):
     prob_min = []; prob_max = []; prob_mean=[]; prob_median=[]; label_task = [];
@@ -120,7 +120,7 @@ def create_features_for_aggregated_segments(all_predictions, labels, task_ids):
 '''
 
 
-def make_cv_predictions_for_agg_segments(aggregated_df, model):
+def make_cv_predictions_for_agg_segments(aggregated_df, model, binary_class_thresh=0.5):
     patients = []; binary_preds = []; prob_preds = []; labels = []
     features_cols = [x for x in aggregated_df.columns if x not in ['patient', 'true_label', 'task']]
     for patient in aggregated_df.patient.unique():
@@ -131,10 +131,12 @@ def make_cv_predictions_for_agg_segments(aggregated_df, model):
         test_labels = aggregated_df['true_label'][aggregated_df.patient==patient]
         #Fit the model and predict:   
         model.fit(train_features, train_labels)
-        binary_pred = model.predict(test_features)
-        binary_preds.extend(binary_pred)
         prob_pred = model.predict_proba(test_features)
-        prob_preds.extend(prob_pred[:,1])
+        prob_pred = prob_pred[:,1]
+        prob_preds.extend(prob_pred)
+        binary_pred = [int(prob>=binary_class_thresh) for prob in prob_pred]
+#        binary_pred = model.predict(test_features)
+        binary_preds.extend(binary_pred)
         labels.extend(test_labels)
         patients.extend([patient]*len(test_labels))
     preds_df = pd.DataFrame({'patient':patients,
