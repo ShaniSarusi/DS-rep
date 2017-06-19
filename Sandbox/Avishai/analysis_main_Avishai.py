@@ -42,7 +42,7 @@ lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False, sa
 ####
 res = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
-res = data_reading.ArrangeRes(res,path = '/home/lfaivish/Documents')
+res = data_reading.ArrangeRes(res,path = '/home/lfaivish/Documents/DataScientists/LDopa/data_reading/Resources/mapTasksClusters.csv')
 tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,2.5,1,1,50)
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]

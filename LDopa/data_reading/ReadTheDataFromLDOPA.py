@@ -62,7 +62,7 @@ def ArrangeRes(res,path):
 
     # Map Tasks to clusters
     print('mapping tasks to clusters')
-    map_t_c = pd.read_csv(path + '/DataScientists/LabeledLDopa/Resources/mapTasksClusters.csv')
+    map_t_c = pd.read_csv(path)
     res = pd.merge(res, map_t_c, left_on=res.Task, right_on=map_t_c.Task, how='inner')
     res = res.drop('Task_y', 1)
     res.rename(columns={'Task_x': 'Task'}, inplace=True)
