@@ -1,4 +1,4 @@
-from Utils.DataHandling import reading_files_and_directories as ut
+from Utils.DataHandling import reading_and_writing_files as ut
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt

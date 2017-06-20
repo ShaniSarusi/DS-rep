@@ -12,7 +12,8 @@ import Gait.GaitUtils.algorithms as uts
 import Gait.config as c
 # our imports
 from Utils.Preprocessing import denoising as Pre
-from Utils import Utils as Utils
+from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
+
 
 
 class StepDetection:
@@ -226,10 +227,10 @@ class StepDetection:
         print("\rRunning: Adding stride and step time variability")
         for i in range(self.res.shape[0]):
             res_idx = self.res.index[i]
-            self.res.set_value(res_idx, 'step_time_var_side1', Utils.cv(self.res.loc[res_idx]['step_dur_side1']))
-            self.res.set_value(res_idx, 'step_time_var_side2', Utils.cv(self.res.loc[res_idx]['step_dur_side2']))
-            self.res.set_value(res_idx, 'stride_time_var_side1', Utils.cv(self.res.loc[res_idx]['stride_dur_side1']))
-            self.res.set_value(res_idx, 'stride_time_var_side2', Utils.cv(self.res.loc[res_idx]['stride_dur_side2']))
+            self.res.set_value(res_idx, 'step_time_var_side1', cv(self.res.loc[res_idx]['step_dur_side1']))
+            self.res.set_value(res_idx, 'step_time_var_side2', cv(self.res.loc[res_idx]['step_dur_side2']))
+            self.res.set_value(res_idx, 'stride_time_var_side1', cv(self.res.loc[res_idx]['stride_dur_side1']))
+            self.res.set_value(res_idx, 'stride_time_var_side2', cv(self.res.loc[res_idx]['stride_dur_side2']))
 
     def add_step_and_stride_time_asymmetry(self):
         print("\rRunning: Adding stride and step time asymmetry")
@@ -254,8 +255,8 @@ class StepDetection:
                                               'rmse_rhs'])
         df.index.name = 'metric'
         # step count
-        df.set_value('Step count', 'true', Utils.mean_and_std(self.res.loc[ids]['sc_true']))
-        df.set_value('Step count', 'alg', Utils.mean_and_std(self.res.loc[ids]['sc_ensemble']))
+        df.set_value('Step count', 'true', mean_and_std(self.res.loc[ids]['sc_true']))
+        df.set_value('Step count', 'alg', mean_and_std(self.res.loc[ids]['sc_ensemble']))
         err = (self.res.loc[ids]['sc_ensemble'].mean() - self.res.loc[ids]['sc_true'].mean()) / \
             self.res.loc[ids]['sc_true'].mean()
         rmse = sqrt(mean_squared_error(self.res.loc[ids]['sc_true'], self.res.loc[ids]['sc_ensemble']))
@@ -277,8 +278,8 @@ class StepDetection:
         df.set_value('Step count', 'rmse_rhs', str(round(100.0 * nrmse, 2)) + "%")
 
         # Cadence
-        df.set_value('Cadence', 'true', Utils.mean_and_std(self.res.loc[ids]['cadence_true']))
-        df.set_value('Cadence', 'alg', Utils.mean_and_std(self.res.loc[ids]['cadence']))
+        df.set_value('Cadence', 'true', mean_and_std(self.res.loc[ids]['cadence_true']))
+        df.set_value('Cadence', 'alg', mean_and_std(self.res.loc[ids]['cadence']))
         err = (self.res.loc[ids]['cadence'].mean() - self.res.loc[ids]['cadence_true'].mean()) / self.res.loc[ids][
             'cadence_true'].mean()
         rmse = sqrt(mean_squared_error(self.res.loc[ids]['cadence_true'], self.res.loc[ids]['cadence']))
@@ -289,13 +290,13 @@ class StepDetection:
         # Asymmetry - stride and step time
         # df.set_value('Stride time asymmetry (%)', 'alg',
         # GaitUtils.mean_and_std(self.res.loc[ids]['stride_time_asymmetry']))
-        df.set_value('Step time asymmetry (%)', 'alg', Utils.mean_and_std(self.res.loc[ids]['step_time_asymmetry']))
+        df.set_value('Step time asymmetry (%)', 'alg', mean_and_std(self.res.loc[ids]['step_time_asymmetry']))
 
         # Variability - stride and step time
-        df.set_value('Stride time variability side1 (CV)', 'alg', Utils.cv(self.res.loc[ids]['stride_time_var_side1']))
-        df.set_value('Stride time variability side2 (CV)', 'alg', Utils.cv(self.res.loc[ids]['stride_time_var_side2']))
-        df.set_value('Step time variability side1 (CV)', 'alg', Utils.cv(self.res.loc[ids]['step_time_var_side1']))
-        df.set_value('Step time variability side2 (CV)', 'alg', Utils.cv(self.res.loc[ids]['step_time_var_side2']))
+        df.set_value('Stride time variability side1 (CV)', 'alg', cv(self.res.loc[ids]['stride_time_var_side1']))
+        df.set_value('Stride time variability side2 (CV)', 'alg', cv(self.res.loc[ids]['stride_time_var_side2']))
+        df.set_value('Step time variability side1 (CV)', 'alg', cv(self.res.loc[ids]['step_time_var_side1']))
+        df.set_value('Step time variability side2 (CV)', 'alg', cv(self.res.loc[ids]['step_time_var_side2']))
 
         # store and save
         self.summary_table = df

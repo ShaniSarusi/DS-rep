@@ -4,7 +4,7 @@ from os.path import join
 import numpy as np
 import Gait.config as c
 import Gait.GaitUtils.preprocessing as pre
-from Utils.Utils import multi_intersect
+from Utils.DataHandling.data_processing import multi_intersect
 
 # load algorithm results
 with open(join(c.pickle_path, 'sc_alg'), 'rb') as fp:

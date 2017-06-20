@@ -1,9 +1,7 @@
 import pickle
 from os.path import join
-
 import Gait.GaitUtils.preprocessing as pre
 import pandas as pd
-
 import Gait.GaitUtils.algorithms as alg
 import Gait.config as c
 
