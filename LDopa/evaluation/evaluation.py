@@ -29,22 +29,24 @@ def per_patient_metrics(final_prediction_df):
         except ValueError:
             patients_results[patient]['auc'] = 'NA'
     return patients_results
-    
+
+
 def global_metrics(final_prediction_df):
     binary_pred = final_prediction_df.binary_prediction
     prob_pred = final_prediction_df.proba_prediction
     label = final_prediction_df.true_label
-    print ('Confusion matrix:')
-    print (met.confusion_matrix(label, binary_pred))
-    print ('Accuracy:', round(met.accuracy_score(label, binary_pred), 3))
-    print ('Sensitivity (recall):', round(met.recall_score(label, binary_pred), 3))
-    print ('Precision:', round(met.precision_score(label, binary_pred), 3))
+    print('Confusion matrix:')
+    print(met.confusion_matrix(label, binary_pred))
+    print('Accuracy:', round(met.accuracy_score(label, binary_pred), 3))
+    print('Sensitivity (recall):', round(met.recall_score(label, binary_pred), 3))
+    print('Precision:', round(met.precision_score(label, binary_pred), 3))
     try:
         auc = met.roc_auc_score(label, prob_pred)
-        print ('AUC:', round(auc, 3))
+        print('AUC:', round(auc, 3))
     except ValueError:
-        print ("Not able to compute AUC since there is only one class in the data")
+        print("Not able to compute AUC since there is only one class in the data")
     return
+
 
 def per_patient_proportion_correlation(final_prediction_df):
     labels_prop = final_prediction_df[['patient', 'true_label']].groupby('patient').agg('mean')

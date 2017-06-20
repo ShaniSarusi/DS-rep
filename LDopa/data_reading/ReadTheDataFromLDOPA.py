@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import time
 
+
 def close_connection(co):
     csr = co.cursor()
     csr.close()
@@ -20,9 +21,11 @@ def close_connection(co):
 '''
 Give you dsn (For example ConnectSmoove2) and read ALL of the labeled data
 '''
+
+
 def ReadAllData(dsn):
-    lab_tagged_sessions_harvard = np.concatenate([range(10100, 10136),range(10137, 10143)])  # ldhp 10136 is not good
-    lab_tagged_sessions_mtsinai = np.concatenate([range(10150, 10152),range(10153, 10175)])  # IntelUsername starts with ldms
+    lab_tagged_sessions_harvard = np.concatenate([range(10100, 10136), range(10137, 10143)])  # ldhp 10136 is not good
+    lab_tagged_sessions_mtsinai = np.concatenate([range(10150, 10152), range(10153, 10175)])  # IntelUsername starts with ldms
     session_ids = np.concatenate([lab_tagged_sessions_harvard, lab_tagged_sessions_mtsinai])
     # session_ids = np.array([10100])
     session_ids = lab_tagged_sessions_harvard
@@ -43,10 +46,11 @@ def ReadAllData(dsn):
     
     return res
 
+
 '''
 Input
 '''
-#path = 'C:/Users/awagner'
+# path = 'C:/Users/awagner'
 def ArrangeRes(res,path):
     res[['TS', 'TSStart', 'TSEnd']] = res[['TS', 'TSStart', 'TSEnd']].apply(pd.to_datetime)
     res['AnnotationStrValue'] = res['AnnotationStrValue'].str.replace(' - .*', '')
@@ -92,7 +96,7 @@ def ArrangeRes(res,path):
     return(res)
 
 
-def MakeIntervalFromAllData(res,window_size,slide_by,trim_start,trim_end,frequency):
+def MakeIntervalFromAllData(res,window_size, slide_by, trim_start,trim_end,frequency):
     raw = res.copy()
     raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 'TremorGA', 'SubjectId',
                 'TSStart', 'TSEnd', 'IntelUsername', 'TaskClusterId', 'TaskClusterName'], axis=1)

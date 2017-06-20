@@ -5,6 +5,7 @@ Created on Sun May 28 13:42:03 2017
 @author: imazeh
 """
 
+from sklearn import svm
 from sklearn.model_selection import LeaveOneGroupOut
 from hyperopt import hp
 import numpy as np

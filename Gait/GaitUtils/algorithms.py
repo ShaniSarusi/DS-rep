@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 import scipy.signal as sig
 import peakutils
 from Utils import Utils as Utils
+from os.path import join
+import pickle
+import Gait.config as c
 
 
 def add_feature(df, sensor, sensor_name, axes, sides, what):
@@ -246,4 +249,14 @@ def max_filter(x, win_size):
     max_val = np.max(a)
     b = np.asarray([max_val] * win_size)
     res = np.convolve(a, b, 'same')
+    return res
+
+
+def calc_duration():
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
+        acc = pickle.load(fp)
+    res = []
+    for i in range(len(acc)):
+        val = (acc[i]['lhs']['ts'].iloc[-1] - acc[i]['lhs']['ts'].iloc[0]).total_seconds()
+        res.append(val)
     return res
