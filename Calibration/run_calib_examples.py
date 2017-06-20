@@ -1,5 +1,5 @@
 from Calibration import AutomaticCalibration
-from Utils import Utils as ut
+from Utils.DataHandling import reading_and_writing_files as ut
 
 # window length and maximum standard deviation per window to be considered static
 static_win_len = 20*50

@@ -8,7 +8,6 @@ import random
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 from math import sqrt
-from collections import OrderedDict
 
 
 class HyperParamOptSteps:

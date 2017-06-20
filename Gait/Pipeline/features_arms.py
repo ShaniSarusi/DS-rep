@@ -1,8 +1,6 @@
 import pickle
 from os.path import join
-
 import pandas as pd
-
 import Gait.GaitUtils.algorithms as ft
 import Gait.config as c
 

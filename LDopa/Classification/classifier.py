@@ -12,9 +12,9 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from xgboost.sklearn import XGBClassifier
 from Utils.Hyperopt.hyperopt_ATM import BayesianHyperOpt
-from copy import copy
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+
 
 def optimize_hyper_params(features_df, labels, patients, model_name,
                           hyper_params=None, scoring_measure=None, eval_iterations=20):

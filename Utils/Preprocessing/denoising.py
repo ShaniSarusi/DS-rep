@@ -9,6 +9,7 @@ from future.utils import lmap
 import numpy as np
 import pywt
 import functools
+import copy
 
 """
 Butter Filter
@@ -47,6 +48,21 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=4):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
     y = filtfilt(b, a, data-np.mean(data),padlen=25)
     return y
+
+
+# Zeev's function - may be redundant with above
+def butter_filter_lowpass(data, order, sampling_rate, freq):
+    nyq = 0.5 * sampling_rate
+    b, a = butter(order, float(freq)/float(nyq), btype='lowpass')
+    return filtfilt(b, a, copy.deepcopy(data))
+
+
+# Zeev's function - may be redundant with above
+def butter_filter_highpass(data, order, sampling_rate, freq):
+    nyq = 0.5 * sampling_rate
+    b, a = butter(order, float(freq)/float(nyq), btype='highpass')
+    return filtfilt(b, a, copy.deepcopy(data))
+
 
 
 """

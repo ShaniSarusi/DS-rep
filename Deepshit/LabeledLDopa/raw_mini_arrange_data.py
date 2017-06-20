@@ -7,6 +7,8 @@ Created on Tue Mar 21 10:22:18 2017
 from os import listdir
 from os.path import isfile, join
 import numpy as np
+from Utils.DataHandling.reading_and_writing_files import read_export_tool_csv
+
 
 mypath = 'C:/Users/awagner/Documents/Avishai_only_giti/By user/'
 onlyfiles_raw = [f for f in listdir(mypath) if isfile(join(mypath, f))]
