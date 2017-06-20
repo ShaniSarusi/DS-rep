@@ -1,6 +1,0 @@
-1. Read from SQL with parameters for window size, etc.
-2. Create output CSV files (after reading from SQL) names as follows:
-"lab_x" / "lab_y" / "lab_z" / "home_x" / "home_y" / "home_z"
-
-** the 2 projections for the home data (currently named "ver" and "hor"),
-should be generated within the new pipeline, rather than read from saved files

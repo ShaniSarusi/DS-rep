@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from functools import reduce
 
 
 # read export tool data
@@ -34,6 +35,10 @@ def pd_to_np(arr):
         return np.asarray(arr.astype(float))
     else:
         return arr
+
+
+def multi_intersect(input_tuple):
+    return reduce(np.intersect1d, input_tuple)
 
 
 def mean_and_std(values, round_by=2):
