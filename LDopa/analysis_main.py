@@ -24,11 +24,11 @@ data_path = 'C:\\Users\\imazeh\\Itzik\\Health_prof\\L_Dopa\\Large_data\\'
 os.chdir('C:\\Users\\imazeh/Itzik/Health_prof/git_team/DataScientists/')
     
 from Utils.features import WavTransform
-import Utils.preprocessing.projections as projections
-import Utils.preprocessing.Denoiseing_func as Denoiseing_func
-import LDopa.data_reading.ReadTheDataFromLDOPA as data_reading
-import LDopa.classification.classifier as classifier
-import LDopa.evaluation.evaluation as evaluation
+import Utils.Preprocessing.projections as projections
+import Utils.Preprocessing.denoising as Denoiseing_func
+import LDopa.Data_reading.ReadTheDataFromLDOPA as data_reading
+import LDopa.Classification.classifier as classifier
+import LDopa.Evaluation.evaluation as evaluation
 
 ###
 """
@@ -42,7 +42,7 @@ tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,25
 """
 Read Itizk
 """
-exec(open('./LDopa/data_reading/load_from_csv.py').read())
+exec(open('./LDopa/Data_reading/load_from_csv.py').read())
 tags_df = read_tag_data(data_path)
 lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False, sample_freq=50, window_size=5)
 #####
@@ -52,7 +52,7 @@ Read data - new approach:
 '''
 res = pd.read_csv(data_path+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
-res = data_reading.ArrangeRes(res,path = 'LDopa/data_reading/Resources/mapTasksClusters.csv')
+res = data_reading.ArrangeRes(res,path = 'LDopa/Data_reading/Resources/mapTasksClusters.csv')
 tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.MakeIntervalFromAllData(res,5,2.5,1,1,50)
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]

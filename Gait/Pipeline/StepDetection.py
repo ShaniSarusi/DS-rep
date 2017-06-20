@@ -11,7 +11,7 @@ from sklearn.metrics import mean_squared_error
 import Gait.GaitUtils.algorithms as uts
 import Gait.config as c
 # our imports
-from Utils import PreProcessing as Pre
+from Utils.Preprocessing import denoising as Pre
 from Utils import Utils as Utils
 
 

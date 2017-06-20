@@ -15,11 +15,11 @@ import time
 data_path = '/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER'
 os.chdir(os.getcwd()+"/Documents/DataScientists")
 from Utils.features import WavTransform
-import Utils.preprocessing.projections as projections
-import Utils.preprocessing.Denoiseing_func as Denoiseing_func
-import LDopa.data_reading.ReadTheDataFromLDOPA as data_reading
-import LDopa.classification.classifier as classifier
-import LDopa.evaluation.evaluation as evaluation
+import Utils.Preprocessing.projections as projections
+import Utils.Preprocessing.denoising as Denoiseing_func
+import LDopa.Data_reading.ReadTheDataFromLDOPA as data_reading
+import LDopa.Classification.classifier as classifier
+import LDopa.Evaluation.evaluation as evaluation
 
 ###
 """

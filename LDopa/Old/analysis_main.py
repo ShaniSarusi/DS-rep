@@ -18,11 +18,11 @@ if os.getcwd() == 'C:\\Users\\imazeh':
     os.chdir(os.getcwd()+"/Itzik/Health_prof/git4/DataScientists/LDopa")
 
 from features import WavTransform
-exec(open('./data_reading/load_from_csv.py').read())
+exec(open('./Data_reading/load_from_csv.py').read())
 exec(open('./preprocessing/preprocess_time_windows_data.py').read())
 exec(open('./preprocessing/butter_filters.py').read())
-exec(open('./classification/classifier.py').read())
-exec(open('./evaluation/evaluation.py').read())
+exec(open('./Classification/classifier.py').read())
+exec(open('./Evaluation/evaluation.py').read())
 
 
 '''

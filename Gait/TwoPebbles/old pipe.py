@@ -1,4 +1,4 @@
-from Utils import Utils as ut
+from Utils.DataHandling import reading_files_and_directories as ut
 import numpy as np
 import pandas as pd
 from scipy import signal

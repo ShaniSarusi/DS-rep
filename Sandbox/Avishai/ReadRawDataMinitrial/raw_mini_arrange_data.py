@@ -8,7 +8,7 @@ from os import listdir
 from os.path import isfile, join
 import numpy as np
 import datetime
-from Utils.Utils import read_export_tool_csv
+from Utils.DataHandling.reading_files_and_directories import read_export_tool_csv
 
 mypath = 'C:/Users/awagner/Documents/Avishai_only_giti/By user/'
 onlyfiles_raw = [f for f in listdir(mypath) if isfile(join(mypath, f))]

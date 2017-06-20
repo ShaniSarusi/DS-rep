@@ -5,7 +5,7 @@ from os import listdir
 import Gait.config as c
 from os.path import isfile, join, isdir, split
 from Utils.Utils import make_df
-from Utils.data_handling import reading_files_and_directories as rd
+from Utils.DataHandling import reading_files_and_directories as rd
 
 # params and global variables
 sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},

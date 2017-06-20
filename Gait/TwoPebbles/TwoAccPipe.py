@@ -1,6 +1,6 @@
 # Two accelerometer pipeline
 from Gait.TwoPebbles import TwoAcc as ta
-from Utils import Utils as ut
+from Utils.DataHandling import reading_files_and_directories as ut
 
 # Read data
 common_path = 'C:\Users\zwaks\Documents\Data\TwoPebbles_Exp2'
