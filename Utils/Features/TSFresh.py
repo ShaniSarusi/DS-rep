@@ -1,24 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun 14 17:07:00 2017
+Created on Tue Jun 20 14:52:08 2017
 
 @author: imazeh
 """
 
-import os
-from os.path import join
 import pandas as pd
 import numpy as np
 from tsfresh import extract_features
 
-data_path = join('C:\\', 'Users', 'imazeh', 'Itzik', 'Health_prof', 'L_Dopa', 'Large_data/')
-os.chdir(join('C:\\', 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists'))
-
-
-exec(open(join('LDopa', 'DataReading', 'load_from_csv.py')).read())
-sample_freq = 50
-window_size = 5
-lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False, sample_freq=sample_freq, window_size=window_size)
 
 def convert_signals_for_ts_fresh(signals_data, dimension_name):
     '''
@@ -40,9 +30,3 @@ def convert_signals_for_ts_fresh(signals_data, dimension_name):
                            dimension_name: acc})
     tsf_df = tsf_df[['signal_id', 'time', dimension_name]]
     return tsf_df
-
-data_sample = pd.DataFrame(lab_x).iloc[0:5]
-data_for_tsf = convert_signals_for_ts_fresh(data_sample, 'bla')
-
-### Extract 222 features from the signal (calculated per signal id)
-acc_extracted_features = extract_features(data_for_tsf, column_id="signal_id", column_sort="time")

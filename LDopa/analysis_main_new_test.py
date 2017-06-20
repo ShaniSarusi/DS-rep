@@ -10,6 +10,7 @@ import numpy as np
 from future.utils import lmap
 import datetime as dt
 import pandas as pd
+from tsfresh import extract_features
 
 '''
 Avishai's settings:
@@ -23,10 +24,11 @@ Itzik's settings:
 data_path = 'C:\\Users\\imazeh\\Itzik\\Health_prof\\L_Dopa\\Large_data\\'
 os.chdir('C:\\Users\\imazeh/Itzik/Health_prof/git_team/DataScientists/')
     
-from Utils.features import WavTransform
+from Utils.Features import WavTransform
+from Utils.Features import TSFresh
 import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
-import LDopa.Data_reading.ReadTheDataFromLDOPA as data_reading
+import LDopa.DataReading.ReadTheDataFromLDOPA as data_reading
 import LDopa.Classification.classifier as classifier
 import LDopa.Evaluation.evaluation as evaluation
 
@@ -52,11 +54,23 @@ Read data - new approach:
 '''
 res = pd.read_csv(data_path+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
-res = data_reading.ArrangeRes(res,path = 'LDopa/Data_reading/Resources/mapTasksClusters.csv')
+res = data_reading.ArrangeRes(res,path = 'LDopa/DataReading/Resources/mapTasksClusters.csv')
 tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.MakeIntervalFromAllData(res,5,2.5,1,1,50)
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_z_numpy = lab_z.as_matrix(); lab_z = lab_z_numpy[:,range(len(lab_x_numpy[0])-1)]
+
+
+'''
+Build an indicator vector, which will indicate which records are relevant for
+the analysis, with regards to the specific task and symptom:
+'''
+task_names = tags_df.Task.as_matrix()
+task_clusters = tags_df.TaskClusterId.as_matrix()
+relevant_task_names = []
+relevant_task_clusters = [5] # 1=resting, 4=periodic hand movement, 5=walking
+cond = np.asarray(lmap(lambda x: x in relevant_task_clusters, task_clusters))
+
 
 '''
 Perform transformation on the data:
@@ -65,31 +79,48 @@ Perform transformation on the data:
 lab_ver_proj, lab_hor_proj = projections.project_from_3_to_2_dims(lab_x, lab_y,
                                                                   lab_z)
 
+
+'''
+Filter the data according to the condition vector:
+'''
+sub_lab_ver_proj = lab_ver_proj[cond==True]
+sub_lab_hor_proj = lab_hor_proj[cond==True]
+
+
 '''
 Perform signal denoising:
 '''
-lab_ver_denoised = Denoiseing_func.denoise_signal(lab_ver_proj)
-lab_hor_denoised = Denoiseing_func.denoise_signal(lab_hor_proj)
+lab_ver_denoised = Denoiseing_func.denoise_signal(sub_lab_ver_proj)
+lab_hor_denoised = Denoiseing_func.denoise_signal(sub_lab_hor_proj)
 
 
 '''
 Extract features:
 '''
-#Create features for each projected dimension, and stack both dimensions horizontally:
+#Create wavelet features for each projected dimension,
+#and stack both dimensions horizontally:
 WavFeatures = WavTransform.wavtransform()
 lab_ver_features = WavFeatures.createWavFeatures(lab_ver_denoised)
 lab_hor_features = WavFeatures.createWavFeatures(lab_hor_denoised)
 features_data = np.column_stack((lab_ver_features, lab_hor_features))
 
+#Create TSFresh features for each projected dimension,
+#and stack both dimensions horizontally:
+lab_ver_for_tsf = TSFresh.convert_signals_for_ts_fresh(lab_ver_denoised,
+                                                       "ver")
+lab_ver_tsf_features = extract_features(lab_ver_for_tsf, column_id="signal_id",
+                                        column_sort="time")
+lab_hor_for_tsf = TSFresh.convert_signals_for_ts_fresh(lab_hor_denoised,
+                                                       "hor")
+lab_hor_tsf_features = extract_features(lab_hor_for_tsf, column_id="signal_id",
+                                        column_sort="time")
+features_data = pd.concat([lab_ver_tsf_features, lab_hor_tsf_features], axis=1)
+
+
 '''
 Prepare the data for the classification process:
 '''
-#Build an indicator vector, which will indicate which records are relevant for the analysis:
-task_names = tags_df.Task.as_matrix()
-task_clusters = tags_df.TaskClusterId.as_matrix()
-relevant_task_names = []
-relevant_task_clusters = [5] # 1=resting, 4=periodic hand movement, 5=walking
-cond = np.asarray(lmap(lambda x: x in relevant_task_clusters, task_clusters))
+
 
 #Create features and labels data frames, according to the condition indicator:
 def create_labels(symptom_name, tags_data, condition_vector, binarize=True):
@@ -104,8 +135,9 @@ def create_labels(symptom_name, tags_data, condition_vector, binarize=True):
         label_vector[label_vector>0] = 1
     return label_vector
 
-labels = create_labels('bradykinesia', tags_data=tags_df, condition_vector=cond, binarize=True)
-features = features_data[cond==True]
+labels = create_labels('bradykinesia', tags_data=tags_df, condition_vector=cond,
+                       binarize=True)
+#features = features_data[cond==True]
 #tags_df_after_cond = tags_df[cond==True]
 patients = tags_df.SubjectId[cond==True]
 task_ids = tags_df.TaskID[cond==True]
