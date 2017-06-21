@@ -64,14 +64,16 @@ Perform signal denoising:
 lab_ver_denoised = Denoiseing_func.denoise_signal(lab_ver_proj)
 lab_hor_denoised = Denoiseing_func.denoise_signal(lab_hor_proj)
 
+lab_ver_denoised = lmap(Denoiseing_func.denoise, lab_ver_proj)
+lab_hor_denoised = lmap(Denoiseing_func.denoise, lab_hor_proj)
 
 '''
 Extract features:
 '''
 #Create features for each projected dimension, and stack both dimensions horizontally:
 WavFeatures = WavTransform.wavtransform()
-lab_ver_features = WavFeatures.createWavFeatures(lab_ver_proj)
-lab_hor_features = WavFeatures.createWavFeatures(lab_hor_proj)
+lab_ver_features = WavFeatures.createWavFeatures(lab_ver_denoised)
+lab_hor_features = WavFeatures.createWavFeatures(lab_hor_denoised  )
 features_data = np.column_stack((lab_ver_features, lab_hor_features))
 
 '''
@@ -81,7 +83,7 @@ Prepare the data for the classification process:
 task_names = tags_df.Task.as_matrix()
 task_clusters = tags_df.TaskClusterId.as_matrix()
 relevant_task_names = []
-relevant_task_clusters = [1,2] # 1=resting, 4=periodic hand movement, 5=walking
+relevant_task_clusters = [1] # 1=resting, 4=periodic hand movement, 5=walking
 cond = np.asarray(lmap(lambda x: x in relevant_task_clusters, task_clusters))
 
 #Create features and labels data frames, according to the condition indicator:
@@ -97,7 +99,7 @@ def create_labels(symptom_name, tags_data, condition_vector, binarize=True):
         label_vector[label_vector>0] = 1
     return label_vector
 
-labels = create_labels('dyskinesia', tags_data=tags_df, condition_vector=cond, binarize=True)
+labels = create_labels('tremor', tags_data=tags_df, condition_vector=cond, binarize=True)
 features = features_data[cond==True]
 #tags_df_after_cond = tags_df[cond==True]
 patients = tags_df.SubjectId[cond==True]
