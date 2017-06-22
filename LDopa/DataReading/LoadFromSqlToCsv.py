@@ -15,7 +15,8 @@ if __name__ == "__main__":
     dsn = "PAP_DEV_SMOOVE2"  # dsn = "ConnectSmoove2"
     lab_tagged_sessions_harvard = np.array(range(10100, 10136) + range(10137, 10143))  # ldhp 10136 is not good
     lab_tagged_sessions_mtsinai = np.array(range(10150, 10152) + range(10153, 10175))  # IntelUsername starts with ldms
-    session_ids = np.concatenate([lab_tagged_sessions_harvard, lab_tagged_sessions_mtsinai])
+    session_ids = np.concatenate([lab_tagged_sessions_harvard,
+                                  lab_tagged_sessions_mtsinai])
     # session_ids = np.array([10100])
     session_ids = lab_tagged_sessions_harvard
 
@@ -51,7 +52,8 @@ if __name__ == "__main__":
     # Map Tasks to clusters
     print('mapping tasks to clusters')
     map_t_c = pd.read_csv('C:\Users\zwaks\Documents\Workspaces\GitHub\DataScientists\LabeledLDopa\Resources\mapTasksClusters.csv')
-    res = pd.merge(res, map_t_c, left_on=res.Task, right_on=map_t_c.Task, how='inner')
+    res = pd.merge(res, map_t_c, left_on=res.Task, right_on=map_t_c.Task,
+                   how='inner')
     res = res.drop('Task_y', 1)
     res.rename(columns={'Task_x': 'Task'}, inplace=True)
 
@@ -63,8 +65,10 @@ if __name__ == "__main__":
 
     print('adding task ids - copying data')
     tmp = res.copy()
-    tmp = tmp.drop(['DeviceID', 'TS', 'X', 'Y', 'Z', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 'TremorGA', 'TSEnd',
-                    'SubjectId', 'IntelUsername', 'Norm', 'TaskClusterId', 'TaskClusterName', 'TaskID'], axis=1)
+    tmp = tmp.drop(['DeviceID', 'TS', 'X', 'Y', 'Z', 'Task', 'BradykinesiaGA',
+                    'DyskinesiaGA', 'TremorGA', 'TSEnd', 'SubjectId',
+                    'IntelUsername', 'Norm', 'TaskClusterId',
+                    'TaskClusterName', 'TaskID'], axis=1)
     print('adding task ids - dropping duplicates')
     st = tmp.drop_duplicates(keep='first').index.values
     st.sort()
@@ -87,8 +91,10 @@ if __name__ == "__main__":
 
     # calculation
     raw = res.copy()
-    raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 'TremorGA', 'SubjectId',
-                    'TSStart', 'TSEnd', 'IntelUsername', 'TaskClusterId', 'TaskClusterName'], axis=1)
+    raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA',
+                    'DyskinesiaGA', 'TremorGA', 'SubjectId', 'TSStart', 'TSEnd',
+                    'IntelUsername', 'TaskClusterId', 'TaskClusterName'],
+                   axis=1)
     raw = raw.sort_values('TS')
 
     win_idx = pd.DataFrame()
@@ -102,7 +108,8 @@ if __name__ == "__main__":
     tot_samples = sum(win_idx['num_samples'])
 
     # Map taskID to sampleID
-    map_ids = pd.DataFrame(index=range(tot_samples), columns=['SampleID', 'TaskID'])
+    map_ids = pd.DataFrame(index=range(tot_samples),
+                           columns=['SampleID', 'TaskID'])
     k = 0
     for i in range(win_idx.shape[0]):
         print(i)
@@ -119,7 +126,6 @@ if __name__ == "__main__":
     meta = meta.drop(['TS', 'X', 'Y', 'Z', 'Norm'], axis=1)
     meta = meta.drop_duplicates()
     meta = pd.merge(map_ids, meta, on='TaskID')
-
 
     # get start/end idx
     print('calculating window start and end indices')
@@ -149,7 +155,8 @@ if __name__ == "__main__":
     for i in range(tot_samples):
         # print('adding sample ', i + 1, '(', (i + 1) * 100 / tot_samples, '%) of ', tot_samples
         if i % 10 == 9:
-            print('adding sample ',i + 1, '(', (i+1)*100/tot_samples, '%) of ', tot_samples)
+            print('adding sample ',i + 1, '(', (i+1)*100/tot_samples,
+                  '%) of ', tot_samples)
         ran = range(samples_idx.loc[i, 'st'], samples_idx.loc[i, 'en']+1)
         xlist.append(raw.iloc[ran]['X'].values)
         ylist.append(raw.iloc[ran]['Y'].values)
@@ -157,10 +164,14 @@ if __name__ == "__main__":
         nlist.append(raw.iloc[ran]['Norm'].values)
         # raw_x.loc[i] = raw.iloc[ran]['X'].values # this method is very slow - Pandas is not efficient at doing this
     print('done adding samples')
-    raw_x = pd.DataFrame(xlist);  raw_x['SampleID'] = meta['SampleID']
-    raw_y = pd.DataFrame(ylist);  raw_y['SampleID'] = meta['SampleID']
-    raw_z = pd.DataFrame(zlist);  raw_z['SampleID'] = meta['SampleID']
-    raw_n = pd.DataFrame(nlist);  raw_n['SampleID'] = meta['SampleID']
+    raw_x = pd.DataFrame(xlist)
+    raw_x['SampleID'] = meta['SampleID']
+    raw_y = pd.DataFrame(ylist)
+    raw_y['SampleID'] = meta['SampleID']
+    raw_z = pd.DataFrame(zlist)
+    raw_z['SampleID'] = meta['SampleID']
+    raw_n = pd.DataFrame(nlist)
+    raw_n['SampleID'] = meta['SampleID']
 
     # save
     print('saving output')
@@ -169,4 +180,3 @@ if __name__ == "__main__":
     raw_y.to_csv('C:/Users/awagner/Box Sync/Large_data/rawY.csv')
     raw_z.to_csv('C:/Users/awagner/Box Sync/Large_data/rawZ.csv')
     raw_n.to_csv('C:/Users/awagner/Box Sync/Large_data/rawN.csv')
-
