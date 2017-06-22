@@ -10,6 +10,7 @@ import numpy as np
 import pywt
 import functools
 import copy
+from scipy.interpolate import interpolate
 
 """
 Butter Filter
@@ -46,7 +47,7 @@ Output
 """
 def butter_bandpass_filter(data, lowcut, highcut, fs, order=4):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = filtfilt(b, a, data-np.mean(data),padlen=25)
+    y = filtfilt(b, a, data-np.mean(data))
     return y
 
 
@@ -75,9 +76,9 @@ Output:
 def denoise2(data,high_cut):
     import numpy as np
     if np.std(data)<0.01:
-        result = denoise(data - np.mean(data))
+         result = data - np.mean(data)
     else:
-        result = butter_bandpass_filter(data - np.mean(data), 0.2, high_cut, 50, order=4)
+         result = butter_bandpass_filter(data - np.mean(data), 0.2, high_cut, 50, order=4)
     return  result
 
 
@@ -90,10 +91,16 @@ Output:
     result - signal after denosing
 """
 def denoise(data):
+    data = data - np.mean(data) + 0.1
+    #x = np.arange(0, len(data))
+    #f = interpolate.interp1d(x, data)
+    #xnew = np.arange(0,len(data)-1,float(len(data)-1)/2**np.ceil(np.log2(len(data))))
+    #ynew = f(xnew)
     WC = pywt.wavedec(data,'sym8')
-    threshold=0.0045*np.sqrt(2*np.log2(256))
+    threshold=0.005*np.sqrt(2*np.log2(256))
     NWC = lmap(lambda x: pywt.threshold(x,threshold,'soft'), WC)
-    return pywt.waverec( NWC, 'sym8')
+    result = pywt.waverec( NWC, 'sym8')
+    return result - np.mean(result)
 
 """
 denoise_Sgnal
@@ -104,7 +111,7 @@ Output:
 """
 def denoise_signal(signal_data,high_cut = 12):
 #    from FunctionForPredWithDEEP import denoise2
-    denoised_signal = lmap(functools.partial(denoise2, high_cut=high_cut), signal_data)
+    denoised_signal = lmap(denoise, signal_data)
     return denoised_signal
 
 
