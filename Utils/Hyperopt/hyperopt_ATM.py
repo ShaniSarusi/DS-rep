@@ -106,14 +106,14 @@ class BayesianHyperOpt():
             # enables using space dictionary of multiple estimators
             self.best_estimator_ = copy(estimator.set_params(**params))
         self.grid_scores_.append((params, -score))
-        
+
         return {'loss': score, 'status': STATUS_OK}
 
     def fit(self, data, labels):
         objective = partial(self._objective, data=data, labels=labels)
         self.trials = Trials()
         fmin(objective, space=self.space, algo=tpe.suggest, trials=self.trials,
-             max_evals=self.max_evals)#, rseed=self.random_state)
+             max_evals=self.max_evals)  #, rseed=self.random_state)
         # convert from loss to score
         self.best_score_ = -min(self.trials.losses())
 
