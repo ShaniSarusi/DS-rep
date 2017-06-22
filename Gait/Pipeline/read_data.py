@@ -5,7 +5,7 @@ from os import listdir
 import Gait.config as c
 from os.path import isfile, join, isdir, split
 from Utils.DataHandling.data_processing import make_df
-from Utils.DataHandling import reading_and_writing_files as rd
+from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory, pickle_excel_file
 
 # params and global variables
 sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
@@ -14,11 +14,11 @@ sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
 
 def pickle_metadata():
     # Make metadata data frame
-    rd.pickle_excel_file(input_path=join(c.common_path, 'SampleData.xlsx'), output_name='metadata_sample',
+    pickle_excel_file(input_path=join(c.common_path, 'SampleData.xlsx'), output_name='metadata_sample',
                          output_path=c.pickle_path)
-    rd.pickle_excel_file(input_path=join(c.common_path, 'SubjectData.xlsx'), output_name='metadata_subject',
+    pickle_excel_file(input_path=join(c.common_path, 'SubjectData.xlsx'), output_name='metadata_subject',
                          output_path=c.pickle_path)
-    rd.pickle_excel_file(input_path=join(c.common_path, 'TaskFilters.xlsx'), output_name='task_filters',
+    pickle_excel_file(input_path=join(c.common_path, 'TaskFilters.xlsx'), output_name='task_filters',
                          output_path=c.pickle_path)
 
     sample = pd.read_excel(join(c.common_path, 'SampleData.xlsx'))
@@ -39,7 +39,7 @@ def read_input_files_names():
         # csv_files = rd.all_files_in_directory(subject_path, "csv")
         if isdir(join(subject_path, 'rawData')):
             subject_path = join(subject_path, 'rawData')
-        h5py_files = rd.all_files_in_directory(subject_path, "h5", do_sort=True)
+        h5py_files = read_all_files_in_directory(subject_path, "h5", do_sort=True)
 
         for j in range(len(h5py_files)):
             input_files.append(join(subject_path, h5py_files[j]))

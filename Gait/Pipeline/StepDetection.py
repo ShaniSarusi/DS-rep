@@ -12,6 +12,7 @@ import Gait.GaitUtils.algorithms as uts
 import Gait.config as c
 # our imports
 from Utils.Preprocessing import denoising as Pre
+from Utils.Preprocessing.projections import project_gravity
 from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
 
 
@@ -61,10 +62,18 @@ class StepDetection:
                 self.rhs[i] = Pre.butter_filter_lowpass(self.rhs[i], order=order, sampling_rate=self.sampling_rate,
                                                         freq=freq)
 
-    def select_signal(self, norm_or_vertical):
+    def select_signal(self, norm_or_vertical, win_size=None):
+        print("\rRunning: Selecting " + norm_or_vertical + " signal")
         for i in range(len(self.acc)):
             if norm_or_vertical == 'vertical':
-                # pre.vc_axis()
+                # left
+                x = self.acc[i]['lhs']['x']; y = self.acc[i]['lhs']['y']; z = self.acc[i]['lhs']['z']
+                ver, hor = project_gravity(x, y, z, num_samples_per_interval=win_size)
+                self.lhs.append(ver)
+                # right
+                x = self.acc[i]['rhs']['x']; y = self.acc[i]['rhs']['y']; z = self.acc[i]['rhs']['z']
+                ver, hor = project_gravity(x, y, z, num_samples_per_interval=win_size)
+                self.rhs.append(ver)
                 pass
             else:
                 self.lhs.append(self.acc[i]['lhs']['n'])
@@ -426,7 +435,9 @@ if __name__ == "__main__":
     # preprocessing
     sc = StepDetection(acc, sample)
     sc.select_specific_samples(id_nums)
-    sc.select_signal('norm')
+    # sc.select_signal('norm')
+    # sc.select_signal('vertical')
+    sc.select_signal('vertical', win_size=c.sampling_rate*5)
     sc.mva(win_size=30)  # other options: sc.mva(p_type='regular', win_size=40) or sc.bf('lowpass', order=5, freq=6)
     sc.mean_normalization()
 

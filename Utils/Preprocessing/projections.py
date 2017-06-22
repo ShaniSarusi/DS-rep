@@ -70,6 +70,34 @@ def projGrav_one_samp(x,y,z):
     return np.asarray(ver), np.asarray(hor)
 
 
+def project_gravity(x, y, z, num_samples_per_interval=None, round_up_or_down='down'):
+    if num_samples_per_interval is None:
+        return projGrav_one_samp(x, y, z)
+
+    # set number of intervals
+    n = len(x)/num_samples_per_interval
+    if round_up_or_down == 'down':
+        n = np.floor(n).astype(int)
+    elif round_up_or_down == 'up':
+        n = np.ceil(n).astype(int)
+
+    # set window size
+    win_size = np.floor(len(x)/n).astype(int)
+
+    # perform sliding windows
+    idx_start = 0
+    v = []; h = []
+    for i in range(n):  # TODO - chunk the samples more evenly by dividing len(x) each time
+        idx_start = i * win_size
+        idx_end = (i +1) * win_size
+        if i == n-1:  # last iteration
+            idx_end = -1
+        x_i = x[idx_start:idx_end]; y_i = y[idx_start:idx_end]; z_i = z[idx_start:idx_end]
+        ver_i, hor_i = projGrav_one_samp(x_i, y_i, z_i)
+        v.append(ver_i); h.append(hor_i)
+    return np.hstack(v), np.hstack(h)
+
+
 def projGrav_one_samp_try(x,y,z,num_of_interval = 1):
     List_x = chunkIt(x, num_of_interval)
     List_y = chunkIt(y, num_of_interval)
