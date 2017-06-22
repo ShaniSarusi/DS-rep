@@ -64,14 +64,16 @@ Perform signal denoising:
 lab_ver_denoised = Denoiseing_func.denoise_signal(lab_ver_proj)
 lab_hor_denoised = Denoiseing_func.denoise_signal(lab_hor_proj)
 
+lab_ver_denoised = lmap(Denoiseing_func.denoise, lab_ver_proj)
+lab_hor_denoised = lmap(Denoiseing_func.denoise, lab_hor_proj)
 
 '''
 Extract features:
 '''
 #Create features for each projected dimension, and stack both dimensions horizontally:
 WavFeatures = WavTransform.wavtransform()
-lab_ver_features = WavFeatures.createWavFeatures(lab_ver_proj)
-lab_hor_features = WavFeatures.createWavFeatures(lab_hor_proj)
+lab_ver_features = WavFeatures.createWavFeatures(lab_ver_denoised)
+lab_hor_features = WavFeatures.createWavFeatures(lab_hor_denoised  )
 features_data = np.column_stack((lab_ver_features, lab_hor_features))
 
 '''
@@ -107,7 +109,7 @@ task_ids = tags_df.TaskID[cond==True]
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
 optimized_model = classifier.optimize_hyper_params(features, labels, patients, 'xgboost',
-                                        hyper_params=None, scoring_measure = None,eval_iterations = 50)
+                                        hyper_params=None, scoring_measure = None,eval_iterations = 150)
 
 '''
 Make predictions for each segment in the data.
@@ -135,7 +137,7 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
 
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
                                                    model_name='logistic_regression',
-                                                   hyper_params=None, scoring_measure='f1',eval_iterations = 150)
+                                                   hyper_params=None, scoring_measure='f1',eval_iterations = 100)
 final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments)
 
 

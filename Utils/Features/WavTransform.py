@@ -13,48 +13,49 @@ import pywt
 from future.utils import lmap
 import numpy as np
 
+
 class wavtransform():
-    
+
     def __init__(self):
         print("Hello")
-    
-    """
-    Input: time signal
-    Output: Wavelet tranformation after we using interpolation to make the signal length
-    as exponent of 2
-    """
-    def toDWT(self,sig):
-       x = np.arange(0, len(sig))
-       f = interpolate.interp1d(x, sig)
-       xnew = np.arange(0,len(sig)-1,float(len(sig)-1)/2**np.ceil(np.log2(len(sig))))
-       ynew = f(xnew)
-       ywav = pywt.wavedec(ynew - np.mean(ynew) , pywt.Wavelet('db1'),mode = 'smooth')
-       return ywav
-   
-    """
-    Input:Signal in frequency domaion (Wavelet tranfrom)
-          rel: if true we get relative features, else contributions features
-    OutPut: Features as described in "Clustering functional data using wavelets"
-    """
+
+    def toDWT(self, sig):
+        """
+        Input: time signal
+        Output: Wavelet tranformation after we using interpolation to make the signal length
+        as exponent of 2
+        """
+        x = np.arange(0, len(sig))
+        f = interpolate.interp1d(x, sig)
+        xnew = np.arange(0, len(sig)-1, float(len(sig)-1)/2**np.ceil(np.log2(len(sig))))
+        ynew = f(xnew)
+        ywav = pywt.wavedec(ynew - np.mean(ynew), pywt.Wavelet('db1'), mode='smooth')
+        return ywav
+
     def contrib(self, x, rel=False):
-       J  = len(x)
-       res = np.zeros(J)
-       for j in range(J):
-           res[j] = np.sqrt(np.sum(x[j]**2))        
-       if rel == True:
-           res = res/np.sum(res + 10**(-10))
-           res = np.log(float(1)/(1-res))       
-       return res
-    
-    """
-    Input: numpy array 
-    Output: Wavelet features for each row
-    """
+        """
+        Input:Signal in frequency domaion (Wavelet tranfrom)
+        rel: if true we get relative features, else contributions features
+        OutPut: Features as described in "Clustering functional data using wavelets"
+        """
+        J = len(x)
+        res = np.zeros(J)
+        for j in range(J):
+            res[j] = np.sqrt(np.sum(x[j]**2))
+        if rel is True:
+            res = res/np.sum(res + 10**(-10))
+            res = np.log(float(1)/(1-res))
+        return res
+
     def createWavFeatures(self, LargeData):
+        """
+        Input: numpy array
+        Output: Wavelet features for each row
+        """
         print("Doing toDWT")
-        verWav = lmap(self.toDWT, LargeData)
+        WavData = lmap(self.toDWT, LargeData)
         print("relative wavelet")
-        relData = lmap(lambda x:self.contrib(x, rel=True), verWav)
+        relData = lmap(lambda x: self.contrib(x, rel=True), WavData)
         print("cont wavelet")
-        contData =lmap(lambda x:self.contrib(x, rel=False), verWav)
+        contData = lmap(lambda x: self.contrib(x, rel=False), WavData)
         return(np.column_stack((contData, relData)))
