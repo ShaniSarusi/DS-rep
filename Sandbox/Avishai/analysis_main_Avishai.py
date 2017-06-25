@@ -14,13 +14,13 @@ import time
 
 data_path = '/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER'
 os.chdir(os.getcwd()+"/Documents/DataScientists")
-from Utils.features import WavTransform
+from Utils.Features import WavTransform
 import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
-import LDopa.Data_reading.ReadTheDataFromLDOPA as data_reading
+import LDopa.DataReading.ReadTheDataFromLDOPA as data_reading
 import LDopa.Classification.classifier as classifier
 import LDopa.Evaluation.evaluation as evaluation
-
+from Utils.Preprocessing.other_utils import normlize_sig
 ###
 """
 Read with SQL
@@ -42,7 +42,7 @@ lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False, sa
 ####
 res = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
-res = data_reading.ArrangeRes(res,path = '/home/lfaivish/Documents/DataScientists/LDopa/data_reading/Resources/mapTasksClusters.csv')
+res = data_reading.ArrangeRes(res,path = '/home/lfaivish/Documents/DataScientists/LDopa/DataReading/Resources/mapTasksClusters.csv')
 tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,2.5,1,1,50)
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]
@@ -64,8 +64,8 @@ Perform signal denoising:
 lab_ver_denoised = Denoiseing_func.denoise_signal(lab_ver_proj)
 lab_hor_denoised = Denoiseing_func.denoise_signal(lab_hor_proj)
 
-lab_ver_denoised = lmap(Denoiseing_func.denoise, lab_ver_proj)
-lab_hor_denoised = lmap(Denoiseing_func.denoise, lab_hor_proj)
+lab_ver_denoised_norm = lmap(normlize_sig, lab_ver_denoised)
+lab_hor_denoised_norm = lmap(normlize_sig, lab_hor_denoised)
 
 '''
 Extract features:
@@ -73,7 +73,7 @@ Extract features:
 #Create features for each projected dimension, and stack both dimensions horizontally:
 WavFeatures = WavTransform.wavtransform()
 lab_ver_features = WavFeatures.createWavFeatures(lab_ver_denoised)
-lab_hor_features = WavFeatures.createWavFeatures(lab_hor_denoised  )
+lab_hor_features = WavFeatures.createWavFeatures(lab_hor_denoised)
 features_data = np.column_stack((lab_ver_features, lab_hor_features))
 
 '''
@@ -109,7 +109,7 @@ task_ids = tags_df.TaskID[cond==True]
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
 optimized_model = classifier.optimize_hyper_params(features, labels, patients, 'xgboost',
-                                        hyper_params=None, scoring_measure = None,eval_iterations = 150)
+                                        hyper_params=None, scoring_measure = None,eval_iterations = 100)
 
 '''
 Make predictions for each segment in the data.
@@ -137,7 +137,7 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
 
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
                                                    model_name='logistic_regression',
-                                                   hyper_params=None, scoring_measure='f1',eval_iterations = 100)
+                                                   hyper_params=None, scoring_measure=None,eval_iterations = 100)
 final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments)
 
 
