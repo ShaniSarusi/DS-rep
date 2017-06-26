@@ -66,10 +66,10 @@ class AutomaticStateAnalysis:
                     n_samples[n_win] = en[n_win] - st[n_win] + 1
                     break
             if verbose:
-                print 'Windows Finished: ' + str(n_win*100/tot_win) + ' percent'
+                print('Windows Finished: ' + str(n_win*100/tot_win) + ' percent')
             n_win += 1
             i += 1
-        print 'Finished windows'
+        print('Finished windows')
         st = st.astype(int)
         en = en.astype(int)
         n_samples = n_samples.astype(int)
@@ -188,7 +188,7 @@ class AutomaticStateAnalysis:
         if method is None:
             method = 'random'
         if n > self.static_windows.shape[0]:
-            print "error: not enough static windows"
+            print("error: not enough static windows")
             return
 
         # Various methods to choose n static windows
@@ -199,8 +199,8 @@ class AutomaticStateAnalysis:
             def calc_dist(p):
                 p = p.reset_index()
                 d = 0
-                for a in xrange(p.shape[0]-1):
-                    for b in xrange(a+1, p.shape[0]):
+                for a in range(p.shape[0]-1):
+                    for b in range(a+1, p.shape[0]):
                         d += m.sqrt((p.loc[a, 'Xmean'] - p.loc[b, 'Xmean'])**2 +
                                     (p.loc[a, 'Ymean'] - p.loc[b, 'Ymean'])**2 +
                                     (p.loc[a, 'Zmean'] - p.loc[b, 'Zmean'])**2)
@@ -209,7 +209,7 @@ class AutomaticStateAnalysis:
             dist = 0
             full_ind = self.static_windows.index.values
             ind = None
-            for i in xrange(random_cycles):
+            for i in range(random_cycles):
                 temp_ind = random.sample(full_ind, n)
                 temp_win = self.static_windows.loc[temp_ind].copy()
                 temp_dist = calc_dist(temp_win)
