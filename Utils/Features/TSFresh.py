@@ -12,8 +12,8 @@ from tsfresh import extract_features
 
 def convert_signals_for_ts_fresh(signals_data, dimension_name):
     '''
-    This function reads signals, each of which in a row in a data-frame or in a
-    separate list, and converts them to a format compatible with the TSFresh
+    This function reads signals, each of which in a row in a data-frame, or in a
+    list of lists, and converts them to a format compatible with the TSFresh
     package.
     '''
     if type(signals_data) != pd.core.frame.DataFrame:

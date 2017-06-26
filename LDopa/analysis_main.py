@@ -11,6 +11,9 @@ from future.utils import lmap
 # import datetime as dt
 import pandas as pd
 from tsfresh import extract_features
+from tsfresh.feature_extraction.settings import ComprehensiveFCParameters,\
+                                                MinimalFCParameters,\
+                                                EfficientFCParameters
 
 '''
 Avishai's settings:
@@ -29,8 +32,8 @@ from Utils.Features import TSFresh
 import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
 import LDopa.DataReading.ReadTheDataFromLDOPA as data_reading
-import LDopa.Classification.classifier as classifier
-import LDopa.Evaluation.evaluation as evaluation
+import LDopa.Classification.Classification as classifier
+import LDopa.Evaluation.Evaluation as evaluation
 
 ###
 """
@@ -38,10 +41,7 @@ Read with SQL
 """
 res = data_reading.ReadAllData("ConnectSmoove2")
 res = data_reading.ArrangeRes(res, path='C:/Users/awagner')
-tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.MakeIntervalFromAllData(res, 
-                                                                           25, 2, 
-                                                                           1, 1,
-                                                                           50)
+tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.MakeIntervalFromAllData(res, 25, 2, 1, 1, 50)
 
 #######
 """
@@ -59,12 +59,7 @@ Read data - new approach:
 res = pd.read_csv(data_path+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
 res = data_reading.ArrangeRes(res, path='LDopa/DataReading/Resources/mapTasksClusters.csv')
-tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.MakeIntervalFromAllData(res,
-                                                                           5,
-                                                                           2.5,
-                                                                           1,
-                                                                           1,
-                                                                           50)
+tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.make_interval_from_all_data(res, 5, 2.5, 1, 1, 50)
 lab_x_numpy = lab_x.as_matrix()
 lab_x = lab_x_numpy[:, range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix()
@@ -120,12 +115,12 @@ features_data = np.column_stack((lab_ver_features, lab_hor_features))
 # and stack both dimensions horizontally:
 lab_ver_for_tsf = TSFresh.convert_signals_for_ts_fresh(sub_lab_ver_proj,
                                                        "ver")
-lab_ver_tsf_features = extract_features(lab_ver_for_tsf, column_id="signal_id",
-                                        column_sort="time")
+lab_ver_tsf_features = extract_features(lab_ver_for_tsf, default_fc_parameters=ComprehensiveFCParameters(),
+                                        column_id="signal_id", column_sort="time")
 lab_hor_for_tsf = TSFresh.convert_signals_for_ts_fresh(sub_lab_hor_proj,
                                                        "hor")
-lab_hor_tsf_features = extract_features(lab_hor_for_tsf, column_id="signal_id",
-                                        column_sort="time")
+lab_hor_tsf_features = extract_features(lab_hor_for_tsf, default_fc_parameters=EfficientFCParameters(),
+                                        column_id="signal_id", column_sort="time")
 features_data = pd.concat([lab_ver_tsf_features, lab_hor_tsf_features], axis=1)
 
 
@@ -160,9 +155,8 @@ Optimize the hyper-parameters of the classification model, using a leave-one-pat
 '''
 
 
-optimized_model = classifier.optimize_hyper_params(features, labels, patients,
-                                                   'xgboost', hyper_params=None,
-                                                   scoring_measure=None,
+optimized_model = classifier.optimize_hyper_params(features, labels, patients, 'xgboost',
+                                                   hyper_params=None, scoring_measure=None,
                                                    eval_iterations=50)
 
 '''
@@ -171,10 +165,8 @@ For each user, the model is trained on all the other users:
 '''
 
 
-all_pred = classifier.make_cv_predictions_prob_for_all_segments(features, labels,
-                                                                patients,
-                                                                optimized_model,
-                                                                task_ids)
+all_pred = classifier.make_cv_predictions_prob_for_all_segments(features, labels, patients,
+                                                                optimized_model, task_ids)
 
 
 '''
@@ -201,15 +193,12 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
                                                                                 'task']]]
 
 
-opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels,
-                                                              agg_patients,
+opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
                                                               model_name='random_forest_for_agg',
-                                                              hyper_params=None,
-                                                              scoring_measure=None,
+                                                              hyper_params=None, scoring_measure=None,
                                                               eval_iterations=50)
 
-final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df,
-                                                             opt_model_for_agg_segments,
+final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments,
                                                              binary_class_thresh=0.5)
 
 
@@ -246,7 +235,7 @@ updrs_data_no_na = updrs_data.dropna()
 dates = pd.to_datetime(tags_df.TSStart[cond == True]).dt.date
 dates = pd.DataFrame(dates).set_index(all_pred.index)
 all_pred['visit_date'] = dates
-     
+
 per_visit = evaluation.per_visit_compare_updrs(all_pred)
 patients_without_updrs = [131, 132]
 per_visit_having_updrs = per_visit[~per_visit.patient.isin(patients_without_updrs)]
