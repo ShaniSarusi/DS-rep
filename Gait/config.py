@@ -2,7 +2,8 @@ from os.path import join, sep
 
 # paths *****************************************************************
 # common_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data', 'Intel APDM March 6 2017')
-common_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data', 'APDM June 2017')
+data_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')
+common_path = join(data_path, 'APDM June 2017')
 pickle_path = join(common_path, 'Pickled')
 input_path = join(common_path, 'Subjects')
 results_path = join(common_path, 'Results')

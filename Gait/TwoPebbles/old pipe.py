@@ -1,18 +1,19 @@
-from Utils.DataHandling import reading_and_writing_files as ut
+from Utils.DataHandling.reading_and_writing_files import read_export_tool_csv
 import numpy as np
 import pandas as pd
 from scipy import signal
 import matplotlib.pyplot as plt
-from Gait.TwoPebbles import TwoAcc as ta
-import scipy.stats as st
-
+from os.path import join
+import Gait.config as c
+from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
 
 # Read data***************************
-common_path = 'C:\Users\zwaks\Documents\Data\TwoPebbles_Exp2'
-left_watch = common_path + '\w_lft_rawa.csv'
-right_watch = common_path + '\w_rt_rawb.csv'
-lhs = ut.read_export_tool_csv(left_watch)
-rhs = ut.read_export_tool_csv(right_watch)
+common_path = join(c.data_path, 'TwoPebbles_Exp2')
+left_watch = join(common_path, 'w_lft_rawa.csv')
+right_watch = join(common_path, 'w_rt_rawb.csv')
+lhs = read_export_tool_csv(left_watch)
+rhs = read_export_tool_csv(right_watch)
 lhs['n'] = (lhs['x'] ** 2 + lhs['y'] ** 2 + lhs['z'] ** 2) ** 0.5
 rhs['n'] = (rhs['x'] ** 2 + rhs['y'] ** 2 + rhs['z'] ** 2) ** 0.5
 
@@ -22,30 +23,31 @@ lhs_shake_range = range(3000, 4000)
 rhs_shake_range = range(2000, 3000)
 
 # find offset
-#time_offset = ta.find_offset(lhs.loc[lhs_shake_range,'n'].as_matrix(), rhs.loc[rhs_shake_range,'n'].as_matrix())
+# time_offset = ta.find_offset(lhs.loc[lhs_shake_range,'n'].as_matrix(), rhs.loc[rhs_shake_range,'n'].as_matrix())
 
 
-a = lhs.loc[lhs_shake_range,'n'].as_matrix()
-b = rhs.loc[rhs_shake_range,'n'].as_matrix()
-offset = np.argmax(signal.correlate(a,b))
+a = lhs.loc[lhs_shake_range, 'n'].as_matrix()
+b = rhs.loc[rhs_shake_range, 'n'].as_matrix()
+offset = np.argmax(signal.correlate(a, b))
 shift_by = a.shape[0] - offset
-time_offset = rhs.loc[rhs_shake_range[0] + shift_by, 'ts'] - lhs.loc[lhs_shake_range[0],'ts']
+time_offset = rhs.loc[rhs_shake_range[0] + shift_by, 'ts'] - lhs.loc[lhs_shake_range[0], 'ts']
 # The link below says you need to subtract 1 from shift_by, but based on my plotting it looks like you don't need to
 # link: http://stackoverflow.com/questions/4688715/find-time-shift-between-two-similar-waveforms
 
 # Plot shift
-st = 500;  en = 550
+st = 500
+en = 550
 plt.plot(a[range(st, en)])
-#plt.plot(b[range(st, en)])
+# plt.plot(b[range(st, en)])
 
 plt.plot(b[range(st + shift_by, en + shift_by)])
 
 
 # Segment data into samples *****************************************
-plt.plot(lhs.loc[range(0,50000),'n'].as_matrix())
-#metadata_path = common_path + '\Gait\Exp2\Metadata.xlsx'
+plt.plot(lhs.loc[range(0, 50000), 'n'].as_matrix())
+# metadata_path = common_path + '\Gait\Exp2\Metadata.xlsx'
 
-metadata_path = common_path + '\Gait\Exp2\Metadata_short.xlsx'
+metadata_path = join(common_path, 'Gait\Exp2\Metadata_short.xlsx')
 metadata = pd.read_excel(metadata_path)
 
 for i in range(metadata.shape[0]):
@@ -68,7 +70,7 @@ def pearson_corr(lhs_p, rhs_p):
     # TODO need to align signals first due to changing sampling rates and missing data
     # can do this via a loop that goes over ts of 1 side and compares with the other
 
-    #tmp solution instead of alignment
+    # tmp solution instead of alignment
     idx = np.min([lhs_p.shape[0], rhs_p.shape[0]])
     lhs_p = lhs_p.reset_index()
     rhs_p = rhs_p.reset_index()
@@ -93,7 +95,6 @@ def pearson_corr(lhs_p, rhs_p):
     return xcorr, ycorr, zcorr, ncorr
 
 
-
 ft = pd.DataFrame()
 for i in range(metadata.shape[0]):
     lhs_st = metadata.loc[i, 'lhs_st']
@@ -109,22 +110,21 @@ for i in range(metadata.shape[0]):
     ft.loc[i, 'zcorr'] = zcorr
     ft.loc[i, 'ncorr'] = ncorr
 
-#ALSO CALCULATE THE BELOW...
+# ALSO CALCULATE THE BELOW...
 #    Difference in mean axis and norm values.  [xr mean vs xl mean, etc.]
 #    Difference between std of each axis
 pass
 
 
 # 5 classifier to distinguish between labels
-#temp label
+# temp label
 y = np.array([0, 0, 0, 1, 1, 1, 1])
 
 # do svm
-from sklearn import svm
 clf = svm.SVC()
 clf.fit(ft.as_matrix(), y)
 
-from sklearn.ensemble import RandomForestClassifier
+
 clf = RandomForestClassifier()
 clf.fit(ft.as_matrix(), y)
 importance = clf.feature_importances_
@@ -134,6 +134,3 @@ importance = clf.feature_importances_
 #  b) show signal off both hands [overlap norms + overlap a single axis example - say z]
 #  c) show feature importance
 #  d) show classification - roc
-
-
-
