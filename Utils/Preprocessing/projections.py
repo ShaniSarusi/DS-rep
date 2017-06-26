@@ -17,7 +17,7 @@ def project_from_3_to_2_dims(x, y, z):
         z - z axis numpy array, every raw is sample
     Ouput:
         ver_proj - vertical projection
-        hor_proj - horizantel projection
+        hor_proj - horizontal projection
     """
     XYZ = np.stack((x, y, z), axis=2)
     XYZ = np.reshape(XYZ, (np.shape(XYZ)[0], np.shape(XYZ)[1]*np.shape(XYZ)[2]))
@@ -34,7 +34,7 @@ def projGrav(XYZ):
         where x, y , z are axis numpy array, every raw is sample
     Ouput:
         ver_proj - vertical projection
-        hor_proj - horizantel projection
+        hor_proj - horizontal projection
     """
     XYZ = np.reshape(XYZ, (int(len(XYZ)/3), 3))
     ver = []

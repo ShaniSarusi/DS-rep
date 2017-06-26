@@ -79,7 +79,7 @@ def denoise(data):
     Input:
         data - time signal
     Output:
-        result - signal after denosing
+        result - signal after denoising
     """
     data = data - np.mean(data) + 0.1
     WC = pywt.wavedec(data, 'sym8')

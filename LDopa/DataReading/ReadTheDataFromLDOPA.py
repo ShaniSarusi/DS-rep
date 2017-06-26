@@ -9,13 +9,8 @@ import pyodbc
 import pandas as pd
 import numpy as np
 import time
+from Utils.Connections.connections import close_connection
 
-
-def close_connection(co):
-    csr = co.cursor()
-    csr.close()
-    del csr
-    co.close()
 
 # dsn = "ConnectSmoove2"
 '''
@@ -96,11 +91,10 @@ def ArrangeRes(res, path):
         res['TaskID'].loc[range(st[i-1], st[i])] = i
         time.sleep(0.01)
     res['TaskID'].loc[range(st[i], res.shape[0])] = i+1
-    return(res)
+    return res
 
 
-def MakeIntervalFromAllData(res, window_size, slide_by, trim_start,
-                            trim_end,frequency):
+def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end,frequency):
     raw = res.copy()
     raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA',
                     'DyskinesiaGA', 'TremorGA', 'SubjectId', 'TSStart',
@@ -182,7 +176,7 @@ def MakeIntervalFromAllData(res, window_size, slide_by, trim_start,
     return [meta,raw_x,raw_y,raw_z,raw_n]
 
 
-def ReadUnLabeldData(sec, freq, session_ids):
+def read_unlabeled_data(sec, freq, session_ids, dsn):
     X_table_ses = []
     Y_table_ses = []
     Z_table_ses = []
