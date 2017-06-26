@@ -83,7 +83,7 @@ def denoise(data):
     """
     data = data - np.mean(data) + 0.1
     WC = pywt.wavedec(data, 'sym8')
-    threshold = 0.005*np.sqrt(2*np.log2(256))
+    threshold = 0.01*np.sqrt(2*np.log2(256))
     NWC = lmap(lambda x: pywt.threshold(x, threshold, 'soft'), WC)
     result = pywt.waverec(NWC, 'sym8')
     return result - np.mean(result)
