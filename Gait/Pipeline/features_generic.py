@@ -4,6 +4,7 @@ import Gait.GaitUtils.preprocessing as pre
 import pandas as pd
 import Gait.GaitUtils.algorithms as alg
 import Gait.config as c
+from Utils.Preprocessing.denoising import butter_lowpass_filter
 
 
 def extract_generic_features():
@@ -18,8 +19,13 @@ def extract_generic_features():
     acc = pre.truncate(acc, fr_pct, bk_pct)
     gyr = pre.truncate(gyr, fr_pct, bk_pct)
 
-    acc = pre.butter_filter_lowpass(acc, order=10, sampling_rate=128, freq=15)
-    gyr = pre.butter_filter_lowpass(gyr, order=10, sampling_rate=128, freq=15)
+    sides = ['lhs', 'rhs']
+    axes = ['x', 'y', 'z', 'n']
+    for i in range(len(acc)):
+        for side in sides:
+            for axis in axes:
+                acc[i][side][axis] = butter_lowpass_filter(acc[i][side][axis], lowcut=15, sampling_rate=128, order=10)
+                gyr[i][side][axis] = butter_lowpass_filter(gyr[i][side][axis], lowcut=15, sampling_rate=128, order=10)
 
     # calculate features
     ft = pd.DataFrame(index=range(sample.shape[0]))

@@ -222,12 +222,6 @@ def score_max_peak(the_signal, sampling_freq, min_hz, max_hz, show=False):
     return score
 
 
-def mva_no_nans(x, win_size):
-    a = [1.0 / win_size] * win_size
-    res = sig.filtfilt(a, 1, x)
-    return pd.Series(res)
-
-
 def detect_peaks(input_signal, peak_type, param1, param2):
     if peak_type == 'p_utils':
         if max(input_signal) == 0:

@@ -11,7 +11,7 @@ from sklearn.metrics import mean_squared_error
 import Gait.GaitUtils.algorithms as uts
 import Gait.config as c
 # our imports
-from Utils.Preprocessing import denoising as Pre
+from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter, butter_highpass_filter
 from Utils.Preprocessing.projections import project_gravity
 from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
 
@@ -52,15 +52,11 @@ class StepDetection:
     def bf(self, p_type, order=5, freq=6):
         for i in range(len(self.lhs)):
             if p_type == 'lowpass':
-                self.lhs[i] = Pre.butter_filter_lowpass(self.lhs[i], order=order, sampling_rate=self.sampling_rate,
-                                                        freq=freq)
-                self.rhs[i] = Pre.butter_filter_lowpass(self.rhs[i], order=order, sampling_rate=self.sampling_rate,
-                                                        freq=freq)
+                self.lhs[i] = butter_lowpass_filter(self.lhs[i], freq, self.sampling_rate, order)
+                self.rhs[i] = butter_lowpass_filter(self.rhs[i], freq, self.sampling_rate, order)
             if p_type == 'highpass':
-                self.lhs[i] = Pre.butter_filter_lowpass(self.lhs[i], order=order, sampling_rate=self.sampling_rate,
-                                                        freq=freq)
-                self.rhs[i] = Pre.butter_filter_lowpass(self.rhs[i], order=order, sampling_rate=self.sampling_rate,
-                                                        freq=freq)
+                self.lhs[i] = butter_highpass_filter(self.lhs[i], freq, self.sampling_rate, order)
+                self.rhs[i] = butter_highpass_filter(self.rhs[i], freq, self.sampling_rate, order)
 
     def select_signal(self, norm_or_vertical, win_size=None):
         print("\rRunning: Selecting " + norm_or_vertical + " signal")
@@ -87,15 +83,15 @@ class StepDetection:
                     self.both[i] = pd.Series(self.both[i]).rolling(window=win_size, center=True).mean()
                     self.both_abs[i] = pd.Series(self.both_abs[i]).rolling(window=win_size, center=True).mean()
                 if p_type == 'nans':
-                    self.both[i] = uts.mva_no_nans(self.both[i], win_size)
-                    self.both_abs[i] = uts.mva_no_nans(self.both_abs[i], win_size)
+                    self.both[i] = moving_average_no_nans(self.both[i], win_size)
+                    self.both_abs[i] = moving_average_no_nans(self.both_abs[i], win_size)
             else:
                 if p_type == 'regular':
                     self.lhs[i] = pd.Series(self.lhs[i]).rolling(window=win_size, center=True).mean()
                     self.rhs[i] = pd.Series(self.rhs[i]).rolling(window=win_size, center=True).mean()
                 if p_type == 'nans':
-                    self.lhs[i] = uts.mva_no_nans(self.lhs[i], win_size)
-                    self.rhs[i] = uts.mva_no_nans(self.rhs[i], win_size)
+                    self.lhs[i] = moving_average_no_nans(self.lhs[i], win_size)
+                    self.rhs[i] = moving_average_no_nans(self.rhs[i], win_size)
 
     def combine_signals(self):
         print("\rRunning: Combine signals")
@@ -181,10 +177,10 @@ class StepDetection:
             s3[self.res.iloc[i]['idx3_lhs']] = 1
             s4[self.res.iloc[i]['idx4_rhs']] = 1
             # s1 = uts.max_filter(s1, win_size)
-            s1 = uts.mva_no_nans(s1, win_size) * w1
-            s2 = uts.mva_no_nans(s2, win_size) * w2
-            s3 = uts.mva_no_nans(s3, win_size) * w3
-            s4 = uts.mva_no_nans(s4, win_size) * w4
+            s1 = moving_average_no_nans(s1, win_size) * w1
+            s2 = moving_average_no_nans(s2, win_size) * w2
+            s3 = moving_average_no_nans(s3, win_size) * w3
+            s4 = moving_average_no_nans(s4, win_size) * w4
             x = s1 + s2 + s3 + s4
             val = uts.detect_peaks(x, peak_type='p_utils', param1=float(thresh)/win_size, param2=win_size)
             self.res.set_value(self.res.index[i], 'idx_ensemble', val)

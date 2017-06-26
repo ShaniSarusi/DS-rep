@@ -8,7 +8,7 @@ from scipy.signal import butter, filtfilt
 from future.utils import lmap
 import numpy as np
 import pywt
-import copy
+import pandas as pd
 
 
 def butter_bandpass(lowcut, highcut, fs, order=4):
@@ -44,18 +44,18 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=4):
     return y
 
 
-# Zeev's function - may be redundant with above
-def butter_filter_lowpass(data, order, sampling_rate, freq):
+def butter_lowpass_filter(data, lowcut, sampling_rate, order=4):
     nyq = 0.5 * sampling_rate
-    b, a = butter(order, float(freq)/float(nyq), btype='lowpass')
-    return filtfilt(b, a, copy.deepcopy(data))
+    low = float(lowcut)/float(nyq)
+    b, a = butter(order, low, btype='lowpass')
+    return filtfilt(b, a, data)
 
 
-# Zeev's function - may be redundant with above
-def butter_filter_highpass(data, order, sampling_rate, freq):
+def butter_highpass_filter(data, highcut, sampling_rate, order=4):
     nyq = 0.5 * sampling_rate
-    b, a = butter(order, float(freq)/float(nyq), btype='highpass')
-    return filtfilt(b, a, copy.deepcopy(data))
+    high = float(highcut)/float(nyq)
+    b, a = butter(order, high, btype='highpass')
+    return filtfilt(b, a, data)
 
 
 def denoise2(data, high_cut):
@@ -117,3 +117,9 @@ def fusedlasso(sig, beta, mymatrix):
     res = np.asarray(res.flatten())
     return res[0]
 """
+
+
+def moving_average_no_nans(data, window_size):
+    a = [1.0 / window_size] * window_size
+    res = filtfilt(a, 1, data)
+    return pd.Series(res)
