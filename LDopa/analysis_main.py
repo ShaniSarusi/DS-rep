@@ -33,7 +33,7 @@ import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
 import LDopa.DataReading.ReadTheDataFromLDOPA as data_reading
 import LDopa.Classification.Classification as classifier
-import LDopa.Evaluation.Evaluation as evaluation
+import LDopa.Evaluation.evaluation as evaluation
 
 ###
 """
@@ -121,7 +121,7 @@ lab_hor_for_tsf = TSFresh.convert_signals_for_ts_fresh(sub_lab_hor_proj,
                                                        "hor")
 lab_hor_tsf_features = extract_features(lab_hor_for_tsf, default_fc_parameters=EfficientFCParameters(),
                                         column_id="signal_id", column_sort="time")
-features_data = pd.concat([lab_ver_tsf_features, lab_hor_tsf_features], axis=1)
+features_data = pd.concat([lab_ver_tsf_features, lab_hor_tsf_features,pd.DataFrame(lab_ver_features), pd.DataFrame(lab_hor_features)], axis=1)
 
 
 '''
@@ -157,7 +157,7 @@ Optimize the hyper-parameters of the classification model, using a leave-one-pat
 
 optimized_model = classifier.optimize_hyper_params(features, labels, patients, 'xgboost',
                                                    hyper_params=None, scoring_measure=None,
-                                                   eval_iterations=50)
+                                                   eval_iterations=200)
 
 '''
 Make predictions for each segment in the data.
