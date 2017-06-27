@@ -18,7 +18,7 @@ from Utils.Features import WavTransform
 import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
 import LDopa.DataReading.ReadTheDataFromLDOPA as data_reading
-import LDopa.Classification.classifier as classifier
+import LDopa.Classification.Classification as classifier
 import LDopa.Evaluation.evaluation as evaluation
 from Utils.Preprocessing.other_utils import normlize_sig
 ###
@@ -148,7 +148,7 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
 
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
                                                    model_name='logistic_regression',
-                                                   hyper_params=None, scoring_measure=None,eval_iterations = 100)
+                                                   hyper_params=None, scoring_measure='f1',eval_iterations = 100)
 final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments)
 
 
