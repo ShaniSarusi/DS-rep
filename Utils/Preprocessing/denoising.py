@@ -11,7 +11,7 @@ import pywt
 import pandas as pd
 
 
-def butter_bandpass(lowcut, highcut, fs, order=4):
+def butter_bandpass(data, lowcut, highcut, fs, order=4):
     """
     Input:
     lowcut - low frequency cut
@@ -19,27 +19,12 @@ def butter_bandpass(lowcut, highcut, fs, order=4):
     fs - sample rate
     order - order of filter
     Output:
-    b - low freq paramter for filtfilt
-    a - high freq paramter for filtfilt
+    y - the signal after butter filter using lowcut and high cut, fs and order
     """
     nyq = 0.5 * fs
     low = lowcut / nyq
     high = highcut / nyq
     b, a = butter(order, [low, high], btype='band')
-    return b, a
-
-
-def butter_bandpass_filter(data, lowcut, highcut, fs, order=4):
-    """
-    Input: data - time signal
-    lowcut - low frequency cut
-    highcut - high frequency cut
-    fs - sample rate
-    order - order of filter
-    Output
-    y - the signal after butter filter using lowcut and high cut, fs and order
-    """
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
     y = filtfilt(b, a, data-np.mean(data))
     return y
 
@@ -69,7 +54,7 @@ def denoise2(data, high_cut):
     if np.std(data) < 0.01:
         result = data - np.mean(data)
     else:
-        result = butter_bandpass_filter(data - np.mean(data), 0.2, high_cut, 50, order=4)
+        result = butter_bandpass(data - np.mean(data), 0.2, high_cut, 50, order=4)
     return result
 
 
