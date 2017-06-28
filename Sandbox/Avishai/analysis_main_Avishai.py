@@ -43,11 +43,11 @@ lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False, sa
 res = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
 res = data_reading.ArrangeRes(res,path = '/home/lfaivish/Documents/DataScientists/LDopa/DataReading/Resources/mapTasksClusters.csv')
-tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,2.5,1,1,50)
+tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.make_interval_from_all_data(res,5,2.5,1,1,50)
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_z_numpy = lab_z.as_matrix(); lab_z = lab_z_numpy[:,range(len(lab_x_numpy[0])-1)]
-
+Order = lab_x_numpy[250]
 ####
 
 '''
@@ -94,7 +94,7 @@ Prepare the data for the classification process:
 task_names = tags_df.Task.as_matrix()
 task_clusters = tags_df.TaskClusterId.as_matrix()
 relevant_task_names = []
-relevant_task_clusters = [1] # 1=resting, 4=periodic hand movement, 5=walking
+relevant_task_clusters = [1,2] # 1=resting, 4=periodic hand movement, 5=walking
 cond = np.asarray(lmap(lambda x: x in relevant_task_clusters, task_clusters))
 
 #Create features and labels data frames, according to the condition indicator:
@@ -110,7 +110,7 @@ def create_labels(symptom_name, tags_data, condition_vector, binarize=True):
         label_vector[label_vector>0] = 1
     return label_vector
 
-labels = create_labels('tremor', tags_data=tags_df, condition_vector=cond, binarize=True)
+labels = create_labels('dyskinesia', tags_data=tags_df, condition_vector=cond, binarize=True)
 features = features_data[cond==True]
 #tags_df_after_cond = tags_df[cond==True]
 patients = tags_df.SubjectId[cond==True]
