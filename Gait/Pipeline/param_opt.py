@@ -21,7 +21,7 @@ sc = StepDetection(acc, sample)
 sc.select_specific_samples(ids)
 
 
-def objective(p):
+def objective_single_side_lhs(p):
     s = p['sc']
     s.select_signal(p['signal'])
     if p['smoothing'] == 'mva':
@@ -43,20 +43,21 @@ def objective(p):
     return res_rmse
 
 ##########################################################################################################
+# Running parameters
 space = space_single_side
-
-# The Trials object will store details of each iteration
-trials = Trials()
-
-# Run the hyperparameter search using the tpe algorithm
+objective = objective_single_side_lhs
 n_folds = 5
-train, test = split_data(np.arange(len(ids)), n_folds=n_folds)
-best = []
-rmse = []
 max_evals = 1000
 alg = 'random'  # 'tpe'
+
+# The parameter optimization code
+trials = Trials()
+train, test = split_data(np.arange(len(ids)), n_folds=n_folds)
+best = []
+rmse= []
 for i in range(n_folds):
     print("\rRunning fold " + str(i + 1) + ' from ' + str(n_folds))
+
     # optimize params
     sc_train = deepcopy(sc)
     sc_train.select_specific_samples(train[i])
@@ -77,7 +78,7 @@ for i in range(n_folds):
     rmse.append(rmse_i)
 
 ##########################################################################################################
-# Results
+# Print and save results
 
 print(best)
 print(rmse)
