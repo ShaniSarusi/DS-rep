@@ -223,6 +223,8 @@ def score_max_peak(the_signal, sampling_freq, min_hz, max_hz, show=False):
 
 
 def detect_peaks(input_signal, peak_type, param1, param2):
+    if len(input_signal) == 0:
+        return np.array([])
     if peak_type == 'p_utils':
         if max(input_signal) == 0:
             val = 1

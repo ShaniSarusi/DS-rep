@@ -8,21 +8,23 @@ from hyperopt import fmin, tpe, hp
 
 
 # split data into k-folds
-num_acc=  10
-k_folds = 5
-all_idx = np.arange(num_acc)
-folds_idx = chunk_it(all_idx, k_folds, shuffle=True)
-test = []
-train = []
-test_label = []
-train_label = []
-for i in k_folds:
-    test.append([data[x] for x in folds_idx[i]])
-    test.append([label[x] for x in folds_idx[i]])
+def split_data(data, label):
+    num_samples=  10
+    k_folds = 5
+    all_idx = np.arange(num_samples)
+    folds_idx = chunk_it(all_idx, k_folds, shuffle=True)
+    test = []
+    train = []
+    test_label = []
+    train_label = []
+    for i in k_folds:
+        test.append([data[x] for x in folds_idx[i]])
+        test.append([label[x] for x in folds_idx[i]])
 
-    tr_idx = np.setdiff1d(all_idx, folds_idx[i])
-    train.append([data[x] for x in tr_idx])
-    train_label.append([label[x] for x in tr_idx])
+        tr_idx = np.setdiff1d(all_idx, folds_idx[i])
+        train.append([data[x] for x in tr_idx])
+        train_label.append([label[x] for x in tr_idx])
+    return train, test
 
 # now the data and labels have been split
 

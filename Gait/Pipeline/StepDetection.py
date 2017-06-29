@@ -1,20 +1,19 @@
-# external imports
+# External imports
 import pickle
 from math import sqrt, ceil
 from os.path import join
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 
+# Imports from our packages
 import Gait.GaitUtils.algorithms as uts
 import Gait.config as c
-# our imports
 from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter, butter_highpass_filter
 from Utils.Preprocessing.projections import project_gravity
 from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
-
+from Utils.DataHandling.data_processing import chunk_it
 
 
 class StepDetection:
@@ -60,6 +59,8 @@ class StepDetection:
 
     def select_signal(self, norm_or_vertical, win_size=None):
         print("\rRunning: Selecting " + norm_or_vertical + " signal")
+        self.lhs = []
+        self.rhs = []
         for i in range(len(self.acc)):
             if norm_or_vertical == 'vertical':
                 # left
@@ -353,7 +354,7 @@ class StepDetection:
             n_max = max(abs(diff))
             plt.scatter(sc_true, diff, color='b')
             plt.ylabel('Algorithm steps - visual steps', fontsize=22)
-            plt.ylim(-n_max- 2, n_max + 2)
+            plt.ylim(-n_max - 2, n_max + 2)
             plt.xlim(min(sc_true) - 5, max(sc_true) + 5)
             plt.xlabel('Visual step count', fontsize=22)
             plt.axhline(0, color='r')
@@ -361,7 +362,6 @@ class StepDetection:
             ax_max = int(ceil(highest / 10.0)) * 10
 
         plt.tick_params(axis='both', which='major', labelsize=18)
-
 
         # calculate rms
         rmse = sqrt(mean_squared_error(sc_true, sc_alg))
