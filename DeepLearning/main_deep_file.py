@@ -21,6 +21,7 @@ from Utils.Preprocessing.other_utils import normlize_sig
 from LDopa.AugmentedData.augmented_data import augment_data
 from Utils.FrequencyMethods.FrequencyMethod import spectogram_and_normlize
 from DeepLearning.build_network import BuildCNNClassWithActivity
+from sklearn.metrics import confusion_matrix
 data_path = '/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER'
 os.chdir(os.getcwd()+"/Documents/DataScientists")
 
@@ -53,7 +54,7 @@ XYZ_normlize = np.stack((x_normlize, y_normlize, z_normlize), axis=2)
 XYZ_normlize_real = np.stack((x_normlize_real, y_normlize_real, z_normlize_real), axis=2)
 XYZ_normlize_fft = np.stack((x_fft, y_fft, z_fft), axis=2)
 
-TagLow = XYZ_normlize_fft.copy()
+TagLow = XYZ_normlize.copy()
 symp = augment_symp.reshape((len(augment_symp),1))
 meta_after_cond = np.asarray(augment_SubjectId)
 Task_for_pred = np.where(augment_Task==2,0,1)
@@ -63,51 +64,36 @@ Task_for_predNew = np.where(Task_for_pred==1 , 0.5, 1)
 Task_andSymp = sympNew + Task_for_predNew 
 Task_andSymp = utils.to_categorical(Task_andSymp, num_classes=4)
 
-symp_class, feature_extract = BuildCNNClassWithActivity(250, 'binary_crossentropy')  
-weights_start_symp = symp_class.get_weights()
-
-logo = LeaveOneGroupOut()
-cv = logo.split(TagLow, symp, meta_after_cond)##np.random.randint(0,4,len(symp)
-cv1 = list(cv)
-cv = list(cv1)
-
-#earlyStopping= EarlyStopping(monitor='loss', min_delta = 0.002,patience=3, verbose=0, mode='auto')
-
+symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary_crossentropy')  
 
 def scheduler(epoch):
     if(epoch == 1):
-        K.set_value(symp_class.optimizer.lr,0.0001)
+        K.set_value(symp_class.optimizer.lr,0.0005)
     if(epoch == 5):
-        K.set_value(symp_class.optimizer.lr,0.00005)
+        K.set_value(symp_class.optimizer.lr,0.0001)
     if(epoch == 10):
-        K.set_value(symp_class.optimizer.lr,0.00005)
+        K.set_value(symp_class.optimizer.lr,0.0001)
     if(epoch == 20):
-        K.set_value(symp_class.optimizer.lr,0.00005)
+        K.set_value(symp_class.optimizer.lr,0.0001)
     return K.get_value(symp_class.optimizer.lr)
 
-change_lr = LearningRateScheduler(scheduler)
-res = []
-symp_cor_res = []
-features_from_deep = [];
-class_weight = {0 : 1,  1: 1}
-for train, test in cv:
-    print(test)
-    symp_class.set_weights(weights_start_symp)
-    xtest = TagLow[test]
-    xtrain = TagLow[train]
-    #weight_sample = np.abs(1 - Task_for_pred[train])
-    symp_class.fit(xtrain, [symp[train],Task_andSymp[train]],epochs=50 , batch_size=128, shuffle=True, validation_data=(xtest, [symp[test],Task_andSymp[test]]),callbacks=[change_lr],class_weight =class_weight  ,verbose=2)#
-    temp_res = symp_class.predict(xtest[augment_or_not[test] == 1])
-    res.append(temp_res[0])
-    symp_cor_res.append(symp[test])
-    features_from_deep.append(feature_extract.predict(xtest[augment_or_not_after[test] == 1]))
-res1 = np.vstack(res)
-symp_cor_res1 = np.vstack(symp_cor_res)
-plt.boxplot([res[symp[test] == 1],res[symp[test] == 0]])
-confusion_matrix(labels ,np.where(res1>0.8,1,0))
+
+deep_params = {'epochs': 30,
+               'class_weight': {0 : 1,  1: 1},
+               'change_lr': LearningRateScheduler(scheduler)}
+
+Group1 = [131,134,137,140,143,146,149]
+Group2 = [132,135,138,141,144,147]
+Group3 = [133,136,139,142,145,148]
+
+res1, order1 = make_cross_val(TagLow, symp, Task_andSymp, np.concatenate([np.zeros(75070),np.ones(75070)]), 
+                            symp_class,  feature_extract, augment_or_not, deep_params)
+results = np.asarray([x for (y,x) in sorted(zip(order1,res1))])
+
+plt.boxplot([res1[symp[test] == 1],res1[symp[test] == 0]])
+confusion_matrix(labels ,np.where(np.asarray(results) > 0.7,1,0))
+
 import gc
+secret = None
 gc.collect()
 
-
-res1 = make_cross_val(TagLow, symp, Task_andSymp, np.random.randint(0,4,len(symp)), 
-                            symp_class,  feature_extract,change_lr, class_weight, augment_or_not)

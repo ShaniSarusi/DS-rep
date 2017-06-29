@@ -27,7 +27,7 @@ def augment_data(XYZ, temp_labels, task_clusters, task_subjectID):
         temp_list_perm = []; temp_list_symp = []; temp_list_Task = []; temp_list_user_id = []; temp_aug_or_not = [];
         if((task_clusters[samp] == 2) | (task_clusters[samp] == 1)):
             if((temp_labels[samp] > 0)):
-                num_of_iter = 30
+                num_of_iter = 40
             for i in range(num_of_iter):
                 m = ortho_group.rvs(dim=3)
                 temp = m.dot(XYZ[samp].T).T

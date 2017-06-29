@@ -240,7 +240,7 @@ def BuildCNNClassifirt(input_size, lost):  # number of nodes in first layer. in 
 
 def BuildCNNClassWithActivity(input_size, lost):  # number of nodes in first layer. in this case 126.
     #
-    input_signal = Input((126,3))
+    input_signal = Input((input_size,3))
     #
     #x = ZeroPadding1D(3)(input_signal) 
     x = Conv1D(32, 16, activation='relu', padding='same')(input_signal) 
@@ -259,7 +259,7 @@ def BuildCNNClassWithActivity(input_size, lost):  # number of nodes in first lay
     
     ActiveLayer = Dropout(1)(OneForActandSymp)
     ActiveLayer= Dense(16, activation='relu')(ActiveLayer)
-    #ActiveLayer = BatchNormalization()(ActiveLayer)
+    ActiveLayer = BatchNormalization()(ActiveLayer)
     #ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
     End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
     
@@ -270,13 +270,13 @@ def BuildCNNClassWithActivity(input_size, lost):  # number of nodes in first lay
     close_to_output = Dense(16, activation='relu')(sympLayer)
     End_point = Dense(1, activation='sigmoid')(close_to_output)
     
-    symp_class = Model(input_signal, [End_point, End_point_Active])
+    symp_class = Model(input_signal, [End_point, End_point_Active, close_to_output])
     #active_class = Model(input_signal, End_point_Active)
     
     optimizer = optimizers.adam(lr = 0.0001)
     feature_extract = Model(input_signal,close_to_output)
     
-    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy'],metrics=['accuracy'], loss_weights=[1., 0.1])
+    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy', loss_cluster],metrics=['accuracy'], loss_weights=[1., 0.2,0.001])
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract
