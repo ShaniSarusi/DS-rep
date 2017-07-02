@@ -42,10 +42,10 @@ class HyperParamOptSteps:
                 s.bf(p_type='lowpass', order=5, freq=r['butter_freq_single_side'])
             s.mean_normalization()
 
-            if r['peaktype'] == 'scipy':
-                s.step_detect_single_side_wpd_method(side='lhs', peak_type=r['peaktype'], p1=r['p1_sc'], p2=r['p1_sc'] + r['p2_sc'])
-            elif r['peaktype'] == 'peak_utils':
-                s.step_detect_single_side_wpd_method(side='lhs', peak_type=r['peaktype'], p1=r['p1_pu'], p2=r['p2_pu'])
+            if r['peak_type'] == 'scipy':
+                s.step_detect_single_side_wpd_method(side='lhs', peak_type=r['peak_type'], p1=r['p1_sc'], p2=r['p1_sc'] + r['p2_sc'])
+            elif r['peak_type'] == 'peak_utils':
+                s.step_detect_single_side_wpd_method(side='lhs', peak_type=r['peak_type'], p1=r['p1_pu'], p2=r['p2_pu'])
             if r['remove_weak_signals']:
                 s.remove_weak_signals(r['weak_signal_thresh'])
             for j in range(s.res.shape[0]):
@@ -63,8 +63,8 @@ if __name__ == '__main__':
         'Smoothing': ['mva', 'butter'],
         'mva_win': np.arange(5, 50, 5),
         'butter_freq_single_side': np.arange(1, 6, 0.5),
-        'peaktype': ['scipy', 'peak_utils'],
-        #'peaktype': ['scipy'],
+        'peak_type': ['scipy', 'peak_utils'],
+        #'peak_type': ['scipy'],
         'p1_sc': np.arange(1, 20).tolist(),
         'p2_sc': np.arange(1, 40).tolist(),
         'p1_pu': np.arange(0.1, 1, 0.1),
