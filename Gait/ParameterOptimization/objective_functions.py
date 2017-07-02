@@ -21,9 +21,9 @@ def objective_single_side_lhs(p):
 
     # do peak finding
     if p['peak_type'] == 'scipy':
-        s.step_detect_single_side_wpd_method(side='lhs', peak_type=p['peak_type'], p1=p['p1_sc'], p2=p['p1_sc'] + p['p2_sc'])
+        s.step_detect_single_side_wpd_method(side='lhs', peak_type=p['peak_type'], p1=p['p1_sc'], p2=p['p1_sc'] + p['p2_sc'], verbose=False)
     elif p['peak_type'] == 'peak_utils':
-        s.step_detect_single_side_wpd_method(side='lhs', peak_type=p['peak_type'], p1=p['p1_pu'], p2=p['p2_pu'])
+        s.step_detect_single_side_wpd_method(side='lhs', peak_type=p['peak_type'], p1=p['p1_pu'], p2=p['p2_pu'], verbose=False)
 
     # remove weak signals
     if p['remove_weak_signals']:

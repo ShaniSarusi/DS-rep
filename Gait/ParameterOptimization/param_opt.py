@@ -1,5 +1,5 @@
 import pickle
-from copy import deepcopy
+from copy import copy, deepcopy
 from os.path import join
 import numpy as np
 from hyperopt import fmin, Trials, tpe, rand
@@ -15,8 +15,8 @@ import Gait.ParameterOptimization.objective_functions as obj_func
 # Running parameters
 space = conf_params.space_single_side
 objective = obj_func.objective_single_side_lhs
-n_folds = 3
-max_evals = 1
+n_folds = 4
+max_evals = 3
 alg = 'random'  # 'tpe'
 
 
@@ -33,34 +33,41 @@ sc.select_specific_samples(ids)
 
 ##########################################################################################################
 # The parameter optimization code
-trials = Trials()
 train, test = split_data(np.arange(len(ids)), n_folds=n_folds)
 best = []
-rmse= []
+rmse = []
 for i in range(n_folds):
-    print("\rRunning fold " + str(i + 1) + ' from ' + str(n_folds))
+    print("\rUsing " + alg + " search algorithm. Running fold " + str(i + 1) + ' of ' + str(n_folds) + '.')
 
     # optimize params
     sc_train = deepcopy(sc)
     sc_train.select_specific_samples(train[i])
     space['sc'] = sc_train
+    trials = Trials()
+    res = None
     if alg == 'tpe':
+        print('hi1')
         res = fmin(objective, space, algo=tpe.suggest, max_evals=max_evals, trials=trials)
     elif alg == 'random':
+        print('hi2')
         res = fmin(objective, space, algo=rand.suggest, max_evals=max_evals, trials=trials)
 
-    # save params
+    # Evaluate result on test set
     best_params_i = space_eval(space, res)
-    del best_params_i['sc']
-    best.append(best_params_i)
-
-    # evaluate result on test set
-    sc_test = deepcopy(sc)
+    sc_test = copy(sc)
     sc_test.select_specific_samples(test[i])
     best_params_i['sc'] = sc_test
     rmse_i = objective(best_params_i)
-    print("\rRMSE of fold " + str(i + 1) + ' from ' + str(n_folds) + ' is ' + str(rmse_i))
+
+    # Save cross validation fold results
     rmse.append(rmse_i)
+    del best_params_i['sc']
+    best.append(best_params_i)
+
+    # Print cross validation fold results
+    print("\rRMSE of fold " + str(i + 1) + ' from ' + str(n_folds) + ' is ' + str(
+        round(rmse_i, 1)) + ". The param values are:")
+    print(best_params_i)
 
 
 ##########################################################################################################
@@ -78,5 +85,3 @@ with open(join(c.pickle_path, 'hypopt3'), 'wb') as fp:
 # Print results
 print(best)
 print(rmse)
-
-
