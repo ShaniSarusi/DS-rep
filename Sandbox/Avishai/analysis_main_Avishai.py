@@ -30,16 +30,6 @@ res = data_reading.ArrangeRes(res,path = 'C:/Users/awagner')
 tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,2.5,1,1,50)
 
 #######
-"""
-Read Itizk
-"""
-exec(open('./data_reading/load_from_csv.py').read())
-tags_df = read_tag_data(data_path)
-lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False, sample_freq=50, window_size=5)
-#####
-
-
-####
 res = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
 res = data_reading.ArrangeRes(res,path = '/home/lfaivish/Documents/DataScientists/LDopa/DataReading/Resources/mapTasksClusters.csv')

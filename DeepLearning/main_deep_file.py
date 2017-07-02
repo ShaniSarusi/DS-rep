@@ -86,6 +86,8 @@ Group1 = [131,134,137,140,143,146,149]
 Group2 = [132,135,138,141,144,147]
 Group3 = [133,136,139,142,145,148]
 
+
+
 res1, order1 = make_cross_val(TagLow, symp, Task_andSymp, np.concatenate([np.zeros(75070),np.ones(75070)]), 
                             symp_class,  feature_extract, augment_or_not, deep_params)
 results = np.asarray([x for (y,x) in sorted(zip(order1,res1))])
