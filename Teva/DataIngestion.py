@@ -6,14 +6,12 @@ Created on Wed Jun 28 16:17:35 2017
 """
 
 import pandas as pd
-import numpy as np
-import pickle as pk
 from os.path import join, sep
-#import imp
+# import imp
 
 exec_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists', 'Teva')
 import Config as c
-#imp.reload(c)
+# imp.reload(c)
 
 clinic_df = pd.read_csv(c.clinic_file_path)
 inds = pd.isnull(clinic_df).any(1).nonzero()[0]
@@ -27,7 +25,7 @@ clinic_df['timestamp'] = pd.to_datetime(clinic_df['timestamp'])
 sub_clinic_df = clinic_df[['user_id', 'assessment_id', 'assessment_start', 'assessment_end',
                            'timestamp', 'x', 'y', 'z', 'patient_report_value', 'clinician_report_value']]
 sub_clinic_df.to_pickle(join(c.data_path, 'clinic_processed_pickle.p'))
-#sub_clinic_df = pd.read_pickle(join(c.data_path, 'clinic_processed_pickle.p'))
+# sub_clinic_df = pd.read_pickle(join(c.data_path, 'clinic_processed_pickle.p'))
 
 
 

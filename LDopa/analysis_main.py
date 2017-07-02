@@ -6,6 +6,7 @@ Created on Thu Jun  8 12:57:44 2017
 """
 
 import os
+from os.path import join, sep
 import numpy as np
 from future.utils import lmap
 # import datetime as dt
@@ -18,14 +19,15 @@ from tsfresh.feature_extraction.settings import ComprehensiveFCParameters,\
 '''
 Avishai's settings:
 '''
-data_path = 'C:/Users/awagner/Desktop/Large_data/'
+dat_path = join('C:', sep, 'Users', 'awagner', 'Desktop', 'Large_data')
+#data_path = 'C:/Users/awagner/Desktop/Large_data/'
 os.chdir(os.getcwd()+"/DataScientists")
 
 '''
 Itzik's settings:
 '''
-data_path = 'C:\\Users\\imazeh\\Itzik\\Health_prof\\L_Dopa\\Large_data\\'
-os.chdir('C:\\Users\\imazeh/Itzik/Health_prof/git_team/DataScientists/')
+data_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'L_Dopa', 'Large_data')
+os.chdir(join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists'))
 
 from Utils.Features import WavTransform
 from Utils.Features import TSFresh
@@ -33,19 +35,19 @@ import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
 import LDopa.DataReading.ReadTheDataFromLDOPA as data_reading
 import LDopa.Classification.Classification as classifier
-import LDopa.Evaluation.evaluation as evaluation
+import LDopa.Evaluation.Evaluation as evaluation
 
 ###
 """
 Read with SQL
 """
 res = data_reading.ReadAllData("ConnectSmoove2")
-res = data_reading.ArrangeRes(res, path='C:/Users/awagner')
+res = data_reading.ArrangeRes(res, path=join('C:', sep, 'Users', 'awagner'))
 tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.MakeIntervalFromAllData(res, 25, 2, 1, 1, 50)
 
 #######
 """
-Read Itizk
+Read Itzik
 """
 exec(open('./LDopa/Data_reading/load_from_csv.py').read())
 tags_df = read_tag_data(data_path)
@@ -56,9 +58,9 @@ lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False,
 '''
 Read data - new approach:
 '''
-res = pd.read_csv(data_path+'AllLabData.csv')
+res = pd.read_csv(join(data_path, 'AllLabData.csv'))
 res = res.drop('Unnamed: 0', 1)
-res = data_reading.ArrangeRes(res, path='LDopa/DataReading/Resources/mapTasksClusters.csv')
+res = data_reading.ArrangeRes(res, path=join('LDopa', 'DataReading', 'Resources', 'mapTasksClusters.csv'))
 tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.make_interval_from_all_data(res, 5, 2.5, 1, 1, 50)
 lab_x_numpy = lab_x.as_matrix()
 lab_x = lab_x_numpy[:, range(len(lab_x_numpy[0])-1)]
@@ -227,7 +229,7 @@ evaluation.per_patient_proportion_correlation(final_pred)
 Evaluate the classifications with the UPDRS scores provided per visit at the lab:
 '''
 # Read the UPDRS data:
-updrs_data = pd.read_csv('C:/Users/awagner/Documents/LDopa/Home_Task/Excel_Form/UPDRS_WITH_DETAILS.csv')
+updrs_data = pd.read_csv(join(data_path, 'UPDRS_WITH_DETAILS.csv'))
 # Remove rows with no UPDRS scores:
 updrs_data_no_na = updrs_data.dropna()
 
