@@ -7,7 +7,7 @@ Created on Sun Apr 02 16:41:14 2017
 
 __author__ = 'gwallach'
 # installed required: hyperopt, bson, pymongo
-import numpy as np
+import numpy as np #Hi
 from hyperopt import fmin, tpe, STATUS_OK, Trials, hp
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import make_scorer, accuracy_score, r2_score
