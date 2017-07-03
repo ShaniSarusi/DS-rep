@@ -106,7 +106,7 @@ class StepDetection:
             self.lhs[i] = self.lhs[i] - self.lhs[i].mean()
             self.rhs[i] = self.rhs[i] - self.rhs[i].mean()
 
-    def step_detect_single_side_wpd_method(self, side=None, peak_type='scipy', p1=10, p2=20):
+    def step_detect_single_side_wpd_method(self, side=None, peak_type='scipy', p1=10, p2=20, verbose=True):
         if side == 'lhs':
             data = self.lhs
             col = 'idx3_lhs'
@@ -117,8 +117,10 @@ class StepDetection:
             s = 'right'
         else:
             return
+        print("\rRunning: Step detect single side (" + s + ") - wpd method")
         for i in range(len(self.lhs)):
-            print("\rRunning: Step detect single side (" + s + ") - wpd method, sample " + str(i + 1) + " from "
+            if verbose:
+                print("\rRunning: Step detect single side (" + s + ") - wpd method, sample " + str(i + 1) + " from "
                   + str(len(self.lhs)))
             idx = uts.detect_peaks(data[i], peak_type, p1, p2)
             if idx is not None:

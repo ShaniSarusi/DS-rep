@@ -276,7 +276,7 @@ def BuildCNNClassWithActivity(input_size, lost):  # number of nodes in first lay
     optimizer = optimizers.adam(lr = 0.0001)
     feature_extract = Model(input_signal,close_to_output)
     
-    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy', loss_cluster],metrics=['accuracy'], loss_weights=[1., 0.2,0.001])
+    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy', loss_cluster],metrics=['accuracy'], loss_weights=[1., 0.2,0.0])
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract
