@@ -6,22 +6,20 @@ Created on Sun May 28 07:08:10 2017
 @author: HealthLOB
 """
 import os
+
 import numpy as np
 from future.utils import lmap
-import datetime as dt
-import pandas as pd
-import time
-from scipy.stats import ortho_group
-from sklearn.model_selection import LeaveOneGroupOut
 from keras import backend as K
-from keras.callbacks import LearningRateScheduler
 from keras import utils
-import Utils.Preprocessing.denoising as Denoiseing_func
-from Utils.Preprocessing.other_utils import normlize_sig
-from LDopa.AugmentedData.augmented_data import augment_data
-from Utils.FrequencyMethods.FrequencyMethod import spectogram_and_normlize
-from DeepLearning.build_network import BuildCNNClassWithActivity
+from keras.callbacks import LearningRateScheduler
 from sklearn.metrics import confusion_matrix
+
+import Utils.Preprocessing.denoising as Denoiseing_func
+from DeepLearning.build_network import BuildCNNClassWithActivity
+from LDopa.AugmentedData.augmented_data import augment_data
+from Utils.Preprocessing.frequency_method import spectogram_and_normlize
+from Utils.Preprocessing.other_utils import normlize_sig
+
 data_path = '/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER'
 os.chdir(os.getcwd()+"/Documents/DataScientists")
 
