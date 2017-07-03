@@ -5,12 +5,14 @@ import pandas as pd
 import pickle
 
 
-def read_all_files_in_directory(dir_path, file_type=None, do_sort=False):
+def read_all_files_in_directory(dir_path, file_type=None, prefix=None, do_sort=False):
     if isdir(dir_path) is False:
         return
     files = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]
     if file_type is not None:
         files = [f for f in files if f.endswith("."+file_type)]
+    if prefix is not None:
+        files = [f for f in files if f.startswith(prefix)]
     if do_sort:
         files = sorted(files)
     return files
@@ -38,11 +40,11 @@ def read_export_tool_csv(csv_path):
     df['y'] = df['y'].str.replace('y=', '')
     df['z'] = df['z'].str.replace('z=', '')
     df['z'] = df['z'].str.replace('}', '')
-    #
+
     # set types
     df['x'] = df['x'].astype('float')
     df['y'] = df['y'].astype('float')
     df['z'] = df['z'].astype('float')
     df['ts'] = pd.to_datetime(df.loc[:, 'ts'])
-    #
+
     return df

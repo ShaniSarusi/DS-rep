@@ -29,14 +29,40 @@ def pickle_metadata():
         pickle.dump(subject, fp)
 
 
-def read_input_files_names():
-    # Get all input file paths, sorted by chronologically by subject, then by test
-    input_files = []
+def read_apdm_result_files(self):
     subjects = [f for f in listdir(c.input_path) if isdir(join(c.input_path, f))]
     subjects = sorted(subjects)
+
+    apdm_files = []
     for i in range(len(subjects)):
         subject_path = join(c.input_path, subjects[i])
-        # csv_files = rd.all_files_in_directory(subject_path, "csv")
+        files = read_all_files_in_directory(subject_path, prefix='2017', do_sort=True)
+        for j in range(len(files)):
+            apdm_files.append(join(subject_path, files[j]))
+    return apdm_files
+
+
+def extract_apdm_results(p_apdm_files, p_len_raw_data):
+    num_files = len(p_apdm_files)
+    assert num_files == p_len_raw_data, "Number of apdm files is not equal to length of raw data input"
+    col = ['cadence', 'xx', 'xx']
+    apdm = pd.DataFrame(index=range(num_files), columns=col)
+
+    for i in range(num_files):
+        f = read_file
+        cadence = float(left_cadence + right_cadence)/2.0
+
+    return apdm
+
+
+def read_input_files_names():
+    # Get all input file paths, sorted by chronologically by subject, then by test
+    subjects = [f for f in listdir(c.input_path) if isdir(join(c.input_path, f))]
+    subjects = sorted(subjects)
+
+    input_files = []
+    for i in range(len(subjects)):
+        subject_path = join(c.input_path, subjects[i])
         if isdir(join(subject_path, 'rawData')):
             subject_path = join(subject_path, 'rawData')
         h5py_files = read_all_files_in_directory(subject_path, "h5", do_sort=True)
@@ -50,13 +76,7 @@ def extract_sensor_data(input_files):
     p_acc = []; p_bar = []; p_gyr = []; p_mag = []; p_temp = []; p_time = []
     for i in range(len(input_files)):
         print('In file ' + str(i + 1) + ' of ' + str(len(input_files)))  # TODO - use logger
-        # print('\r', 'In file ' + str(i + 1) + ' of ' + str(len(input_files)), end=" ")  # TODO - use logger
         f = h5py.File(join(c.common_path, input_files[i]), 'r')
-
-        # read sensor data and convert to pandas format
-        sensors = {"name":"Accelerometer",
-                  "columns": ['x', 'y', 'z'],
-                   "side": {"right":{}, "left": {}}}
 
         acc_i = {}; bar_i = {}; gyr_i = {}; mag_i = {}; temp_i = {}; time_i = {}
         for side in sides:
@@ -66,6 +86,7 @@ def extract_sensor_data(input_files):
             mag_i[side['name']] = make_df(f[side['sensor'] + 'Magnetometer'], ['x', 'y', 'z'])
             temp_i[side['name']] = make_df(f[side['sensor'] + 'Temperature'], ['value'])
             time_i[side['name']] = make_df(f[side['sensor'] + 'Time'], ['value'])
+
         # append current file data
         p_acc.append(acc_i); p_bar.append(bar_i); p_gyr.append(gyr_i); p_mag.append(mag_i); p_temp.append(temp_i)
         p_time.append(time_i)
@@ -152,12 +173,16 @@ def load_sensor_data():
 
 if __name__ == '__main__':
     pickle_metadata()
-    acc, bar, gyr, mag, temp, time = extract_sensor_data(read_input_files_names())
+    raw_data_input_file_names = read_input_files_names()
+    acc, bar, gyr, mag, temp, time = extract_sensor_data(raw_data_input_file_names)
     acc = add_norm(acc)
     gyr = add_norm(gyr)
     mag = add_norm(mag)
     acc, bar, gyr, mag, temp, time = fix_data_types(acc, bar, gyr, mag, temp, time)
     acc, bar, gyr, mag, temp = add_ts_to_sensor_data(acc, bar, gyr, mag, temp, time)
+
+    apdm_files = read_apdm_result_files()
+    apdm_res = extract_apdm_results(apdm_files, p_len_raw_data=len(acc))
 
     metadata_truncate_start_label(time)
     acc, bar, gyr, mag, temp, time = truncate_start_sensor_data(acc, bar, gyr, mag, temp, time)

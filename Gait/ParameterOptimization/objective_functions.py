@@ -34,3 +34,8 @@ def objective_single_side_lhs(p):
         s.res.set_value(s.res.index[j], 'sc3_lhs', len(s.res.iloc[j]['idx3_lhs']))
     res_rmse = sqrt(mean_squared_error(s.res['sc_true'], s.res['sc3_lhs']))
     return res_rmse
+
+
+# Store all algorithms in a dictionary
+all_algorithms = dict()
+all_algorithms['single_side_lhs'] = objective_single_side_lhs

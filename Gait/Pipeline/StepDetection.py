@@ -17,8 +17,9 @@ from Utils.DataHandling.data_processing import chunk_it
 
 
 class StepDetection:
-    def __init__(self, p_acc, p_sample):
+    def __init__(self, p_acc, p_sample, p_apdm_results):
         self.acc = p_acc
+        self.apdm = p_apdm_results
         self.summary_table = []
         self.sampling_rate = c.sampling_rate
         self.lhs = []
@@ -26,7 +27,7 @@ class StepDetection:
         self.both = []
         self.both_abs = []
 
-        # init result table
+        # Initialize result table
         cols = ['sc_true', 'cadence_true', 'speed_true', 'duration', 'sc_ensemble', 'idx_ensemble',
                 'sc1_comb', 'idx1_comb', 'sc2_both', 'idx2_both', 'sc3_lhs', 'idx3_lhs', 'sc4_rhs', 'idx4_rhs',
                 'step_dur_all', 'step_dur_side1', 'step_dur_side2', 'step_time_var_side1', 'step_time_var_side2',
@@ -428,9 +429,11 @@ if __name__ == "__main__":
         sample = pickle.load(fp)
     with open(join(c.pickle_path, 'acc'), 'rb') as fp:
         acc = pickle.load(fp)
-    id_nums = sample[sample['StepCount'].notnull()].index.tolist()  # use only samples with step count
 
-    # preprocessing
+    # Use only samples with step count
+    id_nums = sample[sample['StepCount'].notnull()].index.tolist()
+
+    # Preprocessing
     sc = StepDetection(acc, sample)
     sc.select_specific_samples(id_nums)
     # sc.select_signal('norm')

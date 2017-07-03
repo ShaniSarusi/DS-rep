@@ -4,17 +4,18 @@ from os.path import join
 import numpy as np
 from hyperopt import fmin, Trials, tpe, rand
 from hyperopt import space_eval
+import pprint
 
 import Gait.config as c
 from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Preprocessing.other_utils import split_data
 import Gait.ParameterOptimization.config_param_search as conf_params
-import Gait.ParameterOptimization.objective_functions as obj_func
+from Gait.ParameterOptimization.objective_functions import all_algorithms
 
 ##########################################################################################################
 # Running parameters
 space = conf_params.space_single_side
-objective = obj_func.objective_single_side_lhs
+objective_function = 'single_side_lhs'
 n_folds = 4
 max_evals = 3
 alg = 'random'  # 'tpe'
@@ -33,11 +34,15 @@ sc.select_specific_samples(ids)
 
 ##########################################################################################################
 # The parameter optimization code
+objective = all_algorithms[objective_function]
 train, test = split_data(np.arange(len(ids)), n_folds=n_folds)
 best = []
 rmse = []
 for i in range(n_folds):
-    print("\rUsing " + alg + " search algorithm. Running fold " + str(i + 1) + ' of ' + str(n_folds) + '.')
+    print('************************************************************************')
+    print('\rOptimizing: ' + objective_function + '.   Using ' + alg + " search algorithm.   Running fold " +
+          str(i + 1) + ' of ' + str(n_folds) + '.')
+    print('************************************************************************\n')
 
     # optimize params
     sc_train = deepcopy(sc)
@@ -46,10 +51,8 @@ for i in range(n_folds):
     trials = Trials()
     res = None
     if alg == 'tpe':
-        print('hi1')
         res = fmin(objective, space, algo=tpe.suggest, max_evals=max_evals, trials=trials)
     elif alg == 'random':
-        print('hi2')
         res = fmin(objective, space, algo=rand.suggest, max_evals=max_evals, trials=trials)
 
     # Evaluate result on test set
@@ -65,9 +68,10 @@ for i in range(n_folds):
     best.append(best_params_i)
 
     # Print cross validation fold results
-    print("\rRMSE of fold " + str(i + 1) + ' from ' + str(n_folds) + ' is ' + str(
+    print("\nRMSE of fold " + str(i + 1) + ' from ' + str(n_folds) + ' is ' + str(
         round(rmse_i, 1)) + ". The param values are:")
-    print(best_params_i)
+    pprint.pprint(best_params_i)
+    print()
 
 
 ##########################################################################################################
