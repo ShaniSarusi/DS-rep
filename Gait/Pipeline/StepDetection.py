@@ -17,9 +17,10 @@ from Utils.DataHandling.data_processing import chunk_it
 
 
 class StepDetection:
-    def __init__(self, p_acc, p_sample, p_apdm_results):
+    def __init__(self, p_acc, p_sample, p_apdm_measures=None, p_apdm_events=None):
         self.acc = p_acc
-        self.apdm = p_apdm_results
+        self.apdm_measures = p_apdm_measures
+        self.p_apdm_events = p_apdm_events
         self.summary_table = []
         self.sampling_rate = c.sampling_rate
         self.lhs = []
@@ -429,12 +430,16 @@ if __name__ == "__main__":
         sample = pickle.load(fp)
     with open(join(c.pickle_path, 'acc'), 'rb') as fp:
         acc = pickle.load(fp)
+    with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
+        apdm_measures = pickle.load(fp)
+    with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
+        apdm_events = pickle.load(fp)
 
     # Use only samples with step count
     id_nums = sample[sample['StepCount'].notnull()].index.tolist()
 
     # Preprocessing
-    sc = StepDetection(acc, sample)
+    sc = StepDetection(acc, sample, apdm_measures, apdm_events)
     sc.select_specific_samples(id_nums)
     # sc.select_signal('norm')
     # sc.select_signal('vertical')

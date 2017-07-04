@@ -6,7 +6,7 @@ import pandas as pd
 data_path = join('C', 'Users', 'zwaks', 'Documents', 'Data', 'Tap test', 'Data', 'Test')
 only_files = [f for f in listdir(data_path) if isfile(join(data_path, f))]
 
-# store data files in a single dataframe
+# store data files in a single DataFrame
 frames = []
 for i in range(len(only_files)):
     tmp = pd.read_csv(join(data_path, only_files[i]))
@@ -14,7 +14,7 @@ for i in range(len(only_files)):
 df = pd.concat(frames).reset_index()
 df = df.drop('index', 1)
 
-# add unique experiment ID to dataframe
+# add unique experiment ID to DataFrame
 # method assumes no two experiments started on exactly the same millisecond (same timestamp)
 df['ExperimentID'] = -1
 df.loc[0, 'ExperimentID'] = 0

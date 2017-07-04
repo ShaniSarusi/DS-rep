@@ -9,7 +9,8 @@ space['signal'] = hp.choice('signal', ['norm', 'vertical'])
 # choose which smoothing to perform (or none at all if mva_win is equal to ~1
 space['smoothing'] = hp.choice('smoothing', ['mva', 'butter'])
 space['mva_win'] = 1 + hp.randint('mva_win', 50)
-space['butter_freq_single_side'] = hp.uniform('butter_freq_single_side', 1, 6)
+# space['butter_freq_single_side'] = hp.uniform('butter_freq_single_side', 1, 6)
+space['butter_freq_single_side'] = 1 + 0.1 * hp.randint('p1_sc', 6)
 
 # choose peak detection algorithm and parameters  TODO - read into peak_utils more how to use
 space['peak_type'] = hp.choice('peak_type', ['scipy', 'peak_utils'])
