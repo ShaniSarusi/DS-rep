@@ -13,7 +13,6 @@ import Gait.config as c
 from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter, butter_highpass_filter
 from Utils.Preprocessing.projections import project_gravity
 from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
-from Utils.DataHandling.data_processing import chunk_it
 
 
 class StepDetection:
@@ -382,7 +381,7 @@ class StepDetection:
         if p_rmse:
             return round(rmse, 2)
 
-    def plot_trace(self, id_num, side='both', add_val=0, tight=False, show=True):
+    def plot_trace(self, id_num, side='both', add_val=0, tight=False, show=True, font_small=False):
         t = self.res.index == id_num
         i = [j for j, x in enumerate(t) if x][0]
         if side == 'lhs':
@@ -402,20 +401,28 @@ class StepDetection:
         if side == 'lhs_minus_rhs':
             diff = self.lhs[i] - self.rhs[i]
             plt.plot(diff, label='Lhs_minus_rhs')
-        plt.xlabel('Time (128Hz)', fontsize=28)
-        plt.ylabel('Acceleration (m/s2)', fontsize=28)
-        plt.xticks(fontsize=24)
-        plt.yticks(fontsize=24)
-        plt.legend(fontsize=18)
+        if font_small:
+            div = 2
+        else:
+            div = 1
+        plt.xlabel('Time (128Hz)', fontsize=28/div)
+        plt.ylabel('Acceleration (m/s2)', fontsize=28/div)
+        plt.xticks(fontsize=24/div)
+        plt.yticks(fontsize=24/div)
+        plt.legend(fontsize=18/div)
         if tight:
             plt.tight_layout()
         if show:
             plt.show()
 
-    def plot_step_idx(self, id_num, which, p_color, tight=False, show=True):
-        t = self.res.index == id_num
-        i = [j for j, x in enumerate(t) if x][0]
-        idx = self.res.iloc[i][which]
+    def plot_step_idx(self, id_num, which=None, p_color='k', tight=False, show=True):
+        # id_num is list of indices or a sample id
+        if type(id_num) is list:
+            idx = id_num * c.sampling_rate
+        else:
+            t = self.res.index == id_num
+            i = [j for j, x in enumerate(t) if x][0]
+            idx = self.res.iloc[i][which]
         # p_color examples:  'b', 'g', 'k'
         for i in range(len(idx)):
             plt.axvline(idx[i], color=p_color, ls='-.', lw=2)

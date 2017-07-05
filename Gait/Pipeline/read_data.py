@@ -43,7 +43,7 @@ def read_apdm_result_files():
     return apdm_files
 
 
-def extract_apdm_results(p_apdm_files, p_len_raw_data):
+def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
     num_files = len(p_apdm_files)
     if num_files == 0:
         return
@@ -82,6 +82,18 @@ def extract_apdm_results(p_apdm_files, p_len_raw_data):
         measures.iloc[i] = row
 
     # Set events DataFrame
+    # get time
+    p_time = []
+    for i in range(len(input_files)):
+        print('In file ' + str(i + 1) + ' of ' + str(len(input_files)))
+        f = h5py.File(join(c.common_path, input_files[i]), 'r')
+        time_i = {}
+        for side in sides:
+            time_i[side['name']] = make_df(f[side['sensor'] + 'Time'], ['value'])
+        p_time.append(time_i)
+
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
+        sample = pickle.load(fp)
     f_events = pd.read_csv(p_apdm_files[0], skiprows=np.arange(66), header=None)
     f_events = f_events.drop(f_events.index[len(f_events) - 1])  # drop last column
     cols_events = f_events.iloc[:, 0]
@@ -91,7 +103,12 @@ def extract_apdm_results(p_apdm_files, p_len_raw_data):
         if "_TUG_" in p_apdm_files[i]:
             continue
         events_i = pd.read_csv(p_apdm_files[i], skiprows=np.arange(66), header=None)
-        row = events_i.iloc[:, first_event_idx:].values.tolist()
+        row = events_i.iloc[:, first_event_idx:].values
+        # Truncate
+        trunc = (p_time[i]['rhs'].iloc[sample.iloc[i]['CropStartIndex']] - p_time[i]['rhs'].iloc[0])/1e6
+        row = row - trunc[0]
+        # Store in DataFrame
+        row = row.tolist()
         events.iloc[i] = row[:-1]
 
     return measures, events
@@ -214,8 +231,14 @@ def load_sensor_data():
 
 
 if __name__ == '__main__':
+    # Store metadata
     pickle_metadata()
+
+    # Read file names
     raw_data_input_file_names = read_input_files_names()
+    apdm_files = read_apdm_result_files()
+
+    # Read and process raw signal data
     acc, bar, gyr, mag, temp, time = extract_sensor_data(raw_data_input_file_names)
     acc = add_norm(acc)
     gyr = add_norm(gyr)
@@ -223,11 +246,12 @@ if __name__ == '__main__':
     acc, bar, gyr, mag, temp, time = fix_data_types(acc, bar, gyr, mag, temp, time)
     acc, bar, gyr, mag, temp = add_ts_to_sensor_data(acc, bar, gyr, mag, temp, time)
 
+    # Truncate signal data
     metadata_truncate_start_label(time)
     acc, bar, gyr, mag, temp, time = truncate_start_sensor_data(acc, bar, gyr, mag, temp, time)
     pickle_sensor_data(acc, bar, gyr, mag, temp, time)
 
-    apdm_files = read_apdm_result_files()
+    # Read, process, and store apdm data
     apdm_measures, apdm_events = extract_apdm_results(apdm_files, p_len_raw_data=len(acc))
     with open(join(c.pickle_path, 'apdm_measures'), 'wb') as fp: pickle.dump(apdm_measures, fp)
     with open(join(c.pickle_path, 'apdm_events'), 'wb') as fp: pickle.dump(apdm_events, fp)

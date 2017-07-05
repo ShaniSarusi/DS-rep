@@ -44,7 +44,7 @@ for i in range(n_folds):
           str(i + 1) + ' of ' + str(n_folds) + '.')
     print('************************************************************************\n')
 
-    # optimize params
+    # Optimize params
     sc_train = deepcopy(sc)
     sc_train.select_specific_samples(train[i])
     space['sc'] = sc_train

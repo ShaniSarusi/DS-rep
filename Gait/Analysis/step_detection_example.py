@@ -36,6 +36,11 @@ sc.step_detect_combined_signal_method(min_hz=0.3, max_hz=2.0, factor=1.1, peak_t
 sc.ensemble_result_v1(win_size_merge_lhs_rhs=30, win_merge_lr_both=22)
 sc.ensemble_result_v2(win_size=10, thresh=1.5, w1=1, w2=0.8, w3=1, w4=1)
 
+# TODO evaluate this
+apdm_idx = sc.p_apdm_events.iloc[id]['Gait - Lower Limb - Initial Contact L (s)']
+sc.plot_step_idx(apdm_idx)  # TODO evaluate this
+
+
 sc.plot_step_idx(id, 'idx1_comb', 'r')
 sc.plot_step_idx(id, 'idx2_both', 'k')
 sc.plot_step_idx(id, 'idx3_lhs', 'b')
