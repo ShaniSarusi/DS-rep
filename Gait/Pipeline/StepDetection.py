@@ -19,7 +19,7 @@ class StepDetection:
     def __init__(self, p_acc, p_sample, p_apdm_measures=None, p_apdm_events=None):
         self.acc = p_acc
         self.apdm_measures = p_apdm_measures
-        self.p_apdm_events = p_apdm_events
+        self.apdm_events = p_apdm_events
         self.summary_table = []
         self.sampling_rate = c.sampling_rate
         self.lhs = []
@@ -381,7 +381,7 @@ class StepDetection:
         if p_rmse:
             return round(rmse, 2)
 
-    def plot_trace(self, id_num, side='both', add_val=0, tight=False, show=True, font_small=False):
+    def plot_trace(self, id_num, side='both', add_val=0, tight=True, show=True, font_small=True):
         t = self.res.index == id_num
         i = [j for j, x in enumerate(t) if x][0]
         if side == 'lhs':
@@ -402,14 +402,18 @@ class StepDetection:
             diff = self.lhs[i] - self.rhs[i]
             plt.plot(diff, label='Lhs_minus_rhs')
         if font_small:
-            div = 2
+            big = 18
+            med = 14
+            small = 12
         else:
-            div = 1
-        plt.xlabel('Time (128Hz)', fontsize=28/div)
-        plt.ylabel('Acceleration (m/s2)', fontsize=28/div)
-        plt.xticks(fontsize=24/div)
-        plt.yticks(fontsize=24/div)
-        plt.legend(fontsize=18/div)
+            big = 28
+            med = 24
+            small = 18
+        plt.xlabel('Time (128Hz)', fontsize=big)
+        plt.ylabel('Acceleration (m/s2)', fontsize=big)
+        plt.xticks(fontsize=med)
+        plt.yticks(fontsize=med)
+        plt.legend(fontsize=small)
         if tight:
             plt.tight_layout()
         if show:
@@ -418,7 +422,7 @@ class StepDetection:
     def plot_step_idx(self, id_num, which=None, p_color='k', tight=False, show=True):
         # id_num is list of indices or a sample id
         if type(id_num) is list:
-            idx = id_num * c.sampling_rate
+            idx = [int(128*i) for i in id_num]
         else:
             t = self.res.index == id_num
             i = [j for j, x in enumerate(t) if x][0]

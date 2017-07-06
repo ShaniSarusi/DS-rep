@@ -7,12 +7,17 @@ with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
 with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     acc = pickle.load(fp)
+with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
+    apdm_measures = pickle.load(fp)
+with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
+    apdm_events = pickle.load(fp)
 
-id = 23
-sc = StepDetection(acc, sample)
+id = 60
+sc = StepDetection(acc, sample, apdm_measures, apdm_events)
 sc.select_specific_samples(id)
 sc.select_signal('norm')
-sc.plot_trace(id, 'lhs', add_val=10)
+# sc.plot_trace(id, 'lhs', add_val=10)
+sc.plot_trace(id, 'lhs', font_small=True)
 sc.plot_trace(id, side='rhs')
 sc.mva(win_size=30)  # other options: sc.mva(p_type='regular', win_size=40) or sc.bf('lowpass', order=5, freq=6)
 sc.mean_normalization()
@@ -36,9 +41,9 @@ sc.step_detect_combined_signal_method(min_hz=0.3, max_hz=2.0, factor=1.1, peak_t
 sc.ensemble_result_v1(win_size_merge_lhs_rhs=30, win_merge_lr_both=22)
 sc.ensemble_result_v2(win_size=10, thresh=1.5, w1=1, w2=0.8, w3=1, w4=1)
 
-# TODO evaluate this
-apdm_idx = sc.p_apdm_events.iloc[id]['Gait - Lower Limb - Initial Contact L (s)']
-sc.plot_step_idx(apdm_idx)  # TODO evaluate this
+# Plot APDM
+apdm_idx = sc.apdm_events.iloc[id]['Gait - Lower Limb - Initial Contact L (s)']
+sc.plot_step_idx(apdm_idx)
 
 
 sc.plot_step_idx(id, 'idx1_comb', 'r')
