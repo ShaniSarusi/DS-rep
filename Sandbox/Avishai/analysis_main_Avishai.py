@@ -11,7 +11,10 @@ from future.utils import lmap
 import datetime as dt
 import pandas as pd
 import time
-
+from tsfresh import extract_features
+from tsfresh.feature_extraction.settings import ComprehensiveFCParameters,\
+                                                MinimalFCParameters,\
+                                                EfficientFCParameters
 data_path = '/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER'
 os.chdir(os.getcwd()+"/Documents/DataScientists")
 from Utils.Features import WavTransform
@@ -65,12 +68,10 @@ lab_ver_features = WavFeatures.createWavFeatures(lab_ver_denoised)
 lab_hor_features = WavFeatures.createWavFeatures(lab_hor_denoised)
 features_data = np.column_stack((lab_ver_features, lab_hor_features))
 
-lab_ver_for_tsf = TSFresh.convert_signals_for_ts_fresh(sub_lab_ver_proj,
-                                                       "ver")
+lab_ver_for_tsf = TSFresh.convert_signals_for_ts_fresh(lab_ver_denoised,"ver")
 lab_ver_tsf_features = extract_features(lab_ver_for_tsf, default_fc_parameters=ComprehensiveFCParameters(),
                                         column_id="signal_id", column_sort="time")
-lab_hor_for_tsf = TSFresh.convert_signals_for_ts_fresh(sub_lab_hor_proj,
-                                                       "hor")
+lab_hor_for_tsf = TSFresh.convert_signals_for_ts_fresh(lab_hor_denoised,   "hor")
 lab_hor_tsf_features = extract_features(lab_hor_for_tsf, default_fc_parameters=EfficientFCParameters(),
                                         column_id="signal_id", column_sort="time")
 features_data = pd.concat([lab_ver_tsf_features, lab_hor_tsf_features,pd.DataFrame(lab_ver_features), pd.DataFrame(lab_hor_features)], axis=1)
@@ -105,6 +106,8 @@ features = features_data[cond==True]
 patients = tags_df.SubjectId[cond==True]
 task_ids = tags_df.TaskID[cond==True]
 
+patients = task_ids%3
+
 '''
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
@@ -115,7 +118,7 @@ optimized_model = classifier.optimize_hyper_params(features, labels, patients, '
 Make predictions for each segment in the data.
 For each user, the model is trained on all the other users:
 '''
-all_pred = classifier.make_cv_predictions_prob_for_all_segments(features, labels, patients, optimized_model,
+all_pred = classifier.make_cv_predictions_prob_for_all_segments(features, labels, pd.core.series.Series(patients), optimized_model,
                                                      task_ids)
 
 
@@ -137,7 +140,7 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
 
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
                                                    model_name='logistic_regression',
-                                                   hyper_params=None, scoring_measure='f1',eval_iterations = 200)
+                                                   hyper_params=None, scoring_measure=None,eval_iterations = 100)
 final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments)
 
 
