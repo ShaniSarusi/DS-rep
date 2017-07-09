@@ -2,8 +2,9 @@ import pickle
 import pandas as pd
 import h5py
 from os import listdir
+import numpy as np
 import Gait.config as c
-from os.path import isfile, join, isdir, split
+from os.path import join, isdir
 from Utils.DataHandling.data_processing import make_df
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory, pickle_excel_file
 
@@ -29,7 +30,7 @@ def pickle_metadata():
         pickle.dump(subject, fp)
 
 
-def read_apdm_result_files(self):
+def read_apdm_result_files():
     subjects = [f for f in listdir(c.input_path) if isdir(join(c.input_path, f))]
     subjects = sorted(subjects)
 
@@ -42,17 +43,75 @@ def read_apdm_result_files(self):
     return apdm_files
 
 
-def extract_apdm_results(p_apdm_files, p_len_raw_data):
+def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
     num_files = len(p_apdm_files)
+    if num_files == 0:
+        return
     assert num_files == p_len_raw_data, "Number of apdm files is not equal to length of raw data input"
-    col = ['cadence', 'xx', 'xx']
-    apdm = pd.DataFrame(index=range(num_files), columns=col)
 
+    # Set measures DataFrame
+    cols_measures = ['cadence', 'asymmetry_step_time', 'cv_stride_time_lhs', 'cv_stride_time_rhs', 'cv_step_time_lhs',
+                     'cv_step_time_lhs']
+    measures = pd.DataFrame(index=range(num_files), columns=cols_measures)
     for i in range(num_files):
-        f = read_file
-        cadence = float(left_cadence + right_cadence)/2.0
+        if "_TUG_" in p_apdm_files[i]:
+            continue
+        measures_i = pd.read_csv(p_apdm_files[i], skiprows=np.arange(9))
+        measures_i = measures_i.set_index(measures_i['Measure'])
 
-    return apdm
+        cadence = float(measures_i.loc['Gait - Lower Limb - Cadence L (steps/min)']['Mean'] +
+                        measures_i.loc['Gait - Lower Limb - Cadence R (steps/min)']['Mean']) / 2.0
+
+        step_l_m = measures_i.loc['Gait - Lower Limb - Step Duration L (s)']['Mean']
+        step_l_std = measures_i.loc['Gait - Lower Limb - Step Duration L (s)']['StDev']
+        step_r_m = measures_i.loc['Gait - Lower Limb - Step Duration R (s)']['Mean']
+        step_r_std = measures_i.loc['Gait - Lower Limb - Step Duration R (s)']['StDev']
+
+        stride_l_m = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration L (s)']['Mean']
+        stride_l_std = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration L (s)']['StDev']
+        stride_r_m = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['Mean']
+        stride_r_std = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['StDev']
+
+        asymmetry_step_time = 100.0*(np.abs(step_l_m - step_r_m) / np.mean([step_l_m, step_r_m]))
+        cv_stride_time_lhs = round(stride_l_std / stride_l_m, 3)
+        cv_stride_time_rhs = round(stride_r_std / stride_r_m, 3)
+        cv_step_time_lhs = round(step_l_std / step_l_m, 3)
+        cv_step_time_rhs = round(step_r_std / step_r_m, 3)
+
+        row = [cadence, asymmetry_step_time, cv_stride_time_lhs, cv_stride_time_rhs, cv_step_time_lhs, cv_step_time_rhs]
+        measures.iloc[i] = row
+
+    # Set events DataFrame
+    # get time
+    p_time = []
+    for i in range(len(input_files)):
+        print('In file ' + str(i + 1) + ' of ' + str(len(input_files)))
+        f = h5py.File(join(c.common_path, input_files[i]), 'r')
+        time_i = {}
+        for side in sides:
+            time_i[side['name']] = make_df(f[side['sensor'] + 'Time'], ['value'])
+        p_time.append(time_i)
+
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
+        sample = pickle.load(fp)
+    f_events = pd.read_csv(p_apdm_files[0], skiprows=np.arange(66), header=None)
+    f_events = f_events.drop(f_events.index[len(f_events) - 1])  # drop last column
+    cols_events = f_events.iloc[:, 0]
+    events = pd.DataFrame(index=range(num_files), columns=cols_events)
+    first_event_idx = 5
+    for i in range(num_files):
+        if "_TUG_" in p_apdm_files[i]:
+            continue
+        events_i = pd.read_csv(p_apdm_files[i], skiprows=np.arange(66), header=None)
+        row = events_i.iloc[:, first_event_idx:].values
+        # Truncate
+        trunc = (p_time[i]['rhs'].iloc[sample.iloc[i]['CropStartIndex']] - p_time[i]['rhs'].iloc[0])/1e6
+        row = row - trunc[0]
+        # Store in DataFrame
+        row = row.tolist()
+        events.iloc[i] = row[:-1]
+
+    return measures, events
 
 
 def read_input_files_names():
@@ -172,8 +231,14 @@ def load_sensor_data():
 
 
 if __name__ == '__main__':
+    # Store metadata
     pickle_metadata()
+
+    # Read file names
     raw_data_input_file_names = read_input_files_names()
+    apdm_files = read_apdm_result_files()
+
+    # Read and process raw signal data
     acc, bar, gyr, mag, temp, time = extract_sensor_data(raw_data_input_file_names)
     acc = add_norm(acc)
     gyr = add_norm(gyr)
@@ -181,9 +246,12 @@ if __name__ == '__main__':
     acc, bar, gyr, mag, temp, time = fix_data_types(acc, bar, gyr, mag, temp, time)
     acc, bar, gyr, mag, temp = add_ts_to_sensor_data(acc, bar, gyr, mag, temp, time)
 
-    apdm_files = read_apdm_result_files()
-    apdm_res = extract_apdm_results(apdm_files, p_len_raw_data=len(acc))
-
+    # Truncate signal data
     metadata_truncate_start_label(time)
     acc, bar, gyr, mag, temp, time = truncate_start_sensor_data(acc, bar, gyr, mag, temp, time)
     pickle_sensor_data(acc, bar, gyr, mag, temp, time)
+
+    # Read, process, and store apdm data
+    apdm_measures, apdm_events = extract_apdm_results(apdm_files, p_len_raw_data=len(acc))
+    with open(join(c.pickle_path, 'apdm_measures'), 'wb') as fp: pickle.dump(apdm_measures, fp)
+    with open(join(c.pickle_path, 'apdm_events'), 'wb') as fp: pickle.dump(apdm_events, fp)

@@ -11,12 +11,14 @@ from os.path import join, sep
 
 exec_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists', 'Teva')
 import Config as c
+valid_users = c.valid_users
 # imp.reload(c)
 
 clinic_df = pd.read_csv(c.clinic_file_path)
 inds = pd.isnull(clinic_df).any(1).nonzero()[0]
 print('len of inds:', len(inds))
 print(clinic_df.user_id.unique())
+clinic_df = clinic_df[clinic_df.user_id.isin(valid_users)]
 # Convert relevant columns to datetime format:
 clinic_df['assessment_start'] = pd.to_datetime(clinic_df['assessment_start'])
 clinic_df['assessment_end'] = pd.to_datetime(clinic_df['assessment_end'])
@@ -33,6 +35,7 @@ home_df = pd.read_csv(c.home_file_name)
 inds = pd.isnull(home_df).any(1).nonzero()[0]
 print('len of inds:', len(inds))
 print(home_df.user_id.unique())
+home_df = home_df[home_df.user_id.isin(valid_users)]
 # Rename for compatibility:
 home_df['patient_report_value'] = home_df['value']
 # Convert relevant columns to datetime format:
@@ -51,6 +54,7 @@ five_mins_df = pd.read_csv(c.five_mins_file_name)
 inds = pd.isnull(five_mins_df).any(1).nonzero()[0]
 print('len of inds:', len(inds))
 print(five_mins_df.user_id.unique())
+five_mins_df = five_mins_df[five_mins_df.user_id.isin(valid_users)]
 # Rename for compatibility:
 five_mins_df['patient_report_value'] = five_mins_df['value']
 five_mins_df['reminder_id'] = five_mins_df['id']

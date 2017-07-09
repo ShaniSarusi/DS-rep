@@ -13,13 +13,13 @@ import Gait.config as c
 from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter, butter_highpass_filter
 from Utils.Preprocessing.projections import project_gravity
 from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
-from Utils.DataHandling.data_processing import chunk_it
 
 
 class StepDetection:
-    def __init__(self, p_acc, p_sample, p_apdm_results):
+    def __init__(self, p_acc, p_sample, p_apdm_measures=None, p_apdm_events=None):
         self.acc = p_acc
-        self.apdm = p_apdm_results
+        self.apdm_measures = p_apdm_measures
+        self.apdm_events = p_apdm_events
         self.summary_table = []
         self.sampling_rate = c.sampling_rate
         self.lhs = []
@@ -381,7 +381,7 @@ class StepDetection:
         if p_rmse:
             return round(rmse, 2)
 
-    def plot_trace(self, id_num, side='both', add_val=0, tight=False, show=True):
+    def plot_trace(self, id_num, side='both', add_val=0, tight=True, show=True, font_small=True):
         t = self.res.index == id_num
         i = [j for j, x in enumerate(t) if x][0]
         if side == 'lhs':
@@ -401,20 +401,32 @@ class StepDetection:
         if side == 'lhs_minus_rhs':
             diff = self.lhs[i] - self.rhs[i]
             plt.plot(diff, label='Lhs_minus_rhs')
-        plt.xlabel('Time (128Hz)', fontsize=28)
-        plt.ylabel('Acceleration (m/s2)', fontsize=28)
-        plt.xticks(fontsize=24)
-        plt.yticks(fontsize=24)
-        plt.legend(fontsize=18)
+        if font_small:
+            big = 18
+            med = 14
+            small = 12
+        else:
+            big = 28
+            med = 24
+            small = 18
+        plt.xlabel('Time (128Hz)', fontsize=big)
+        plt.ylabel('Acceleration (m/s2)', fontsize=big)
+        plt.xticks(fontsize=med)
+        plt.yticks(fontsize=med)
+        plt.legend(fontsize=small)
         if tight:
             plt.tight_layout()
         if show:
             plt.show()
 
-    def plot_step_idx(self, id_num, which, p_color, tight=False, show=True):
-        t = self.res.index == id_num
-        i = [j for j, x in enumerate(t) if x][0]
-        idx = self.res.iloc[i][which]
+    def plot_step_idx(self, id_num, which=None, p_color='k', tight=False, show=True):
+        # id_num is list of indices or a sample id
+        if type(id_num) is list:
+            idx = [int(128*i) for i in id_num]
+        else:
+            t = self.res.index == id_num
+            i = [j for j, x in enumerate(t) if x][0]
+            idx = self.res.iloc[i][which]
         # p_color examples:  'b', 'g', 'k'
         for i in range(len(idx)):
             plt.axvline(idx[i], color=p_color, ls='-.', lw=2)
@@ -429,12 +441,16 @@ if __name__ == "__main__":
         sample = pickle.load(fp)
     with open(join(c.pickle_path, 'acc'), 'rb') as fp:
         acc = pickle.load(fp)
+    with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
+        apdm_measures = pickle.load(fp)
+    with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
+        apdm_events = pickle.load(fp)
 
     # Use only samples with step count
     id_nums = sample[sample['StepCount'].notnull()].index.tolist()
 
     # Preprocessing
-    sc = StepDetection(acc, sample)
+    sc = StepDetection(acc, sample, apdm_measures, apdm_events)
     sc.select_specific_samples(id_nums)
     # sc.select_signal('norm')
     # sc.select_signal('vertical')

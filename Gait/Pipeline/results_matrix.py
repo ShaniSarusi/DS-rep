@@ -9,7 +9,7 @@ def create_result_matrix():
     with open(join(c.pickle_path, 'features_steps'), 'rb') as fp: step_features = pickle.load(fp)
     # with open(join(common_input, 'features_armswing'), 'rb') as fp: arm_swing_features = pickle.load(fp)
 
-    # connect dataframes
+    # connect DataFrame
     step_features = step_features.drop('step_durations', axis=1)
 
     # df_results = pd.concat([step_features, arm_swing_features], axis=1)
