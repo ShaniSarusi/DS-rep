@@ -30,12 +30,12 @@ data_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'L_Dopa',
 os.chdir(join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists'))
 
 from Utils.Features import WavTransform
-from Utils.Features import TSFresh
+from Utils.Features import ts_fresh
 import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
-import LDopa.DataReading.ReadTheDataFromLDOPA as data_reading
-import LDopa.Classification.Classification as classifier
-import LDopa.Evaluation.Evaluation as evaluation
+import LDopa.DataReading.read_data_from_ldopa as data_reading
+import LDopa.Classification.classification as classifier
+import LDopa.Evaluation.evaluation as evaluation
 
 ###
 """
@@ -115,11 +115,11 @@ features_data = np.column_stack((lab_ver_features, lab_hor_features))
 
 # Create TSFresh features for each projected dimension,
 # and stack both dimensions horizontally:
-lab_ver_for_tsf = TSFresh.convert_signals_for_ts_fresh(sub_lab_ver_proj,
+lab_ver_for_tsf = ts_fresh.convert_signals_for_ts_fresh(sub_lab_ver_proj,
                                                        "ver")
 lab_ver_tsf_features = extract_features(lab_ver_for_tsf, default_fc_parameters=ComprehensiveFCParameters(),
                                         column_id="signal_id", column_sort="time")
-lab_hor_for_tsf = TSFresh.convert_signals_for_ts_fresh(sub_lab_hor_proj,
+lab_hor_for_tsf = ts_fresh.convert_signals_for_ts_fresh(sub_lab_hor_proj,
                                                        "hor")
 lab_hor_tsf_features = extract_features(lab_hor_for_tsf, default_fc_parameters=EfficientFCParameters(),
                                         column_id="signal_id", column_sort="time")
