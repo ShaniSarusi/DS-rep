@@ -5,7 +5,7 @@ from sklearn.metrics import mean_squared_error
 
 def objective_single_side_lhs(p):
     # set data
-    s = p['sc']
+    s = p['sd']
 
     # choose norm, vertical, or vertical with windows
     s.select_signal(p['signal'])
