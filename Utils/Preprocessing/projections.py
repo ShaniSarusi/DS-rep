@@ -68,23 +68,10 @@ def project_from_3_to_2_dims(x, y, z):
         ver_proj - vertical projection
         hor_proj - horizontal projection
     """
-    XYZ = np.stack((x, y, z), axis=2)
-    XYZ = np.reshape(XYZ, (np.shape(XYZ)[0], np.shape(XYZ)[1]*np.shape(XYZ)[2]))
-    HR = lmap(projGrav, XYZ)
+    HR = lmap((lambda x_lam, y_lam, z_lam: project_gravity(x_lam, y_lam, z_lam)), x, y, z)
     ver_proj = np.asarray([i[0] for i in HR])
     hor_proj = np.asarray([i[1] for i in HR])
     return ver_proj, hor_proj
 
 
-def projGrav(XYZ):
-    """
-    Input:
-        XYZ - a 2d array, each row is XYZ = np.stack((x, y, z), axis=2)
-        where x, y , z are axis numpy array, every raw is sample
-    Ouput:
-        ver_proj - vertical projection
-        hor_proj - horizontal projection
-    """
-    XYZ = np.reshape(XYZ, (int(len(XYZ)/3), 3))
-    return project_gravity_core(XYZ)
 
