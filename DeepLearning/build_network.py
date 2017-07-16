@@ -4,7 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """
-from keras.layers import Input, Dropout, Dense, Conv2D, Conv1D, MaxPooling1D, UpSampling1D, Flatten, Reshape, ZeroPadding1D, LSTM, RepeatVector
+from keras.layers import merge, Input, Dropout, Dense, Conv2D, Conv1D, MaxPooling1D, UpSampling1D, Flatten, Reshape, ZeroPadding1D, LSTM, RepeatVector
 from keras.layers.recurrent import GRU
 from keras.models import Model
 from keras.layers.normalization import BatchNormalization
@@ -349,6 +349,73 @@ def BuildCNNClassWithAutoencoder(input_size, lost):  # number of nodes in first 
     #x = ZeroPadding1D(3)(input_signal) 
     x = Conv1D(32, 32, activation='relu', padding='same')(input_signal) 
     x = MaxPooling1D(2)(x)
+    #x = Dropout(0.25)(x)
+    x = Conv1D(16, 16, activation='relu', padding='same')(x)
+    x = MaxPooling1D(2)(x)
+    x = Conv1D(4, 4, activation='relu', padding='same')(x)
+    #BatchNormalization()(x)
+    x = MaxPooling1D(4)(x)
+    x = Conv1D(4, 3, activation='relu', padding='same')(x)
+    x = MaxPooling1D(2)(x)
+    #x = GRU(32,  activation='tanh', return_sequences=True)(x)
+    #attention_mul = attention_3d_block(x)
+    #x = Flatten()(attention_mul)
+    x = Flatten()(x)
+    OneForActandSymp = Dense(32, activation='relu')(x)#,activity_regularizer=regularizers.l2(0.001)
+    #OneForActandSymp = BatchNormalization()(OneForActandSymp)
+    
+    ##Here is activity
+    #ActiveLayer = Dropout(0.2)(OneForActandSymp)
+    ActiveLayer= Dense(16, activation='relu')(OneForActandSymp)
+    ActiveLayer = BatchNormalization()(ActiveLayer)
+    #ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
+    #End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
+    
+    ##Here is autoencoer
+    autoencoder_layer = Dense(32, activation='relu')(OneForActandSymp)
+    autoencoder_layer = Reshape((16,2))(autoencoder_layer)
+    autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
+    autoencoder_layer = Conv1D(4,4, activation='relu',padding='same')(autoencoder_layer)
+    autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
+    autoencoder_layer = Conv1D(16,4, activation='relu',padding='same')(autoencoder_layer)
+    autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
+    autoencoder_layer = Conv1D(4,4, activation='relu')(autoencoder_layer)
+    autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
+    autoencoder_layer = Conv1D(3,1, activation='relu')(autoencoder_layer)
+    ##Here is the final symtpoms
+    sympLayer = Dense(16, activation='relu')(ActiveLayer)
+    #sympLayer = BatchNormalization()(sympLayer)
+    close_to_output = Dense(16, activation='relu')(sympLayer)
+    
+    input_home_or_not = Input((1,))
+    #attention_probs = Dense(16, activation='softmax', name='attention_vec')(close_to_output)
+    #attention_mul = Multiply((close_to_output, attention_probs), output_shape=32, name='attention_mul')
+    End_point = Dense(1, activation='sigmoid')(close_to_output)
+    
+    symp_class = Model([input_signal, input_home_or_not], [End_point, autoencoder_layer])
+    #active_class = Model(input_signal, End_point_Active)
+    
+    optimizer = optimizers.adam(lr = 0.001)
+    feature_extract = Model(input_signal,close_to_output)
+    
+    def penalized_loss(fake_or_not):
+        def loss(y_true, y_pred):
+            return K.mean(K.binary_crossentropy(y_pred,y_true)*fake_or_not,axis = -1)
+        return loss
+
+    symp_class.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse'],metrics=['accuracy'], loss_weights=[1.,0.8])
+    feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
+    #
+    return symp_class, feature_extract
+
+
+def MultiTaskNet(input_size, lost):  # number of nodes in first layer. in this case 126.
+    #
+    input_signal = Input((input_size,3))
+    #
+    #x = ZeroPadding1D(3)(input_signal) 
+    x = Conv1D(32, 32, activation='relu', padding='same')(input_signal) 
+    x = MaxPooling1D(2)(x)
     #x = Dropout(0.5)(x)
     x = Conv1D(16, 16, activation='relu', padding='same')(x)
     x = MaxPooling1D(2)(x)
@@ -365,35 +432,49 @@ def BuildCNNClassWithAutoencoder(input_size, lost):  # number of nodes in first 
     #OneForActandSymp = BatchNormalization()(OneForActandSymp)
     
     ##Here is activity
-    ActiveLayer = Dropout(0.5)(OneForActandSymp)
-    ActiveLayer= Dense(16, activation='relu')(ActiveLayer)
+    #ActiveLayer = Dropout(0.5)(OneForActandSymp)
+    ActiveLayer= Dense(16, activation='relu')(OneForActandSymp)
     ActiveLayer = BatchNormalization()(ActiveLayer)
-    #ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
+    ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
     End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
     
-    ##Here is autoencoer
-    autoencoder_layer = Dense(32, activation='relu')(OneForActandSymp)
-    autoencoder_layer = Reshape(16,2)(autoencoder_layer)
-    autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
-    Conv1D(4,4, activation='relu',padding='same')(autoencoder_layer)
-    autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
-    
-    
+
     ##Here is the final symtpoms
     sympLayer = Dense(16, activation='relu')(ActiveLayer)
     #sympLayer = BatchNormalization()(sympLayer)
     close_to_output = Dense(16, activation='relu')(sympLayer)
-    attention_probs = Dense(16, activation='softmax', name='attention_vec')(close_to_output)
-    attention_mul = merge([close_to_output, attention_probs], output_shape=32, name='attention_mul', mode='mul')
-    End_point = Dense(1, activation='sigmoid')(attention_mul)
     
-    symp_class = Model([input_signal,input_signal,input_signal], [End_point, End_point_Active,autoencoder_layer])
+    #attention_probs = Dense(16, activation='softmax', name='attention_vec')(close_to_output)
+    #attention_mul = merge([close_to_output, attention_probs], output_shape=32, name='attention_mul',mode = 'mul')
+    End_point_Dys = Dense(2, activation='softmax')(close_to_output)
+    End_point_trem = Dense(2, activation='softmax')(close_to_output)
+    End_point_brady = Dense(2, activation='softmax')(close_to_output)
+    
+   
+    def w_categorical_crossentropy(weights,y_pred_brad):
+        def myloss(y_true, y_pred):
+            nb_cl = len(weights)
+            final_mask = K.zeros_like(y_pred[:, 0])
+            y_pred_max = K.max(y_pred, axis=1)
+            y_pred_max = K.reshape(y_pred_max, (K.shape(y_pred)[0], 1))
+            y_pred_max_mat = K.equal(y_pred, y_pred_max)
+            y_pred_max_brad = K.max(y_pred_brad, axis=1)
+            y_pred_max_brad = K.reshape(y_pred_max_brad, (K.shape(y_pred_brad)[0], 1))
+            y_pred_max_brad_mat = K.equal(y_pred_brad, y_pred_max_brad)
+            for c_p, c_t in product(range(nb_cl), range(nb_cl)):
+                final_mask += (K.cast(weights[c_t, c_p],tf.float32) * K.cast(y_pred_max_mat[:, c_p] ,tf.float32)* K.cast(y_pred_max_brad_mat[:, c_t],tf.float32))
+            return K.categorical_crossentropy(y_pred, y_true) * final_mask
+        return myloss
+
+    weights = np.ones([2,2])
+    weights[1,1] = 5
+    symp_class = Model(input_signal, [End_point_Dys, End_point_trem, End_point_brady, End_point_Active])
     #active_class = Model(input_signal, End_point_Active)
     
     optimizer = optimizers.adam(lr = 0.0001)
     feature_extract = Model(input_signal,close_to_output)
     
-    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy'],metrics=['accuracy'], loss_weights=[1., 0.1])
+    symp_class.compile(optimizer=optimizer, loss=[w_categorical_crossentropy(weights = weights, y_pred_brad = End_point_trem), 'categorical_crossentropy', 'categorical_crossentropy', 'categorical_crossentropy'], metrics=['accuracy'], loss_weights=[1.,0.5,0.5,0.1])
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract

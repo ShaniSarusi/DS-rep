@@ -20,7 +20,7 @@ os.chdir(os.getcwd()+"/Documents/DataScientists")
 from Utils.Features import WavTransform
 import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
-import LDopa.DataReading.ReadTheDataFromLDOPA as data_reading
+import LDopa.DataReading.read_data_from_ldopa as data_reading
 import LDopa.Classification.Classification as classifier
 import LDopa.Evaluation.evaluation as evaluation
 from Utils.Preprocessing.other_utils import normlize_sig
@@ -112,7 +112,7 @@ patients = task_ids%3
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
 optimized_model = classifier.optimize_hyper_params(features, labels, patients, 'xgboost',
-                                        hyper_params=None, scoring_measure = None,eval_iterations = 100)
+                                        hyper_params=None, scoring_measure = None,eval_iterations = 10)
 
 '''
 Make predictions for each segment in the data.
