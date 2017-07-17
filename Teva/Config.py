@@ -8,6 +8,7 @@ Created on Thu Jun 29 13:12:28 2017
 import os
 from os.path import join, sep
 
+cloud_data_path = join(sep, 'mnt', 'intel-health-analytics', 'data', 'teva')
 exec_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists', 'Teva')
 #os.chdir(join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists', 'Teva'))
 data_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'Datasets', 'Teva')
