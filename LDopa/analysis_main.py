@@ -58,8 +58,8 @@ lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False,
 '''
 Read data - new approach:
 '''
-res = pd.read_csv(join(data_path, 'AllLabData.csv'))
-res = res.drop('Unnamed: 0', 1)
+res = pd.read_csv(join(data_path, 'all_lab_data.csv'))
+#res = res.drop('Unnamed: 0', 1)
 res = data_reading.ArrangeRes(res, path=join('LDopa', 'DataReading', 'Resources', 'mapTasksClusters.csv'))
 tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.make_interval_from_all_data(res, 5, 2.5, 1, 1, 50)
 lab_x_numpy = lab_x.as_matrix()
