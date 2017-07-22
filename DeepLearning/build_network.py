@@ -239,7 +239,7 @@ def BuildCNNClassifirt(input_size, lost):  # number of nodes in first layer. in 
     #
     return encoder, feature_extract
 
-def BuildCNNClassWithActivity(input_size, lost):  # number of nodes in first layer. in this case 126.
+def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1., 0.1]):  # number of nodes in first layer. in this case 126.
     #
     input_signal = Input((input_size,3))
     #
@@ -279,10 +279,10 @@ def BuildCNNClassWithActivity(input_size, lost):  # number of nodes in first lay
     symp_class = Model(input_signal, [End_point, End_point_Active])
     #active_class = Model(input_signal, End_point_Active)
     
-    optimizer = optimizers.adam(lr = 0.0001)
+    optimizer = optimizers.adam(lr = lr)
     feature_extract = Model(input_signal,close_to_output)
     
-    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy'],metrics=['accuracy'], loss_weights=[1., 0.1])
+    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy'],metrics=['accuracy'], loss_weights=loss_weights)
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract
@@ -300,7 +300,7 @@ def attention_3d_block(inputs):
     return output_attention_mul
 
 
-def BuildCNNClassWithLSTM(input_size, lost):  # number of nodes in first layer. in this case 126.
+def BuildCNNClassWithLSTM(input_size, lost, lr = 0.0001, loss_weights=[1., 0.1]):  # number of nodes in first layer. in this case 126.
     #
     input_signal = Input((input_size,3))
     #
@@ -333,16 +333,17 @@ def BuildCNNClassWithLSTM(input_size, lost):  # number of nodes in first layer. 
     symp_class = Model(input_signal, [End_point, End_point_Active])
     #active_class = Model(input_signal, End_point_Active)
     
-    optimizer = optimizers.adam(lr = 0.0001)
+    optimizer = optimizers.adam(lr = lr)
     feature_extract = Model(input_signal,close_to_output)
     
-    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy'],metrics=['accuracy'], loss_weights=[1., 0.1])
+    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy'],
+                       metrics=['accuracy'], loss_weights=loss_weights)
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract
 
 
-def BuildCNNClassWithAutoencoder(input_size, lost):  # number of nodes in first layer. in this case 126.
+def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.001, loss_weights=[1.,0.8]):  # number of nodes in first layer. in this case 126.
     #
     input_signal = Input((input_size,3))
     #
@@ -395,7 +396,7 @@ def BuildCNNClassWithAutoencoder(input_size, lost):  # number of nodes in first 
     symp_class = Model([input_signal, input_home_or_not], [End_point, autoencoder_layer])
     #active_class = Model(input_signal, End_point_Active)
     
-    optimizer = optimizers.adam(lr = 0.001)
+    optimizer = optimizers.adam(lr = lr)
     feature_extract = Model(input_signal,close_to_output)
     
     def penalized_loss(fake_or_not):
@@ -403,7 +404,7 @@ def BuildCNNClassWithAutoencoder(input_size, lost):  # number of nodes in first 
             return K.mean(K.binary_crossentropy(y_pred,y_true)*fake_or_not,axis = -1)
         return loss
 
-    symp_class.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse'],metrics=['accuracy'], loss_weights=[1.,0.8])
+    symp_class.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse'],metrics=['accuracy'], loss_weights = loss_weights)
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract
@@ -451,7 +452,7 @@ def MultiTaskNet(input_size, lost):  # number of nodes in first layer. in this c
     End_point_brady = Dense(2, activation='softmax')(close_to_output)
     
    
-    def w_categorical_crossentropy(weights,y_pred_brad):
+    def w_categorical_crossentropy(weights,y_pred_brad, lr = 0.0001):
         def myloss(y_true, y_pred):
             nb_cl = len(weights)
             final_mask = K.zeros_like(y_pred[:, 0])
@@ -471,7 +472,7 @@ def MultiTaskNet(input_size, lost):  # number of nodes in first layer. in this c
     symp_class = Model(input_signal, [End_point_Dys, End_point_trem, End_point_brady, End_point_Active])
     #active_class = Model(input_signal, End_point_Active)
     
-    optimizer = optimizers.adam(lr = 0.0001)
+    optimizer = optimizers.adam(lr = lr)
     feature_extract = Model(input_signal,close_to_output)
     
     symp_class.compile(optimizer=optimizer, loss=[w_categorical_crossentropy(weights = weights, y_pred_brad = End_point_trem), 'categorical_crossentropy', 'categorical_crossentropy', 'categorical_crossentropy'], metrics=['accuracy'], loss_weights=[1.,0.5,0.5,0.1])
