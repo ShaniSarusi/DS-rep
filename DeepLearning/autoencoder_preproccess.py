@@ -16,7 +16,7 @@ pkl_file.close()
 unlabeld = np.stack([unlabeld[0],unlabeld[1],unlabeld[2]],axis=2)
 
 TagLow = np.vstack([XYZ_denoise, unlabeld])
-augment_dys = np.concatenate([augment_dys, np.ones(len(unlabeld))])
+augment_dys = np.concatenate([augment_dys.flatten(), np.ones(len(unlabeld))])
 augment_dys = augment_dys.reshape((len(augment_dys),1)); 
 augment_task_ids = np.concatenate([augment_task_ids, np.random.randint(0,1,len(unlabeld))])
 augment_or_not = np.concatenate([augment_or_not, np.zeros(len(unlabeld))])                                 

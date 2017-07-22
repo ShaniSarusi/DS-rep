@@ -42,19 +42,18 @@ augment_dys = augment_dys.reshape((len(augment_dys),1)); #augment_dys = utils.to
 #augment_tremor = augment_tremor.reshape((len(augment_tremor),1)); augment_tremor = utils.to_categorical(augment_tremor, num_classes=2)
 meta_after_cond = np.asarray(augment_SubjectId)
 Task_for_pred = np.where(augment_Task==2,0,1)
-Task_for_pred  = Task_for_pred.reshape((len(Task_for_pred),1))
-sympNew = np.where(augment_dys[:,1]==0 , 0, 0.25)
-Task_for_predNew = np.where(Task_for_pred==1 , 0.5, 1)
-Task_andSymp = sympNew + Task_for_predNew.flatten() 
-Task_andSymp = utils.to_categorical(Task_andSymp, num_classes=4)
+Task_for_pred  = augment_Task.reshape((len(augment_Task),1))
+sympNew = np.where(augment_dys==0 , 0, 0.25)
+Task_for_predNew = np.where(Task_for_pred==2 , 0.5, 1)
+Task_andSymp = sympNew + Task_for_pred
+Task_andSymp = utils.to_categorical(Task_andSymp, num_classes=6)
 
-symp_class, feature_extract = BuildCNNClassWithAutoencoder(TagLow.shape[1], 'binary_crossentropy')  
+symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary_crossentropy')  
 
-home_or_not = np.concatenate([np.ones(len(XYZ_denoise)),np.zeros(len(data2))])
 
 def scheduler(epoch):
     if(epoch == 1):
-        K.set_value(symp_class.optimizer.lr,0.001)
+        K.set_value(symp_class.optimizer.lr,0.0005)
     if(epoch == 5):
         K.set_value(symp_class.optimizer.lr,0.0001)
     if(epoch == 10):
@@ -70,23 +69,23 @@ deep_params = {'epochs': 10,
                'batch_size': 128}
 
 
-labels_for_deep = augment_task_ids%3; labels_for_deep[range(len(XYZ_denoise),len(labels_for_deep))] = np.random.randint(0,3,len(data2))
+labels_for_deep = augment_task_ids%3; 
 
 symp = augment_dys.copy()#{'Dys': augment_dys, 'brady': augment_brady, 'trem': augment_tremor}
 
-res1, order1, features_from_deep_res, symp_res = make_cross_val_with_auto(TagLow, home_or_not, symp, labels_for_deep, augment_task_ids,
+res1, order1, features_from_deep_res, symp_res = make_cross_val(TagLow, symp, Task_andSymp, labels_for_deep, augment_task_ids,
                             symp_class,  feature_extract, augment_or_not, deep_params)
 results = np.asarray([x for (y,x) in sorted(zip(order1,res1))])
 results_feature = np.asarray([x for (y,x) in sorted(zip(order1,features_from_deep_res1))])
 
 plt.boxplot([res1[symp[test] == 1],res1[symp[test] == 0]])
-confusion_matrix(np.vstack(symp_res) ,np.where(np.hstack(res1) > 0.75,1,0))
+confusion_matrix(np.vstack(symp_res) ,np.where(np.vstack(res1) > 0.75,1,0))
 
 import gc
 secret = None
 gc.collect()
 
-all_pred['prediction_probability'] = np.hstack(res1)
+all_pred['prediction_probability'] = np.vstack(res1)
 all_pred['true_label'] = np.vstack(symp_res).flatten()
 all_pred['task'] = order1.copy()
 all_pred['patient'] = order1%3

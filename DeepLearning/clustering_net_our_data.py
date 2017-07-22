@@ -6,7 +6,7 @@ Created on Sun Jul  9 03:24:45 2017
 @author: HealthLOB
 """
 
-input_signal = Input((250,3))
+input_signal = Input((250,3))#augment_or_not
 #
 #x = ZeroPadding1D(3)(input_signal) 
 x = Conv1D(32, 32, activation='relu', padding='same')(input_signal) 
@@ -58,7 +58,7 @@ End_point = Dense(1, activation='sigmoid')(close_to_output)
 symp_cluster = Model([input_signal, input_home_or_not], [End_point, autoencoder_layer, ActiveLayer])
 #active_class = Model(input_signal, End_point_Active)
 
-optimizer = optimizers.adam(lr = 0.0005)
+optimizer = optimizers.adam(lr = 0.001)
 
 def penalized_loss(fake_or_not):
     def loss(y_true, y_pred):
@@ -91,7 +91,8 @@ for train, test in cv:
     
     
     symp_cluster.set_weights(weights_start_symp)
-    
+    optimizer = optimizers.adam(lr = 0.001)
+
     symp_cluster.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse','mse'],metrics=['accuracy'], loss_weights=[1.,0.5,0.])
 
     Mytrain = train[range(len(train) - len(train)%deep_params['batch_size'])]
@@ -107,15 +108,16 @@ for train, test in cv:
     cluster_labels = KMeans(n_clusters=5).fit(cluster_features)
     MyCenters = [cluster_labels.cluster_centers_[j] for j in cluster_labels.labels_]
     MyCenters = np.vstack(MyCenters)
-    symp_cluster.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse',
-             cluster_function(cluster_center = Input_for_cluster)],metrics=['accuracy'], loss_weights=[1.,0.1,0.25])
-
-    for i in range(1,7):
+    symp_cluster.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse','mse'],
+                                                    metrics=['accuracy'], loss_weights=[1.,0.1,0.2])
+    
+    best_score = 0
+    for i in range(1,8):
         print(i)
         if(i==3):
-            K.set_value(symp_cluster.optimizer.lr,0.0001)
-        if(i==20):
-            K.set_value(symp_cluster.optimizer.lr,0.00005)
+            K.set_value(symp_cluster.optimizer.lr,0.0005)
+        #if(i==5):
+        #    K.set_value(symp_cluster.optimizer.lr,0.00005)
         symp_cluster.fit([xtrain, home_or_not[Mytrain]], [augment_dys[Mytrain],xtrain,MyCenters],epochs=i , batch_size = 128, shuffle=True,verbose=2, validation_data=([xtest[augment_or_not[test] == 1],home_or_not[test][augment_or_not[test] == 1]], [augment_dys[test][augment_or_not[test] == 1],xtest[augment_or_not[test] == 1],MyCenters[range(len(test))][augment_or_not[test] == 1]]))
         cluster_features =  symp_cluster.predict([xtrain, home_or_not[Mytrain]])
         cluster_labels = KMeans(n_clusters=5, random_state = 1234).fit(cluster_features[2])
@@ -126,3 +128,10 @@ for train, test in cv:
     symp_cor_res.append(augment_dys[test][augment_or_not[test] == 1])
     order_final.append(augment_task_ids[test][augment_or_not[test] == 1])
     print(confusion_matrix(symp_cor_res[len(symp_cor_res)-1],np.where(temp_res[0]>0.5,1,0)))
+    
+print(confusion_matrix(np.vstack(symp_cor_res),np.where(np.vstack(res)>0.5,1,0)))
+
+all_pred['prediction_probability'] = np.vstack(res)
+all_pred['true_label'] = np.vstack(symp_cor_res)
+all_pred['task'] = np.hstack(order_final)
+all_pred['patient'] = np.hstack(order_final)%3

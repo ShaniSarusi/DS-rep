@@ -10,7 +10,7 @@ from scipy.stats import ortho_group
 import numpy as np
 
 
-def augment_data(XYZ, temp_labels, task_clusters, task_subjectID, task_ids,num_iter=20):
+def augment_data(XYZ, temp_labels, task_clusters, task_subjectID, task_ids,num_iter=20,group = [0,1,2]):
     augment_XYZ = []
     augment_symp = []
     augment_task = []
@@ -28,7 +28,7 @@ def augment_data(XYZ, temp_labels, task_clusters, task_subjectID, task_ids,num_i
         num_of_iter = num_iter
         temp_list_perm = []; temp_list_symp = []; temp_list_Task = []; 
         temp_list_user_id = []; temp_task_ids = []; temp_aug_or_not = []
-        if((task_clusters[samp] == 2) | (task_clusters[samp] == 1)):
+        if(task_clusters[samp] in group):
             if((temp_labels[samp] > 0)):
                 num_of_iter = 20
             for i in range(num_of_iter):

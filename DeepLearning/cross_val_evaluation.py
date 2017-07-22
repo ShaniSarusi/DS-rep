@@ -15,7 +15,7 @@ def make_cross_val(data, Task_params, Task_andSymp, meta_data, deep_task_ids, ma
     weights_start_symp = main_network.get_weights()
 
     logo = LeaveOneGroupOut()
-    cv = logo.split(data, Task_params['Dys'], meta_data)
+    cv = logo.split(data, Task_params, meta_data)
     cv1 = list(cv)
     cv = list(cv1)
         
@@ -31,18 +31,17 @@ def make_cross_val(data, Task_params, Task_andSymp, meta_data, deep_task_ids, ma
         xtest = data[test]
         xtrain = data[Mytrain]
         #weight_sample = np.abs(1 - Task_for_pred[train])
-        main_network.fit(xtrain, [Task_params['Dys'][Mytrain],Task_params['brady'][Mytrain], Task_params['trem'][Mytrain], Task_andSymp[Mytrain]],
+        main_network.fit(xtrain, [Task_params[Mytrain], Task_andSymp[Mytrain]],
                          epochs=deep_params['epochs'] , batch_size=deep_params['batch_size'], shuffle=True, 
-                         validation_data=(data[Mytest], [Task_params['Dys'][Mytest], 
-                         Task_params['brady'][Mytest], Task_params['trem'][Mytest], Task_andSymp[Mytest]]),
-                         callbacks=[deep_params['change_lr']],class_weight = deep_params['class_weight']  ,verbose=2)#
+                         validation_data=(data[Mytest], [Task_params[Mytest], Task_andSymp[Mytest]]),
+                         callbacks=[deep_params['change_lr']], verbose=2)#
         
         temp_res = main_network.predict(xtest[augment_or_not[test] == 1])
-        res.append(temp_res[0][:,1])
-        symp_cor_res.append(Task_params['Dys'][test][augment_or_not[test] == 1])
+        res.append(temp_res[0])
+        symp_cor_res.append(Task_params[test][augment_or_not[test] == 1])
         features_from_deep.append(second_network.predict(xtest[augment_or_not[test] == 1]))
         order_final.append(deep_task_ids[test][augment_or_not[test] == 1])
-        print(confusion_matrix(symp_cor_res[len(symp_cor_res)-1][:,1],np.where(temp_res[0][:,1]>0.5,1,0)))
+        print(confusion_matrix(symp_cor_res[len(symp_cor_res)-1],np.where(temp_res[0]>0.5,1,0)))
     #res1 = np.vstack(res)
     order1 = np.hstack(order_final)
     

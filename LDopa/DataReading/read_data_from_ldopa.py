@@ -107,7 +107,7 @@ def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end
     win_idx['en'] = raw['TaskID'].drop_duplicates(keep='last').sort_values().index
     win_idx['len'] = win_idx['en'] - win_idx['st'] + 1
     win_idx['dur'] = (win_idx['len']-1)/frequency
-    tmp = np.ceil((win_idx['dur'] - trim_end - trim_end - window_size)/(window_size - slide_by))
+    tmp = np.ceil((win_idx['dur'] - trim_end - trim_end - window_size)/(slide_by))
     tmp[tmp < 0] = 0
     win_idx['num_samples'] = tmp.astype(np.int)
     tot_samples = sum(win_idx['num_samples'])
