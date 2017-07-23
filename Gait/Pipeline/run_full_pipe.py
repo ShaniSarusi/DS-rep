@@ -1,7 +1,6 @@
 import Gait.Pipeline.read_data as p1
-import Gait.Pipeline.features_generic as p2
+import Gait.Pipeline.extract_features as p2
 # import Gait.Pipeline.step_fts as p3
-import Gait.Pipeline.features_arms as p4
 import Gait.Pipeline.results_matrix as p5
 import Gait.config as c
 from os.path import join
@@ -35,8 +34,7 @@ with open(join(c.pickle_path, 'apdm_events'), 'wb') as fp: pickle.dump(apdm_even
 
 # Extract features
 p2.extract_generic_features()
-# p3.extract_step_features()
-# p4.extract_arm_swing_features()
+# p2.extract_arm_swing_features()
 
 # Create result summary
-# p5.create_result_matrix()
+# p1.create_result_matrix()

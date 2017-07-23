@@ -12,22 +12,22 @@ with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
 with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
     apdm_events = pickle.load(fp)
 
-id = 60
+id = 224
 sc = StepDetection(acc, sample, apdm_measures, apdm_events)
 sc.select_specific_samples(id)
 sc.select_signal('norm')
-# sc.plot_trace(id, 'lhs', add_val=10)
-sc.plot_trace(id, 'lhs', font_small=True)
-sc.plot_trace(id, side='rhs')
+# sc.plot_signal_trace(id, 'lhs', add_val=10)
+sc.plot_signal_trace(id, 'lhs', font_small=True)
+sc.plot_signal_trace(id, side='rhs')
 sc.mva(win_size=30)  # other options: sc.mva(p_type='regular', win_size=40) or sc.bf('lowpass', order=5, freq=6)
 sc.mean_normalization()
 sc.combine_signals()
 sc.mva(win_size=20, which='combined')  # another de-noising option: sc.mva(win_size=40, which='combined')
-#sc.plot_trace(id, 'lhs')
-sc.plot_trace(id, 'lhs', add_val=10)
-sc.plot_trace(id, side='rhs', add_val=5)
-sc.plot_trace(id, 'combined', tight=True)
-#sc.plot_trace(id, 'combined_abs', tight=True)
+#sc.plot_signal_trace(id, 'lhs')
+sc.plot_signal_trace(id, 'lhs', add_val=10)
+sc.plot_signal_trace(id, side='rhs', add_val=5)
+sc.plot_signal_trace(id, 'combined', tight=True)
+#sc.plot_signal_trace(id, 'combined_abs', tight=True)
 
 # step detection
 sc.step_detect_single_side_wpd_method(side='lhs', peak_type='scipy', p1=10, p2=20)
@@ -42,8 +42,16 @@ sc.ensemble_result_v1(win_size_merge_lhs_rhs=30, win_merge_lr_both=22)
 sc.ensemble_result_v2(win_size=10, thresh=1.5, w1=1, w2=0.8, w3=1, w4=1)
 
 # Plot APDM
-apdm_idx = sc.apdm_events.iloc[id]['Gait - Lower Limb - Initial Contact L (s)']
-sc.plot_step_idx(apdm_idx)
+apdm_idx_initial_left = sc.apdm_events.iloc[id]['Gait - Lower Limb - Initial Contact L (s)']
+apdm_idx_toe_off_left = sc.apdm_events.iloc[id]['Gait - Lower Limb - Toe Off L (s)']
+apdm_idx_midswing_left = sc.apdm_events.iloc[id]['Gait - Lower Limb - Midswing L (s)']
+sc.plot_step_idx(apdm_idx_initial_left)
+sc.plot_step_idx(apdm_idx_toe_off_left, p_color='r')
+sc.plot_step_idx(apdm_idx_midswing_left, p_color='g')
+sc.plot_signal_trace(id, 'lhs', font_small=True)
+sc.plot_signal_trace(id, side='rhs')
+
+
 
 
 sc.plot_step_idx(id, 'idx1_comb', 'r')

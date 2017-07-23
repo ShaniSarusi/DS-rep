@@ -1,9 +1,9 @@
-import copy
 import numpy as np
 from os.path import join
 import pickle
-import pandas as pd
 import Gait.config as c
+import copy
+import pandas as pd
 
 
 def split_by_person():
@@ -61,8 +61,8 @@ def set_filters(exp=2):
         # Task ID
         num_tasks = 10
         for i in range(num_tasks):
-            name = 'task_' + str(i+1)
-            filt[name] = sample[sample['TaskId'] == (i+1)]['SampleId'].as_matrix()
+            name = 'task_' + str(i + 1)
+            filt[name] = sample[sample['TaskId'] == (i + 1)]['SampleId'].as_matrix()
     return filt
 
 
@@ -70,10 +70,35 @@ def truncate(data, front, back):
     out = []
     for i in range(len(data)):
         n = len(data[i]['rhs'])
-        f = int(n * front/100.0)
-        b = int(n * (1.0-back/100.0))
-        tmp = {}
+        f = int(n * front / 100.0)
+        b = int(n * (1.0 - back / 100.0))
+        tmp = dict()
         tmp['rhs'] = data[i]['rhs'].iloc[range(f, b)]
         tmp['lhs'] = data[i]['lhs'].iloc[range(f, b)]
         out.append(copy.deepcopy(tmp))
     return out
+
+
+def combine_both_single(b, l, r, win_size=30):
+    single = np.unique([l, r])
+    for i in range(len(single)):
+        if np.min(np.abs(b-single[i])) > win_size:
+            b.append(single[i])
+    return b
+
+
+def calculate_time_duration_of_samples():
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
+        acc = pickle.load(fp)
+    res = []
+    for i in range(len(acc)):
+        val = (acc[i]['lhs']['ts'].iloc[-1] - acc[i]['lhs']['ts'].iloc[0]).total_seconds()
+        res.append(val)
+    return res
+
+
+# def typefilter(data, filt_data, string):
+#     filt = (filt_data == string).as_matrix()
+#     a = [i for (i, v) in zip(data, filt) if v]
+#     b = [i for (i, v) in zip(data, ~filt) if v]
+#     return a, b

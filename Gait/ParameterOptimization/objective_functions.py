@@ -36,6 +36,28 @@ def objective_single_side_lhs(p):
     return res_rmse
 
 
+def objective_single_side_lhs2(p):
+    # Set class
+    s = p['sd']
+
+    # Open dictionary to get objective function parameters   #TODO maybe use dict.items()
+    param1 = p['signal']
+    param2 = p['smoothing']
+    # ...
+
+    # Run algorithm
+    s.step_detect_single_side_wpd_method(param1, param2)
+
+    # TODO the next two lines should be fixed in new code, and may not be needed here
+    for j in range(s.res.shape[0]):
+        s.res.set_value(s.res.index[j], 'sc3_lhs', len(s.res.iloc[j]['idx3_lhs']))
+
+    # Calculate RMSE
+    # TODO see how to make this non-parametric - no use of sc3....
+    rmse = sqrt(mean_squared_error(s.res['sc_true'], s.res['sc3_lhs']))
+    return rmse
+
+
 # Store all algorithms in a dictionary
 all_algorithms = dict()
 all_algorithms['single_side_lhs'] = objective_single_side_lhs

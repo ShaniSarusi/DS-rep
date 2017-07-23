@@ -9,7 +9,7 @@ import numpy as np
 from future.utils import lmap
 
 
-def project_gravity(x, y, z, num_samples_per_interval=None, round_up_or_down='down'):
+def project_gravity(x, y, z, num_samples_per_interval=None, round_up_or_down='down', return_only_vertical=False):
     if num_samples_per_interval is None:
         return project_gravity_xyz(x, y, z)
 
@@ -38,6 +38,8 @@ def project_gravity(x, y, z, num_samples_per_interval=None, round_up_or_down='do
         ver_i, hor_i = project_gravity_xyz(x_i, y_i, z_i)
         v.append(ver_i)
         h.append(hor_i)
+    if return_only_vertical:
+        return np.hstack(v)
     return np.hstack(v), np.hstack(h)
 
 
@@ -58,17 +60,18 @@ def project_gravity_core(xyz):
     return np.asarray(ver), np.asarray(hor)
 
 
-def project_from_3_to_2_dims(x, y, z):
+def project_from_3_to_2_dims(x, y, z, interval_length=None):
     """
     Input:
         x - x axis numpy array, every raw is sample
         y - y axis numpy array, every raw is sample
         z - z axis numpy array, every raw is sample
+        interval_length - interval_length is the length of each interval, in number of samples
     Ouput:
         ver_proj - vertical projection
         hor_proj - horizontal projection
     """
-    HR = lmap((lambda x_lam, y_lam, z_lam: project_gravity(x_lam, y_lam, z_lam)), x, y, z)
+    HR = lmap((lambda x_lam, y_lam, z_lam: project_gravity(x_lam, y_lam, z_lam, interval_length)), x, y, z)
     ver_proj = np.asarray([i[0] for i in HR])
     hor_proj = np.asarray([i[1] for i in HR])
     return ver_proj, hor_proj

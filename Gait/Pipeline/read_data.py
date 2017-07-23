@@ -16,11 +16,11 @@ sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
 def pickle_metadata():
     # Make metadata data frame
     pickle_excel_file(input_path=join(c.common_path, 'SampleData.xlsx'), output_name='metadata_sample',
-                         output_path=c.pickle_path)
+                      output_path=c.pickle_path)
     pickle_excel_file(input_path=join(c.common_path, 'SubjectData.xlsx'), output_name='metadata_subject',
-                         output_path=c.pickle_path)
+                      output_path=c.pickle_path)
     pickle_excel_file(input_path=join(c.common_path, 'TaskFilters.xlsx'), output_name='task_filters',
-                         output_path=c.pickle_path)
+                      output_path=c.pickle_path)
 
     sample = pd.read_excel(join(c.common_path, 'SampleData.xlsx'))
     subject = pd.read_excel(join(c.common_path, 'SubjectData.xlsx'))
@@ -173,7 +173,7 @@ def fix_data_types(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
 
 
 def add_ts_to_sensor_data(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
-    # add_ts (everything is synced in apdm
+    # add_ts (everything is synced in apdm)
     for i in range(len(p_acc)):
         for side in sides:
             p_acc[i][side['name']]['ts'] = p_time[i][side['name']]['value']
@@ -228,6 +228,22 @@ def load_sensor_data():
     with open(join(c.pickle_path, 'mag'), 'rb') as fp: p_mag = pickle.load(fp)
     with open(join(c.pickle_path, 'temp'), 'rb') as fp: p_temp = pickle.load(fp)
     return p_acc, p_bar, p_gyr, p_mag, p_temp, p_time, p_sample
+
+
+def create_result_matrix():
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
+    with open(join(c.pickle_path, 'features_steps'), 'rb') as fp: step_features = pickle.load(fp)
+    # with open(join(common_input, 'features_armswing'), 'rb') as fp: arm_swing_features = pickle.load(fp)
+
+    # connect DataFrame
+    step_features = step_features.drop('step_durations', axis=1)
+
+    # df_results = pd.concat([step_features, arm_swing_features], axis=1)
+    df_results = step_features
+    df_sample_and_results = pd.concat([sample, df_results], axis=1)
+
+    # save csvs
+    df_sample_and_results.to_csv(join(c.results_path, 'Results.csv'))
 
 
 if __name__ == '__main__':

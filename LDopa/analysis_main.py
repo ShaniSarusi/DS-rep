@@ -41,8 +41,8 @@ import LDopa.Evaluation.evaluation as evaluation
 """
 Read with SQL
 """
-res = data_reading.ReadAllData("ConnectSmoove2")
-res = data_reading.ArrangeRes(res, path=join('C:', sep, 'Users', 'awagner'))
+res = data_reading.read_all_data("ConnectSmoove2")
+res = data_reading.arrange_res(res, path=join('C:', sep, 'Users', 'awagner'))
 tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.MakeIntervalFromAllData(res, 25, 2, 1, 1, 50)
 
 #######

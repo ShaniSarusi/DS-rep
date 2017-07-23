@@ -41,25 +41,28 @@ augment_dys = augment_dys.reshape((len(augment_dys),1)); #augment_dys = utils.to
 #augment_brady = augment_brady.reshape((len(augment_brady),1)); augment_brady = utils.to_categorical(augment_brady, num_classes=2)
 #augment_tremor = augment_tremor.reshape((len(augment_tremor),1)); augment_tremor = utils.to_categorical(augment_tremor, num_classes=2)
 meta_after_cond = np.asarray(augment_SubjectId)
-Task_for_pred = np.where(augment_Task==2,0,1)
+Task_for_pred = np.where(augment_Task == 2, 0, 1)
 Task_for_pred  = augment_Task.reshape((len(augment_Task),1))
-sympNew = np.where(augment_dys==0 , 0, 0.25)
-Task_for_predNew = np.where(Task_for_pred==2 , 0.5, 1)
+sympNew = np.where(augment_dys == 0, 0, 0.25)
+Task_for_predNew = np.where(Task_for_pred == 2, 0.5, 1)
 Task_andSymp = sympNew + Task_for_pred
 Task_andSymp = utils.to_categorical(Task_andSymp, num_classes=6)
 
 symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary_crossentropy')  
 
 
-def scheduler(epoch):
-    if(epoch == 1):
-        K.set_value(symp_class.optimizer.lr,0.0005)
-    if(epoch == 5):
-        K.set_value(symp_class.optimizer.lr,0.0001)
-    if(epoch == 10):
-        K.set_value(symp_class.optimizer.lr,0.00005)
-    if(epoch == 20):
-        K.set_value(symp_class.optimizer.lr,0.00005)
+def scheduler(epoch=5):
+    if epoch == 1:
+        K.set_value(symp_class.optimizer.lr, 0.0005)
+    elif epoch == 5:
+        K.set_value(symp_class.optimizer.lr, 0.0001)
+    elif epoch == 10:
+        K.set_value(symp_class.optimizer.lr, 0.00005)
+    elif epoch == 20:
+        K.set_value(symp_class.optimizer.lr, 0.00005)
+    else:
+        # TODO treat input that is not 1, 5, 10, or 20 (if you want)
+        return
     return K.get_value(symp_class.optimizer.lr)
 
 
@@ -78,8 +81,8 @@ res1, order1, features_from_deep_res, symp_res = make_cross_val(TagLow, symp, Ta
 results = np.asarray([x for (y,x) in sorted(zip(order1,res1))])
 results_feature = np.asarray([x for (y,x) in sorted(zip(order1,features_from_deep_res1))])
 
-plt.boxplot([res1[symp[test] == 1],res1[symp[test] == 0]])
-confusion_matrix(np.vstack(symp_res) ,np.where(np.vstack(res1) > 0.75,1,0))
+plt.boxplot([res1[symp[test] == 1], res1[symp[test] == 0]])
+confusion_matrix(np.vstack(symp_res), np.where(np.vstack(res1) > 0.75,1,0))
 
 import gc
 secret = None

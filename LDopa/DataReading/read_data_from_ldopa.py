@@ -18,13 +18,10 @@ Give you dsn (For example ConnectSmoove2) and read ALL of the labeled data
 '''
 
 
-def ReadAllData(dsn):
-    lab_tagged_sessions_harvard = np.concatenate([range(10100, 10136),
-                                                  range(10137, 10143)])  # ldhp 10136 is not good
-    lab_tagged_sessions_mtsinai = np.concatenate([range(10150, 10152),
-                                                  range(10153, 10175)])  # IntelUsername starts with ldms
-    session_ids = np.concatenate([lab_tagged_sessions_harvard,
-                                  lab_tagged_sessions_mtsinai])
+def read_all_data(dsn):
+    lab_tagged_sessions_harvard = np.concatenate([range(10100, 10136), range(10137, 10143)])  # ldhp 10136 is not good
+    lab_tagged_sessions_mtsinai = np.concatenate([range(10150, 10152), range(10153, 10175)])  # IntelUsername starts with ldms
+    session_ids = np.concatenate([lab_tagged_sessions_harvard, lab_tagged_sessions_mtsinai])
     # session_ids = np.array([10100])
     session_ids = lab_tagged_sessions_harvard
 
@@ -48,7 +45,7 @@ def ReadAllData(dsn):
 Input
 '''
 # path = 'C:/Users/awagner'
-def ArrangeRes(res, path):
+def arrange_res(res, path):
     res[['TS', 'TSStart', 'TSEnd']] = res[['TS', 'TSStart', 'TSEnd']].apply(pd.to_datetime)
     res['AnnotationStrValue'] = res['AnnotationStrValue'].str.replace(' - .*', '')
     res.ix[(res.AnnotationStrValue.str.contains('Finger')) & (res.BradykinesiaGA.isnull()), ['AnnotationStrValue']] = 'Rest finger to nose'
@@ -77,10 +74,8 @@ def ArrangeRes(res, path):
 
     print('adding task ids - copying data')
     tmp = res.copy()
-    tmp = tmp.drop(['DeviceID', 'TS', 'X', 'Y', 'Z', 'Task', 'BradykinesiaGA',
-                    'DyskinesiaGA', 'TremorGA', 'TSEnd', 'SubjectId',
-                    'IntelUsername', 'Norm', 'TaskClusterId',
-                    'TaskClusterName', 'TaskID'], axis=1)
+    tmp = tmp.drop(['DeviceID', 'TS', 'X', 'Y', 'Z', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 'TremorGA', 'TSEnd',
+                    'SubjectId', 'IntelUsername', 'Norm', 'TaskClusterId', 'TaskClusterName', 'TaskID'], axis=1)
     print('adding task ids - dropping duplicates')
     st = tmp.drop_duplicates(keep='first').index.values
     st.sort()
@@ -96,10 +91,8 @@ def ArrangeRes(res, path):
 
 def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end,frequency):
     raw = res.copy()
-    raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA',
-                    'DyskinesiaGA', 'TremorGA', 'SubjectId', 'TSStart',
-                    'TSEnd', 'IntelUsername', 'TaskClusterId',
-                    'TaskClusterName'], axis=1)
+    raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 'TremorGA', 'SubjectId',
+                    'TSStart', 'TSEnd', 'IntelUsername', 'TaskClusterId', 'TaskClusterName'], axis=1)
     raw = raw.sort_values('TS')
 
     win_idx = pd.DataFrame()
@@ -107,13 +100,12 @@ def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end
     win_idx['en'] = raw['TaskID'].drop_duplicates(keep='last').sort_values().index
     win_idx['len'] = win_idx['en'] - win_idx['st'] + 1
     win_idx['dur'] = (win_idx['len']-1)/frequency
-    tmp = np.ceil((win_idx['dur'] - trim_end - trim_end - window_size)/(slide_by))
+    tmp = np.ceil((win_idx['dur'] - trim_end - trim_end - window_size)/slide_by)
     tmp[tmp < 0] = 0
     win_idx['num_samples'] = tmp.astype(np.int)
     tot_samples = sum(win_idx['num_samples'])
 
-    map_ids = pd.DataFrame(index=range(tot_samples), columns=['SampleID',
-                           'TaskID'])
+    map_ids = pd.DataFrame(index=range(tot_samples), columns=['SampleID', 'TaskID'])
     k = 0
     for i in range(win_idx.shape[0]):
         print(i)
@@ -155,14 +147,13 @@ def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end
     for i in range(tot_samples):
     # print 'adding sample ', i + 1, '(', (i + 1) * 100 / tot_samples, '%) of ', tot_samples
         if i % 10 == 90:
-            print('adding sample ', i + 1, '(',
-                  (i+1)*100/tot_samples, '%) of ', tot_samples)
+            print('adding sample ', i + 1, '(', (i+1)*100/tot_samples, '%) of ', tot_samples)
         ran = range(samples_idx.loc[i, 'st'], samples_idx.loc[i, 'en']+1)
         xlist.append(raw.iloc[ran]['X'].values)
         ylist.append(raw.iloc[ran]['Y'].values)
         zlist.append(raw.iloc[ran]['Z'].values)
         nlist.append(raw.iloc[ran]['Norm'].values)
-   # raw_x.loc[i] = raw.iloc[ran]['X'].values # this method is very slow - Pandas is not efficient at doing this
+    # raw_x.loc[i] = raw.iloc[ran]['X'].values # this method is very slow - Pandas is not efficient at doing this
     print('done adding samples')
     raw_x = pd.DataFrame(xlist)
     raw_x['SampleID'] = meta['SampleID']
@@ -173,7 +164,7 @@ def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end
     raw_n = pd.DataFrame(nlist)
     raw_n['SampleID'] = meta['SampleID']
 
-    return [meta,raw_x,raw_y,raw_z,raw_n]
+    return [meta, raw_x, raw_y, raw_z, raw_n]
 
 
 def read_unlabeled_data(sec, freq, session_ids, dsn):

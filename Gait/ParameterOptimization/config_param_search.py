@@ -6,6 +6,8 @@ space = dict()
 # choose which signal to use
 space['signal'] = hp.choice('signal', ['norm', 'vertical'])
 
+# TODO add vertical window range (NOne or some range [128 to 30*128]
+
 # choose which smoothing to perform (or none at all if mva_win is equal to ~1
 space['smoothing'] = hp.choice('smoothing', ['mva', 'butter'])
 space['mva_win'] = 1 + hp.randint('mva_win', 50)

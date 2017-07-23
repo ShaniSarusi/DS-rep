@@ -1,3 +1,5 @@
+import Gait.config as c
+
 # External imports
 import pickle
 from math import sqrt, ceil
@@ -7,39 +9,44 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 
-# Imports from our packages
-import Gait.GaitUtils.algorithms as uts
-import Gait.config as c
+# Imports from Utils
+from Utils.SignalProcessing.peak_detection_and_handling import merge_adjacent_peaks_from_two_signals, \
+    run_scipy_peak_detection, run_peak_utils_peak_detection, merge_adjacent_peaks_from_single_signal, \
+    score_max_peak_within_fft_frequency_range
+from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
 from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter, butter_highpass_filter
 from Utils.Preprocessing.projections import project_gravity
-from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
 
 
 class StepDetection:
     def __init__(self, p_acc, p_sample, p_apdm_measures=None, p_apdm_events=None):
         self.acc = p_acc
+        self.sample = p_sample
         self.apdm_measures = p_apdm_measures
         self.apdm_events = p_apdm_events
         self.summary_table = []
         self.sampling_rate = c.sampling_rate
         self.lhs = []
         self.rhs = []
-        self.both = []
-        self.both_abs = []
+        self.combined_signal = []
+        self.combined_signal_abs = []
+        self.res = pd.DataFrame()
 
         # Initialize result table
-        cols = ['sc_true', 'cadence_true', 'speed_true', 'duration', 'sc_ensemble', 'idx_ensemble',
+        cols = ['sc_ensemble', 'idx_ensemble',
                 'sc1_comb', 'idx1_comb', 'sc2_both', 'idx2_both', 'sc3_lhs', 'idx3_lhs', 'sc4_rhs', 'idx4_rhs',
                 'step_dur_all', 'step_dur_side1', 'step_dur_side2', 'step_time_var_side1', 'step_time_var_side2',
                 'step_time_asymmetry',
                 'stride_dur_all', 'stride_dur_side1', 'stride_dur_side2', 'stride_time_var_side1',
                 'stride_time_var_side2',
                 'asymmetry_pci', 'idx_lhs2rhs_ratio', 'cadence']
-        self.res = pd.DataFrame(index=p_sample['SampleId'], columns=cols)
-        self.res['sc_true'] = p_sample['StepCount']
-        self.res['cadence_true'] = p_sample['CadenceWithCrop']
-        self.res['speed_true'] = p_sample['SpeedWithCrop']
-        self.res['duration'] = p_sample['DurationWithCrop']
+
+    def set_manual_count_result(self):
+        self.res = self.res(index=self.sample['SampleId'])
+        self.res['sc_manual'] = self.sample['StepCount']
+        self.res['cadence_manual'] = self.sample['CadenceWithCrop']
+        self.res['speed_manual'] = self.sample['SpeedWithCrop']
+        self.res['duration'] = self.sample['DurationWithCrop']
 
     def select_specific_samples(self, sample_ids):
         if isinstance(sample_ids, int):
@@ -49,115 +56,160 @@ class StepDetection:
             self.acc = [self.acc[i] for i in sample_ids]
             self.res = self.res.iloc[[i for i in sample_ids]]
 
-    def bf(self, p_type, order=5, freq=6):
-        for i in range(len(self.lhs)):
-            if p_type == 'lowpass':
-                self.lhs[i] = butter_lowpass_filter(self.lhs[i], freq, self.sampling_rate, order)
-                self.rhs[i] = butter_lowpass_filter(self.rhs[i], freq, self.sampling_rate, order)
-            if p_type == 'highpass':
-                self.lhs[i] = butter_highpass_filter(self.lhs[i], freq, self.sampling_rate, order)
-                self.rhs[i] = butter_highpass_filter(self.rhs[i], freq, self.sampling_rate, order)
+    def step_detection_single_side(self, side='lhs', signal_to_use='norm', smoothing=None, mva_win=20,
+                                       vert_win=None, butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20,
+                                       weak_signal_thresh=None, verbose=True):
+        # Choose side
+        data = [self.acc[i][side] for i in range(len(self.acc))]
 
-    def select_signal(self, norm_or_vertical, win_size=None):
-        print("\rRunning: Selecting " + norm_or_vertical + " signal")
-        self.lhs = []
-        self.rhs = []
-        for i in range(len(self.acc)):
-            if norm_or_vertical == 'vertical':
-                # left
-                x = self.acc[i]['lhs']['x']; y = self.acc[i]['lhs']['y']; z = self.acc[i]['lhs']['z']
-                ver, hor = project_gravity(x, y, z, num_samples_per_interval=win_size)
-                self.lhs.append(ver)
-                # right
-                x = self.acc[i]['rhs']['x']; y = self.acc[i]['rhs']['y']; z = self.acc[i]['rhs']['z']
-                ver, hor = project_gravity(x, y, z, num_samples_per_interval=win_size)
-                self.rhs.append(ver)
-                pass
-            else:
-                self.lhs.append(self.acc[i]['lhs']['n'])
-                self.rhs.append(self.acc[i]['rhs']['n'])
+        # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
+        if verbose: print("Running: Selecting " + signal_to_use + " signal")
+        if signal_to_use == 'norm':
+            data = [data[i]['n'] for i in range(len(data))]
+        if signal_to_use == 'vertical':
+            data = [project_gravity(data[i]['x'], data[i]['y'], data[i]['z'], num_samples_per_interval=vert_win,
+                                    return_only_vertical=True) for i in range(len(data))]
 
-    def mva(self, p_type='nans', win_size=30, which=None):
-        print("\rRunning: Moving average")
-        for i in range(len(self.lhs)):
-            if which == 'combined':
-                if p_type == 'regular':
-                    self.both[i] = pd.Series(self.both[i]).rolling(window=win_size, center=True).mean()
-                    self.both_abs[i] = pd.Series(self.both_abs[i]).rolling(window=win_size, center=True).mean()
-                if p_type == 'nans':
-                    self.both[i] = moving_average_no_nans(self.both[i], win_size)
-                    self.both_abs[i] = moving_average_no_nans(self.both_abs[i], win_size)
-            else:
-                if p_type == 'regular':
-                    self.lhs[i] = pd.Series(self.lhs[i]).rolling(window=win_size, center=True).mean()
-                    self.rhs[i] = pd.Series(self.rhs[i]).rolling(window=win_size, center=True).mean()
-                if p_type == 'nans':
-                    self.lhs[i] = moving_average_no_nans(self.lhs[i], win_size)
-                    self.rhs[i] = moving_average_no_nans(self.rhs[i], win_size)
+        # Smoothing
+        if smoothing == 'mva':
+            data = [moving_average_no_nans(data[i], mva_win) for i in range(len(data))]
+        if smoothing == 'butter':
+            data = [butter_lowpass_filter(data[i], butter_freq, self.sampling_rate, order=5) for i in range(len(data))]
+        # TODO add option for lowpass and highpass butterfilter. maybe just do in single one, with low zero being highpass.
 
-    def combine_signals(self):
-        print("\rRunning: Combine signals")
-        for i in range(len(self.lhs)):
-            self.both.append(self.lhs[i] + self.rhs[i])
-            self.both_abs.append(np.abs(self.lhs[i]) + np.abs(self.rhs[i]))
+        # Mean normalization
+        data = [data[i] - data[i].mean() for i in range(len(data))]
 
-    def mean_normalization(self):
-        print("\rRunning: Mean normalization")
-        for i in range(len(self.lhs)):
-            self.lhs[i] = self.lhs[i] - self.lhs[i].mean()
-            self.rhs[i] = self.rhs[i] - self.rhs[i].mean()
+        # Peak detection
+        if peak_type == 'scipy':
+            idx = [run_scipy_peak_detection(data[i], peak_param1, peak_param2) for i in range(len(data))]
+        if peak_type == 'p_utils':
+            idx = [run_peak_utils_peak_detection(data[i], peak_param1, peak_param2) for i in range(len(data))]
 
-    def step_detect_single_side_wpd_method(self, side=None, peak_type='scipy', p1=10, p2=20, verbose=True):
-        if side == 'lhs':
-            data = self.lhs
-            col = 'idx3_lhs'
-            s = 'left'
-        elif side == 'rhs':
-            data = self.rhs
-            col = 'idx4_rhs'
-            s = 'right'
-        else:
-            return
-        print("\rRunning: Step detect single side (" + s + ") - wpd method")
-        for i in range(len(self.lhs)):
-            if verbose:
-                print("\rRunning: Step detect single side (" + s + ") - wpd method, sample " + str(i + 1) + " from "
-                  + str(len(self.lhs)))
-            idx = uts.detect_peaks(data[i], peak_type, p1, p2)
-            if idx is not None:
-                self.res.set_value(self.res.index[i], col, [j for j in idx])
-            else:
-                self.res.set_value(self.res.index[i], col, [])
+        # TODO need to implement this
+        # Remove weak signals
+        if weak_signal_thresh is not None:
+            pass
 
-    def step_detect_overlap_method(self, win_merge, win_size_remove_adjacent_peaks, peak_type='scipy', p1=2, p2=15):
-        for i in range(len(self.lhs)):
-            print("\rRunning: Step detect two wrist devices - overlap method, sample " + str(i + 1) + ' from '
-                  + str(len(self.lhs)))
-            # detect peaks in each side. Go for high recall and low precision
-            idx_l = uts.detect_peaks(self.lhs[i], peak_type, p1, p2)
-            idx_r = uts.detect_peaks(self.rhs[i], peak_type, p1, p2)
-            # merge peaks by choosing overlap
-            peaks_both = uts.merge_peaks(idx_l, idx_r, self.lhs[i][idx_l], self.rhs[i][idx_r], 'keep_max', win_merge)
-            idx_both = uts.remove_adjacent_peaks(peaks_both, win_size_remove_adjacent_peaks)
-            # save result
-            self.res.set_value(self.res.index[i], 'idx2_both', idx_both)
+        # Save results
+        res = pd.Series(idx, name='idx_' + side)
+        self.res = pd.concat([self.res, res], axis=1)
 
-    def step_detect_combined_signal_method(self, min_hz=0.3, max_hz=2.0, factor=1.1, peak_type='p_utils', p1=0.5,
-                                           p2=30):
-        for i in range(len(self.lhs)):
-            print("\rRunning: Step detect - combined signal method, sample " + str(i + 1) + ' from '
-                  + str(len(self.lhs)))
-            # choose which of 2 combined signal options to use. Choose by looking for most sine-like signal
-            # 1) lhs + rhs     2) abs(lhs) + abs(rhs)
-            sco1 = uts.score_max_peak(self.both[i], c.sampling_rate, min_hz, max_hz, show=False)
-            sco2 = uts.score_max_peak(self.both_abs[i], c.sampling_rate, min_hz, max_hz, show=False)
-            if (factor*sco1) > sco2:
-                cb = self.both[i].as_matrix()
-            else:
-                cb = self.both_abs[i].as_matrix()
+    def step_detection_two_sides_overlap(self, signal_to_use='norm', smoothing=None, mva_win=15,
+                                        vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
+                                         win_size_merge=30, win_size_remove_adjacent_peaks=40, verbose=True):
 
-            idx = uts.detect_peaks(cb, peak_type, p1, p2)
-            self.res.set_value(self.res.index[i], 'idx1_comb', idx)
+        # Set data
+        lhs = [self.acc[i]['lhs'] for i in range(len(self.acc))]
+        rhs = [self.acc[i]['rhs'] for i in range(len(self.acc))]
+
+        # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
+        if verbose: print("Running: Selecting " + signal_to_use + " signal")
+        if signal_to_use == 'norm':
+            lhs = [lhs[i]['n'] for i in range(len(lhs))]
+            rhs = [rhs[i]['n'] for i in range(len(rhs))]
+        if signal_to_use == 'vertical':
+            lhs = [project_gravity(lhs[i]['x'], lhs[i]['y'], lhs[i]['z'], num_samples_per_interval=vert_win,
+                                   return_only_vertical=True) for i in range(len(lhs))]
+            rhs = [project_gravity(rhs[i]['x'], rhs[i]['y'], rhs[i]['z'], num_samples_per_interval=vert_win,
+                                   return_only_vertical=True) for i in range(len(rhs))]
+
+        # Smoothing
+        if smoothing == 'mva':
+            lhs = [moving_average_no_nans(lhs[i], mva_win) for i in range(len(lhs))]
+            rhs = [moving_average_no_nans(rhs[i], mva_win) for i in range(len(rhs))]
+        if smoothing == 'butter':
+            lhs = [butter_lowpass_filter(lhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(lhs))]
+            rhs = [butter_lowpass_filter(rhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(rhs))]
+        # TODO add option for lowpass and highpass butterfilter. maybe just do in single one, with low zero being highpass.
+
+        # Mean normalization
+        lhs = [lhs[i] - lhs[i].mean() for i in range(len(lhs))]
+        rhs = [rhs[i] - rhs[i].mean() for i in range(len(rhs))]
+
+        # Peak detection
+        if peak_type == 'scipy':
+            idx_lhs = [run_scipy_peak_detection(lhs[i], peak_param1, peak_param2) for i in range(len(lhs))]
+            idx_rhs = [run_scipy_peak_detection(rhs[i], peak_param1, peak_param2) for i in range(len(rhs))]
+        if peak_type == 'p_utils':
+            idx_lhs = [run_peak_utils_peak_detection(lhs[i], peak_param1, peak_param2) for i in range(len(lhs))]
+            idx_rhs = [run_peak_utils_peak_detection(rhs[i], peak_param1, peak_param2) for i in range(len(rhs))]
+
+        # Merge adjacent peaks from both sides into single peaks
+        merged_peaks = [merge_adjacent_peaks_from_two_signals(idx_lhs[i], idx_rhs[i], lhs[i][idx_lhs], rhs[i][idx_rhs],
+                                                              'keep_max', win_size_merge) for i in range(len(lhs))]
+
+        # Merge adjacent peaks from the 'merged peaks' before
+        idx = [merge_adjacent_peaks_from_single_signal(merged_peaks, win_size_remove_adjacent_peaks) for i in
+               range(len(merged_peaks))]
+
+        # Save results
+        res = pd.Series(idx, name='idx_' + 'overlap')
+        self.res = pd.concat([self.res, res], axis=1)
+
+    def step_detection_two_sides_combined_signal(self, signal_to_use='norm', smoothing=None, mva_win=15, vert_win=None,
+                                                 butter_freq=12, mva_win_combined=40, min_hz=0.3, max_hz=2.0,
+                                                 factor=1.1, peak_type='p_utils', peak_param1=0.5, peak_param2=30,
+                                                 verbose=True):
+
+        # Set data
+        lhs = [self.acc[i]['lhs'] for i in range(len(self.acc))]
+        rhs = [self.acc[i]['rhs'] for i in range(len(self.acc))]
+
+        # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
+        if verbose: print("Running: Selecting " + signal_to_use + " signal")
+        if signal_to_use == 'norm':
+            lhs = [lhs[i]['n'] for i in range(len(lhs))]
+            rhs = [rhs[i]['n'] for i in range(len(rhs))]
+        if signal_to_use == 'vertical':
+            lhs = [project_gravity(lhs[i]['x'], lhs[i]['y'], lhs[i]['z'], num_samples_per_interval=vert_win,
+                                   return_only_vertical=True) for i in range(len(lhs))]
+            rhs = [project_gravity(rhs[i]['x'], rhs[i]['y'], rhs[i]['z'], num_samples_per_interval=vert_win,
+                                   return_only_vertical=True) for i in range(len(rhs))]
+
+        # Smoothing
+        if smoothing == 'mva':
+            lhs = [moving_average_no_nans(lhs[i], mva_win) for i in range(len(lhs))]
+            rhs = [moving_average_no_nans(rhs[i], mva_win) for i in range(len(rhs))]
+        if smoothing == 'butter':
+            lhs = [butter_lowpass_filter(lhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(lhs))]
+            rhs = [butter_lowpass_filter(rhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(rhs))]
+        # TODO add option for lowpass and highpass butterfilter. maybe just do in single one, with low zero being highpass.
+
+        # Mean normalization
+        lhs = [lhs[i] - lhs[i].mean() for i in range(len(lhs))]
+        rhs = [rhs[i] - rhs[i].mean() for i in range(len(rhs))]
+
+        # Combine signals
+        combined_signal = [lhs[i] + rhs[i] for i in range(len(lhs))]
+        combined_signal_abs = [np.abs(lhs[i]) + np.abs(rhs[i]) for i in range(len(lhs))]
+
+        # Save the combined signal to enable plotting
+        self.combined_signal = combined_signal
+        self.combined_signal_abs = combined_signal_abs
+
+        # Smooth the combined signal
+        combined_signal = [moving_average_no_nans(combined_signal[i], mva_win_combined) for i in range(len(lhs))]
+        combined_signal_abs = [moving_average_no_nans(combined_signal_abs[i], mva_win_combined) for i in range(len(lhs))]
+
+        # Select which combined signal to use by choosing the more oscillatory signal (sine-like). Do this using fft.
+        score_combined = [score_max_peak_within_fft_frequency_range(combined_signal[i], self.sampling_rate, min_hz,
+                                                                    max_hz, show=False) for i in range(len(lhs))]
+        score_combined = [factor * score_combined[i] for i in range(len(lhs))]
+        score_combined_abs = [score_max_peak_within_fft_frequency_range(combined_signal_abs[i], self.sampling_rate,
+                                                                        min_hz, max_hz, show=False) for i in range(len(lhs))]
+        signal = [combined_signal[i].as_matrix() if (score_combined > score_combined_abs) else
+                  combined_signal_abs[i].as_matrix() for i in range(len(lhs))]
+
+        # Run peak detection
+        if peak_type == 'scipy':
+            idx = [run_scipy_peak_detection(signal[i], peak_param1, peak_param2) for i in range(len(signal))]
+        if peak_type == 'p_utils':
+            idx = [run_peak_utils_peak_detection(signal[i], peak_param1, peak_param2) for i in range(len(signal))]
+
+        # Save results
+        res = pd.Series(idx, name='idx_' + 'combined')
+        self.res = pd.concat([self.res, res], axis=1)
 
     def ensemble_result_v1(self, win_size_merge_lhs_rhs, win_merge_lr_both):
         for i in range(len(self.lhs)):
@@ -167,8 +219,8 @@ class StepDetection:
             rhs = pd.DataFrame({'idx': self.res.iloc[i]['idx4_rhs'],
                                 'maxsignal': self.rhs[i][self.res.iloc[i]['idx4_rhs']].tolist()})
             lr = pd.concat([lhs, rhs]).sort_values(by='idx').reset_index(drop=True)
-            idx_lr = uts.remove_adjacent_peaks(lr, win_size_merge_lhs_rhs)
-            val = uts.merge_peaks(self.res.iloc[i]['idx2_both'], idx_lr, win_merge_lr_both, p_type='keep_first_signal')
+            idx_lr = merge_adjacent_peaks_from_single_signal(lr, win_size_merge_lhs_rhs)
+            val = merge_adjacent_peaks_from_two_signals(self.res.iloc[i]['idx2_both'], idx_lr, win_merge_lr_both, p_type='keep_first_signal')
             self.res.set_value(self.res.index[i], 'idx_ensemble', val)
 
     def ensemble_result_v2(self, win_size=20, thresh=2, w1=1.0, w2=1.0, w3=1.0, w4=1.0):
@@ -180,13 +232,14 @@ class StepDetection:
             s2[self.res.iloc[i]['idx2_both']] = 1
             s3[self.res.iloc[i]['idx3_lhs']] = 1
             s4[self.res.iloc[i]['idx4_rhs']] = 1
-            # s1 = uts.max_filter(s1, win_size)
+            # s1 = max_filter(s1, win_size)
             s1 = moving_average_no_nans(s1, win_size) * w1
             s2 = moving_average_no_nans(s2, win_size) * w2
             s3 = moving_average_no_nans(s3, win_size) * w3
             s4 = moving_average_no_nans(s4, win_size) * w4
             x = s1 + s2 + s3 + s4
-            val = uts.detect_peaks(x, peak_type='p_utils', param1=float(thresh)/win_size, param2=win_size)
+            val = run_peak_utils_peak_detection(x, float(thresh)/win_size, win_size)
+
             self.res.set_value(self.res.index[i], 'idx_ensemble', val)
             # x2 = (x >= thr).astype(int)
 
@@ -206,7 +259,7 @@ class StepDetection:
 
     def add_gait_metrics(self):
         print("\rRunning: Adding gait metrics")
-        self.add_total_step_count()
+        self.add_total_step_count_and_cadence()
         self.add_gait_cadence()
         self.add_step_and_stride_durations()
         # TODO currently using number of indices as time to calculate step durations. Need to add timestamp later on
@@ -215,13 +268,25 @@ class StepDetection:
         self.add_step_and_stride_time_asymmetry()
         # self.add_gait_pci_asymmetry()
 
+    def add_total_step_count_and_cadence(self):
+        # Find 'idx_' columns
+        cols = [col for col in self.res.columns if 'idx_' in col]
+        for i in range(len(cols)):
+            # Step count
+            val = [len(self.res.iloc[j][cols[i]]) for j in range(self.res.shape[0])]
+            res_steps = pd.Series(val, name=cols[i].replace('idx_', 'sc_'))
+            # Cadence
+            val = [60 * self.res.iloc[j][cols[i]] / self.res.iloc[j]['duration'] for j in range(self.res.shape[0])]
+            res_cadence = pd.Series(val, name=cols[i].replace('idx_', 'cadence_'))
+            self.res = pd.concat([self.res, res_steps, res_cadence], axis=1)
+
     def add_step_and_stride_durations(self):
         # TODO currently using number of indices as time to calculate step and stride durations.
         # TODO Need to add timestamp later on
         print("\rRunning: Adding step and stride durations")
         for i in range(self.res.shape[0]):
             res_idx = self.res.index[i]
-            step_durations = np.diff(sc.res.loc[res_idx]['idx_ensemble'])
+            step_durations = np.diff(self.res.loc[res_idx]['idx_ensemble'])
             self.res.set_value(res_idx, 'step_dur_all', step_durations)
             self.res.set_value(res_idx, 'step_dur_side1', step_durations[::2])
             self.res.set_value(res_idx, 'step_dur_side2', step_durations[1::2])
@@ -246,13 +311,16 @@ class StepDetection:
         for i in range(self.res.shape[0]):
             res_idx = self.res.index[i]
             # step
-            side1 = sc.res.loc[res_idx]['step_dur_side1'].mean()
-            side2 = sc.res.loc[res_idx]['step_dur_side2'].mean()
+            # side1 = self.res.loc[res_idx]['step_dur_side1'].mean()
+            # side2 = self.res.loc[res_idx]['step_dur_side2'].mean()
+            side1 = self.res.loc[res_idx]['step_dur_side1'].median()
+            side2 = self.res.loc[res_idx]['step_dur_side2'].median()
+
             step_time_asymmetry = 100.0*(np.abs(side1 - side2) / np.mean([side1, side2]))
             self.res.set_value(res_idx, 'step_time_asymmetry', step_time_asymmetry)
             # stride
-            # side1 = sc.res.loc[res_idx]['stride_dur_side1'].mean()
-            # side2 = sc.res.loc[res_idx]['stride_dur_side2'].mean()
+            # side1 = self.res.loc[res_idx]['stride_dur_side1'].mean()
+            # side2 = self.res.loc[res_idx]['stride_dur_side2'].mean()
             # stride_time_asymmetry = 100.0*(np.abs(side1 - side2) / np.mean([side1, side2]))
             # self.res.set_value(res_idx, 'stride_time_asymmetry', stride_time_asymmetry)
 
@@ -317,29 +385,13 @@ class StepDetection:
         with open(path, 'wb') as f:
             pickle.dump(self, f)
 
-    def add_total_step_count(self):
-        print("\rRunning: Adding step count")
-        for i in range(self.res.shape[0]):
-            res_idx = self.res.index[i]
-            self.res.set_value(res_idx, 'sc1_comb', len(self.res.iloc[i]['idx1_comb']))
-            self.res.set_value(res_idx, 'sc2_both', len(self.res.iloc[i]['idx2_both']))
-            self.res.set_value(res_idx, 'sc3_lhs', len(self.res.iloc[i]['idx3_lhs']))
-            self.res.set_value(res_idx, 'sc4_rhs', len(self.res.iloc[i]['idx4_rhs']))
-            self.res.set_value(res_idx, 'sc_ensemble', len(self.res.iloc[i]['idx_ensemble']))
-
-    def add_gait_cadence(self):
-        print("\rRunning: Adding cadence")
-        for i in range(self.res.shape[0]):
-            res_idx = self.res.index[i]
-            val = 60*self.res.iloc[i]['sc_ensemble']/self.res.iloc[i]['duration']
-            self.res.set_value(res_idx, 'cadence', val)
-
-    def plot_results(self, which, ptype=1, idx=None, save_name=None, show=True, p_rmse=False):
+    def plot_step_count_comparison_scatter(self, sc_algo_column_name='sc_lhs', ptype=1, idx=None, save_name=None,
+                                           show=True, p_rmse=False):
         if idx is None:
-            sc_alg = self.res[which]
+            sc_alg = self.res[sc_algo_column_name]
             sc_true = self.res['sc_true']
         else:
-            sc_alg = self.res.loc[idx][which]
+            sc_alg = self.res.loc[idx][sc_algo_column_name]
             sc_true = self.res.loc[idx]['sc_true']
 
         if ptype == 1:
@@ -381,26 +433,34 @@ class StepDetection:
         if p_rmse:
             return round(rmse, 2)
 
-    def plot_trace(self, id_num, side='both', add_val=0, tight=True, show=True, font_small=True):
+    def plot_signal_trace(self, id_num, side='both', add_val=0, show=True, font_small=True):
         t = self.res.index == id_num
         i = [j for j, x in enumerate(t) if x][0]
+
         if side == 'lhs':
-            plt.plot(self.lhs[i] + add_val, label='Left')
+            x = np.array(range(len(self.lhs[i])))/float(self.sampling_rate)
+            plt.plot(x, self.lhs[i] + add_val, label='Left')
         if side == 'rhs':
-            plt.plot(self.rhs[i] + add_val, label='Right')
+            x = np.array(range(len(self.rhs[i]))) / float(self.sampling_rate)
+            plt.plot(x, self.rhs[i] + add_val, label='Right')
         if side == 'both':
-            plt.plot(self.lhs[i] + add_val, label='Left')
-            plt.plot(self.rhs[i] + add_val, label='Right')
+            x = np.array(range(len(self.lhs[i]))) / float(self.sampling_rate)
+            plt.plot(x, self.lhs[i] + add_val, label='Left')
+            plt.plot(x, self.rhs[i] + add_val, label='Right')
         if side == 'combined':
-            plt.plot(self.both[i] + add_val, label='Combined')
+            x = np.array(range(len(self.combined_signal[i]))) / float(self.sampling_rate)
+            plt.plot(x, self.combined_signal[i] + add_val, label='Combined')
         if side == 'combined_abs':
-            plt.plot(self.both_abs[i] + add_val, label='Combined_abs')
+            x = np.array(range(len(self.combined_signal_abs[i]))) / float(self.sampling_rate)
+            plt.plot(x, self.combined_signal_abs[i] + add_val, label='Combined_abs')
         if side == 'lhs2rhs_ratio':
+            x = np.array(range(len(self.lhs[i]))) / float(self.sampling_rate)
             ratio = self.lhs[i]/self.rhs[i]
-            plt.plot(ratio, label='Lhs2rhs_ratio')
+            plt.plot(x, ratio, label='Lhs2rhs_ratio')
         if side == 'lhs_minus_rhs':
+            x = np.array(range(len(self.lhs[i]))) / float(self.sampling_rate)
             diff = self.lhs[i] - self.rhs[i]
-            plt.plot(diff, label='Lhs_minus_rhs')
+            plt.plot(x, diff, label='Lhs_minus_rhs')
         if font_small:
             big = 18
             med = 14
@@ -409,29 +469,28 @@ class StepDetection:
             big = 28
             med = 24
             small = 18
-        plt.xlabel('Time (128Hz)', fontsize=big)
+        # plt.xlabel('Time (128Hz)', fontsize=big)
+        plt.xlabel('Time (seconds)', fontsize=big)
         plt.ylabel('Acceleration (m/s2)', fontsize=big)
         plt.xticks(fontsize=med)
         plt.yticks(fontsize=med)
         plt.legend(fontsize=small)
-        if tight:
-            plt.tight_layout()
+        plt.tight_layout()
         if show:
             plt.show()
 
-    def plot_step_idx(self, id_num, which=None, p_color='k', tight=False, show=True):
+    def plot_step_idx(self, id_num, column_name='idx_lhs', p_color='k', show=True):
         # id_num is list of indices or a sample id
         if type(id_num) is list:
             idx = [int(128*i) for i in id_num]
         else:
             t = self.res.index == id_num
             i = [j for j, x in enumerate(t) if x][0]
-            idx = self.res.iloc[i][which]
+            idx = self.res.iloc[i][column_name]
         # p_color examples:  'b', 'g', 'k'
         for i in range(len(idx)):
-            plt.axvline(idx[i], color=p_color, ls='-.', lw=2)
-        if tight:
-            plt.tight_layout()
+            plt.axvline(idx[i]/float(self.sampling_rate), color=p_color, ls='-.', lw=2)
+        plt.tight_layout()
         if show:
             plt.show()
 
@@ -450,31 +509,29 @@ if __name__ == "__main__":
     id_nums = sample[sample['StepCount'].notnull()].index.tolist()
 
     # Preprocessing
-    sc = StepDetection(acc, sample, apdm_measures, apdm_events)
-    sc.select_specific_samples(id_nums)
-    # sc.select_signal('norm')
-    # sc.select_signal('vertical')
-    sc.select_signal('vertical', win_size=c.sampling_rate*5)
-    sc.mva(win_size=30)  # other options: sc.mva(p_type='regular', win_size=40) or sc.bf('lowpass', order=5, freq=6)
-    sc.mean_normalization()
+    sd = StepDetection(acc, sample, apdm_measures, apdm_events)
+    sd.select_specific_samples(id_nums)
+    sd.set_manual_count_result()
 
-    # step detection - WPD single side
-    sc.step_detect_single_side_wpd_method(side='lhs', peak_type='scipy', p1=10, p2=17)
-    sc.step_detect_single_side_wpd_method(side='rhs', peak_type='scipy', p1=10, p2=17)
-    sc.step_detect_overlap_method(win_merge=30, win_size_remove_adjacent_peaks=40, peak_type='scipy', p1=2, p2=15)
-
-    # step detection - WPD single side
-    sc.combine_signals()
-    sc.mva(win_size=40, which='combined')  # another de-noising option: sc.mva(win_size=40, which='combined')
-    sc.step_detect_combined_signal_method(min_hz=0.3, max_hz=2.0, factor=1.1, peak_type='p_utils', p1=0.5, p2=30)
+    # Run the step detection algorithms
+    sd.step_detection_single_side(side='lhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
+                                  butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
+    sd.step_detection_single_side(side='rhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
+                                  butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
+    sd.step_detection_two_sides_overlap(signal_to_use='norm', smoothing='mva', mva_win=15,
+                                     vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
+                                     win_size_merge=30, win_size_remove_adjacent_peaks=40, verbose=True)
+    sd.step_detection_two_sides_combined_signal(signal_to_use='norm', smoothing='mva', mva_win=15, vert_win=None,
+                                             butter_freq=12, mva_win_combined=40, min_hz=0.3, max_hz=2.0,
+                                             factor=1.1, peak_type='p_utils', peak_param1=0.5, peak_param2=30)
 
     # integrate the 4 algorithms (lhs, rhs, both-merge, and combined signal)
-    sc.ensemble_result_v1(win_size_merge_lhs_rhs=30, win_merge_lr_both=22)
-    sc.ensemble_result_v2(win_size=10, thresh=1.5, w1=1, w2=0.8, w3=1, w4=1)  # TODO do some sliding window. maybe keep only windows with 2 or more peaks, winsize 10
+    sd.ensemble_result_v1(win_size_merge_lhs_rhs=30, win_merge_lr_both=22)
+    sd.ensemble_result_v2(win_size=10, thresh=1.5, w1=1, w2=0.8, w3=1, w4=1)  # TODO do some sliding window. maybe keep only windows with 2 or more peaks, winsize 10
 
-    sc.calculate_lhs_to_rhs_signal_ratio('idx_ensemble')
-    sc.remove_weak_signals()
+    sd.calculate_lhs_to_rhs_signal_ratio('idx_ensemble')
+    sd.remove_weak_signals()
 
     # create results output
-    sc.add_gait_metrics()
-    sc.save(path=join(c.pickle_path, 'sc_alg'))
+    sd.add_gait_metrics()
+    sd.save(path=join(c.pickle_path, 'sc_alg'))
