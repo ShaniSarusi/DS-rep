@@ -21,3 +21,4 @@ five_mins_file_name = join(data_path, 'last_5_minutes_watch_acc_data_view.csv')
 
 valid_users = [8, 25, 45, 51, 57, 63, 74, 82, 94, 108]
 report_values = range(5)
+accelerometer
