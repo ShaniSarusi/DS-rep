@@ -54,10 +54,10 @@ sc.plot_signal_trace(id, side='rhs')
 
 
 
-sc.plot_step_idx(id, 'idx1_comb', 'r')
-sc.plot_step_idx(id, 'idx2_both', 'k')
-sc.plot_step_idx(id, 'idx3_lhs', 'b')
-sc.plot_step_idx(id, 'idx4_rhs', 'g', tight=True)
+sc.plot_step_idx(id, 'idx_combined', 'r')
+sc.plot_step_idx(id, 'idx_overlap', 'k')
+sc.plot_step_idx(id, 'idx_lhs', 'b')
+sc.plot_step_idx(id, 'idx_rhs', 'g', tight=True)
 
 
 sc.calculate_lhs_to_rhs_signal_ratio('idx_ensemble')

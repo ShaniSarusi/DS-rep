@@ -1,18 +1,20 @@
 from hyperopt import hp
 
-# initialize dictionary
+# Initialize dictionary
 space = dict()
 
-# choose which signal to use
-space['signal'] = hp.choice('signal', ['norm', 'vertical'])
+# Side to work on
+space['side'] = 'lhs'
+
+# Signal to use
+space['signal_to_use'] = hp.choice('signal_to_use', ['norm', 'vertical'])
 
 # TODO add vertical window range (NOne or some range [128 to 30*128]
 
 # choose which smoothing to perform (or none at all if mva_win is equal to ~1
 space['smoothing'] = hp.choice('smoothing', ['mva', 'butter'])
 space['mva_win'] = 1 + hp.randint('mva_win', 50)
-# space['butter_freq_single_side'] = hp.uniform('butter_freq_single_side', 1, 6)
-space['butter_freq_single_side'] = 1 + 0.1 * hp.randint('butter_freq_single_side', 6)
+space['butter_freq'] = 1 + 0.1 * hp.randint('butter_freq', 6)
 
 # choose peak detection algorithm and parameters  TODO - read into peak_utils more how to use
 space['peak_type'] = hp.choice('peak_type', ['scipy', 'peak_utils'])
@@ -25,5 +27,5 @@ space['p2_pu'] = 5 + 5 * hp.randint('p2_pu', 9)
 space['remove_weak_signals'] = hp.choice('remove_weak_signals', [False])
 space['weak_signal_thresh'] = hp.uniform('weak_signal_thresh', -1, 0.5)
 
-# save dict in appropriate variable name
+# Save dict in appropriate variable name
 space_single_side = space

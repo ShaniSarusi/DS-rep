@@ -8,7 +8,7 @@ from hyperopt import fmin, Trials, tpe
 import Gait.config as c
 from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Preprocessing.other_utils import split_data
-import Gait.ParameterOptimization.config_param_search as conf_params
+import Gait.ParameterOptimization.param_search_space as param_search_space
 from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Gait.ParameterOptimization.evaluate_test_set_function import evaluate_on_test_set
 
@@ -19,9 +19,9 @@ from pyspark.sql.functions import *
 
 ##########################################################################################################
 # Running parameters
-space = conf_params.space_single_side
-objective_function = 'single_side_lhs'
-do_spark = True
+space = param_search_space.space_single_side
+objective_function = 'step_detect_single_side_wpd_method'
+do_spark = False
 n_folds = 4
 max_evals = 3
 alg = 'random'  # Can be 'tpe' or 'random'
