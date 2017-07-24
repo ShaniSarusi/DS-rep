@@ -45,11 +45,12 @@ def butter_highpass_filter(data, highcut, sampling_rate, order=4):
 
 def denoise2(data, high_cut):
     """
-    Denoise the data with wavelet and butter
+    Denoise the data with wavelet and butter.
+
     Input:
     data - time signal
     Output:
-    result - signal after denosing
+    result - signal after denoising
     """
     if np.std(data) < 0.01:
         result = data - np.mean(data)

@@ -2,7 +2,7 @@ import pickle
 from os.path import join
 import pandas as pd
 import Gait.config as c
-import Gait.GaitUtils.preprocessing as pre
+import Gait.Pipeline.gait_specific_utils as pre
 from Utils.Preprocessing.denoising import butter_lowpass_filter
 from scipy.stats import pearsonr
 from scipy.integrate import trapz

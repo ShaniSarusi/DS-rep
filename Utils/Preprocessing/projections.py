@@ -11,12 +11,17 @@ from future.utils import lmap
 
 def project_gravity(x, y, z, num_samples_per_interval=None, round_up_or_down='down', return_only_vertical=False):
     if num_samples_per_interval is None:
-        return project_gravity_xyz(x, y, z)
+        v, h = project_gravity_xyz(x, y, z)
+        if return_only_vertical:
+            return v
+        else:
+            return v, h
 
     # set number of intervals
     n = len(x)/num_samples_per_interval
     if round_up_or_down == 'down':
         n = np.floor(n).astype(int)
+        n = np.max([1, n])
     elif round_up_or_down == 'up':
         n = np.ceil(n).astype(int)
 
@@ -27,7 +32,9 @@ def project_gravity(x, y, z, num_samples_per_interval=None, round_up_or_down='do
     idx_start = 0
     v = []
     h = []
-    for i in range(n):  # TODO - chunk the samples more evenly by dividing len(x) each time
+
+    # TODO Chunk the samples below evenly. Do this by dividing len(x) each time rather than the current implementation
+    for i in range(n):
         idx_start = i * win_size
         idx_end = (i + 1) * win_size
         if i == n-1:  # last iteration

@@ -1,7 +1,17 @@
 import numpy as np
 
+
 def zero_crossings(input_signal):
-    # returns indices of zero crossings, and area between each consecutive zero crossings
+    """
+    Returns the indices where a signal crosses zero.
+
+    Args:
+        input_signal (list or numpy array): The signal to be analyzed
+
+    Returns:
+        crossings_idx: Numpy array of the indices where a signal crosses zero.
+        area: Numpy array of the area defined y=0 and every two consecutive zero crossings.
+    """
 
     # Find zero crossings
     crossings_idx = np.where(np.diff(np.signbit(input_signal)))[0] + 1

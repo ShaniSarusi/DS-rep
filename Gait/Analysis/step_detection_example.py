@@ -35,7 +35,7 @@ sc.step_detect_single_side_wpd_method(side='rhs', peak_type='scipy', p1=10, p2=2
 #sc.step_detect_single_side_wpd_method(side='lhs', peak_type='scipy', p1=2, p2=15)
 #sc.step_detect_single_side_wpd_method(side='rhs', peak_type='scipy', p1=2, p2=15)
 sc.step_detect_overlap_method(win_merge=30, win_size_remove_adjacent_peaks=40, peak_type='scipy', p1=2, p2=15)
-sc.step_detect_combined_signal_method(min_hz=0.3, max_hz=2.0, factor=1.1, peak_type='p_utils', p1=0.5, p2=30)
+sc.step_detect_combined_signal_method(min_hz=0.3, max_hz=2.0, factor=1.1, peak_type='peak_utils', p1=0.5, p2=30)
 
 # integrate
 sc.ensemble_result_v1(win_size_merge_lhs_rhs=30, win_merge_lr_both=22)
@@ -54,10 +54,10 @@ sc.plot_signal_trace(id, side='rhs')
 
 
 
-sc.plot_step_idx(id, 'idx1_comb', 'r')
-sc.plot_step_idx(id, 'idx2_both', 'k')
-sc.plot_step_idx(id, 'idx3_lhs', 'b')
-sc.plot_step_idx(id, 'idx4_rhs', 'g', tight=True)
+sc.plot_step_idx(id, 'idx_combined', 'r')
+sc.plot_step_idx(id, 'idx_overlap', 'k')
+sc.plot_step_idx(id, 'idx_lhs', 'b')
+sc.plot_step_idx(id, 'idx_rhs', 'g', tight=True)
 
 
 sc.calculate_lhs_to_rhs_signal_ratio('idx_ensemble')

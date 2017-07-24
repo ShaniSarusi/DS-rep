@@ -134,7 +134,7 @@ def read_input_files_names():
 def extract_sensor_data(input_files):
     p_acc = []; p_bar = []; p_gyr = []; p_mag = []; p_temp = []; p_time = []
     for i in range(len(input_files)):
-        print('In file ' + str(i + 1) + ' of ' + str(len(input_files)))  # TODO - use logger
+        print('In file ' + str(i + 1) + ' of ' + str(len(input_files)))  # TODO - consider using logger
         f = h5py.File(join(c.common_path, input_files[i]), 'r')
 
         acc_i = {}; bar_i = {}; gyr_i = {}; mag_i = {}; temp_i = {}; time_i = {}
