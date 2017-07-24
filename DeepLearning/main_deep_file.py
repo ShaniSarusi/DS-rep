@@ -28,7 +28,7 @@ XYZ = XYZ[cond==True]
 task_clusters_for_deep = task_clusters[cond==True]
 
 augment_XYZ, augment_dys, augment_Task, augment_SubjectId, augment_task_ids, augment_or_not = augment_data(XYZ, 
-                                            labels, np.asarray(task_clusters_for_deep), np.asarray(patients), np.asarray(task_ids))
+                                            labels, np.asarray(task_clusters_for_deep), np.asarray(tags_df.SubjectId[cond==True]), np.asarray(task_ids))
 
 x_denoise = lmap(Denoiseing_func.denoise, augment_XYZ[:, :, 0])
 y_denoise = lmap(Denoiseing_func.denoise, augment_XYZ[:, :, 1])
@@ -47,26 +47,24 @@ sympNew = np.where(augment_dys == 0, 0, 0.25)
 Task_for_predNew = np.where(Task_for_pred == 2, 0.5, 1)
 Task_andSymp = sympNew + Task_for_pred
 Task_andSymp = utils.to_categorical(Task_andSymp, num_classes=6)
+SubjectId_cat = utils.to_categorical(np.reshape(augment_SubjectId - 131, [len(augment_SubjectId), 1]), num_classes=19)
 
 symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary_crossentropy')  
 
 
-def scheduler(epoch=5):
+def scheduler(epoch=10):
     if epoch == 1:
-        K.set_value(symp_class.optimizer.lr, 0.0005)
-    elif epoch == 5:
         K.set_value(symp_class.optimizer.lr, 0.0001)
-    elif epoch == 10:
+    if epoch == 5:
         K.set_value(symp_class.optimizer.lr, 0.00005)
-    elif epoch == 20:
+    if epoch == 10:
         K.set_value(symp_class.optimizer.lr, 0.00005)
-    else:
-        # TODO treat input that is not 1, 5, 10, or 20 (if you want)
-        return
+    if epoch == 20:
+        K.set_value(symp_class.optimizer.lr, 0.00005)
     return K.get_value(symp_class.optimizer.lr)
 
 
-deep_params = {'epochs': 10,
+deep_params = {'epochs': 100,
                'class_weight': {0 : 1,  1: 1},
                'change_lr': LearningRateScheduler(scheduler),
                'batch_size': 128}
@@ -76,8 +74,8 @@ labels_for_deep = augment_task_ids%3;
 
 symp = augment_dys.copy()#{'Dys': augment_dys, 'brady': augment_brady, 'trem': augment_tremor}
 
-res1, order1, features_from_deep_res, symp_res = make_cross_val(TagLow, symp, Task_andSymp, labels_for_deep, augment_task_ids,
-                            symp_class,  feature_extract, augment_or_not, deep_params)
+res1, order1, symp_res = make_cross_val(TagLow, symp, Task_andSymp, labels_for_deep, augment_task_ids,
+                            symp_class,  SubjectId_cat, augment_or_not, deep_params)
 results = np.asarray([x for (y,x) in sorted(zip(order1,res1))])
 results_feature = np.asarray([x for (y,x) in sorted(zip(order1,features_from_deep_res1))])
 
