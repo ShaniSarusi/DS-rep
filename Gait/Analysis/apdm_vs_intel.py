@@ -2,7 +2,7 @@ from Gait.Pipeline.StepDetection import StepDetection
 from os.path import join
 import pickle
 import Gait.config as c
-import Gait.GaitUtils.preprocessing as pre
+import Gait.Pipeline.gait_specific_utils as pre
 import matplotlib.pyplot as plt
 import scipy.stats as s
 

@@ -3,7 +3,7 @@ import pickle
 from os.path import join
 import numpy as np
 import Gait.config as c
-import Gait.GaitUtils.preprocessing as pre
+import Gait.Pipeline.gait_specific_utils as pre
 from Utils.DataHandling.data_processing import multi_intersect
 
 # Load algorithm results
@@ -52,7 +52,7 @@ rmse1 = sc.plot_step_count_comparison_scatter('sc_combined', ptype=2, idx=inp_go
 rmse2 = sc.plot_step_count_comparison_scatter('sc_overlap', idx=reg, save_name=join(c.results_path, 'sc_overlap.png'), p_rmse=True)
 rmse3 = sc.plot_step_count_comparison_scatter('sc_lhs', idx=reg, save_name=join(c.results_path, 'sc_lhs.png'), p_rmse=True)
 rmse4 = sc.plot_step_count_comparison_scatter('sc_rhs', idx=reg, save_name=join(c.results_path, 'sc_rhs.png'), p_rmse=True)
-rmse5 = sc.plot_step_count_comparison_scatter('sc_ensemble', idx=reg, save_name=join(c.results_path, 'sc_ensemble.png'), p_rmse=True)
+# rmse5 = sc.plot_step_count_comparison_scatter('sc_ensemble', idx=reg, save_name=join(c.results_path, 'sc_ensemble.png'), p_rmse=True)
 
 print('RMS results. 1combined: ' + str(rmse1) + ' 2overlap: ' + str(rmse2) + ' 3lhs: ' + str(rmse3) + ' 4rhs: ' +
-      str(rmse4) + ' 5ensemble: ' + str(rmse5))
+      str(rmse4))

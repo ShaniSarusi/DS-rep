@@ -121,7 +121,8 @@ def run_peak_utils_peak_detection(signal, param1, param2):
         val = param1 / max(signal)
 
     # Run peakutils
-    return peakutils.indexes(signal, thres=val, min_dist=param2)
+    res = peakutils.indexes(signal, thres=val, min_dist=param2)
+    return res
 
 
 def run_scipy_peak_detection(signal, param1, param2):

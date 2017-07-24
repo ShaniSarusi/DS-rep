@@ -20,7 +20,7 @@ from pyspark.sql.functions import *
 ##########################################################################################################
 # Running parameters
 space = param_search_space.space_single_side
-objective_function = 'step_detect_single_side_wpd_method'
+objective_function = 'step_detection_single_side'
 do_spark = False
 n_folds = 4
 max_evals = 3
@@ -96,7 +96,7 @@ else:
 ##########################################################################################################
 # Evaluate results on test set and print out
 for i in range(n_folds):
-    root_mean_squared_error_i, best_params_i = evaluate_on_test_set(space, results[i], sd, test[i], i, n_folds)
+    root_mean_squared_error_i, best_params_i = evaluate_on_test_set(space, results[i], sd, test[i], objective, i, n_folds)
     root_mean_squared_error.append(root_mean_squared_error_i)
     best.append(best_params_i)
 

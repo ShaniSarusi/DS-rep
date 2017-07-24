@@ -2,7 +2,7 @@ from os.path import join, sep
 
 exp = 2  # can be either exp 1 or 2 for now
 ###################################################################################
-# paths
+# Paths
 data_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')
 if exp == 1:
     common_path = join(data_path, 'Intel APDM March 6 2017')
@@ -13,7 +13,7 @@ input_path = join(common_path, 'Subjects')
 results_path = join(common_path, 'Results')
 
 ####################################################################
-# parameters and constants
+# Parameters and constants
 G = 9.80665  # standard gravity
 radian = 57.2958
 sampling_rate = 128

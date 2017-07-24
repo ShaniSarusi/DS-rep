@@ -1,21 +1,25 @@
 # functions (i.e. algorithms) to optimize
 from math import sqrt
 from sklearn.metrics import mean_squared_error
+from copy import copy
 
 
-def objective_step_detect_single_side_wpd_method(p):
-    s = p['sd']
+def objective_step_detection_single_side(p):
+    s = copy(p['sd'])
     side = p['side']
     signal_to_use = p['signal_to_use']
+    if signal_to_use == 'vertical' and p['do_windows_if_vertical']:
+        vert_win = p['vert_win']
+    else:
+        vert_win = None
     smoothing = p['smoothing']
     mva_win = p['mva_win']
-    vert_win = p['vert_win']
     butter_freq = p['butter_freq']
     peak_type = p['peak_type']
     if p['peak_type'] == 'scipy':
         peak_param1 = p['p1_sc']
         peak_param2 = p['p2_sc']
-    elif p['peak_utils'] == 'peak_utils':
+    elif p['peak_type'] == 'peak_utils':
         peak_param1 = p['p1_pu']
         peak_param2 = p['p2_pu']
     if p['remove_weak_signals']:
@@ -23,17 +27,18 @@ def objective_step_detect_single_side_wpd_method(p):
     else:
         weak_signal_thresh = None
 
-    s.step_detect_single_side_wpd_method(side=side, signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
+    s.step_detection_single_side(side=side, signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                          vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
                                          peak_param1=peak_param1, peak_param2=peak_param2,
                                          weak_signal_thresh=weak_signal_thresh, verbose=True)
 
     # ********** Calculate RMSE
-    s.add_gait_metrics()
+    s.add_gait_metrics(verbose=False)
     res_rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
     return res_rmse
 
 
+# TODO erase the function below once the function above works
 def objective_single_side_lhs(p):
     # set data
     s = p['sd']
@@ -67,29 +72,7 @@ def objective_single_side_lhs(p):
     return res_rmse
 
 
-def objective_single_side_lhs2(p):
-    # Set class
-    s = p['sd']
-
-    # Open dictionary to get objective function parameters   #TODO maybe use dict.items()
-    param1 = p['signal']
-    param2 = p['smoothing']
-    # ...
-
-    # Run algorithm
-    s.step_detect_single_side_wpd_method(param1, param2)
-
-    # TODO the next two lines should be fixed in new code, and may not be needed here
-    for j in range(s.res.shape[0]):
-        s.res.set_value(s.res.index[j], 'sc3_lhs', len(s.res.iloc[j]['idx3_lhs']))
-
-    # Calculate RMSE
-    # TODO see how to make this non-parametric - no use of sc3....
-    rmse = sqrt(mean_squared_error(s.res['sc_true'], s.res['sc3_lhs']))
-    return rmse
-
-
 # Store all algorithms in a dictionary
 all_algorithms = dict()
 all_algorithms['single_side_lhs'] = objective_single_side_lhs
-all_algorithms['step_detect_single_side_wpd_method'] = objective_step_detect_single_side_wpd_method
+all_algorithms['step_detection_single_side'] = objective_step_detection_single_side

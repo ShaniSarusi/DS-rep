@@ -4,7 +4,7 @@ from copy import copy
 
 
 # Evaluate result on test set
-def evaluate_on_test_set(p_space, p_res, p_sd, test_set, objective, fold_i=None, folds=None, verbose=True):
+def evaluate_on_test_set(p_space, p_res, p_sd, test_set, objective, fold_i=None, folds=None, verbose=False):
     params = space_eval(p_space, p_res)
     sd_test = copy(p_sd)
     sd_test.select_specific_samples(test_set)

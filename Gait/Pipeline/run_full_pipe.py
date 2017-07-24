@@ -1,7 +1,6 @@
 import Gait.Pipeline.read_data as p1
 import Gait.Pipeline.extract_features as p2
 # import Gait.Pipeline.step_fts as p3
-import Gait.Pipeline.results_matrix as p5
 import Gait.config as c
 from os.path import join
 import pickle
