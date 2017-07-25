@@ -5,7 +5,7 @@ import hyperopt as hp
 from hyperopt import fmin, Trials, tpe
 
 import Gait.config as c
-from Utils.Connections.connections import load_pickle_file_from_s3
+from Utils.Connections.connections import load_pickle_file_from_s3, save_pickle_file_to_s3
 from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Preprocessing.other_utils import split_data
 import Gait.ParameterOptimization.param_search_space as param_search_space
@@ -20,6 +20,8 @@ from pyspark.sql.functions import *
 ##########################################################################################################
 # Running parameters
 space = param_search_space.space_single_side
+# space = param_search_space.space_overlap
+# space = param_search_space.space_combined
 objective_function = 'step_detection_single_side'
 do_spark = False
 n_folds = 4
@@ -69,6 +71,9 @@ if do_spark:
         .getOrCreate()
 
     sc = spark.sparkContext
+    if c.run_on_cloud:
+        sc.addPyFile('DS.zip')
+
     # Run parallel code
     rdd = sc.parallelize(rdd_data)
     res_rdd = rdd.map(lambda x: fmin(x[0], x[1], algo=x[2], max_evals=x[3], trials=x[4]))
@@ -104,8 +109,16 @@ results['best'] = best
 results['rmse'] = root_mean_squared_error
 results['train'] = train
 results['test'] = test
-with open(join(c.pickle_path, 'hypopt_cloud_1'), 'wb') as fp:
-    pickle.dump(results, fp)
+
+if c.run_on_cloud:
+    file_name = 'hypopt_cloud_1'
+    with open(file_name, 'wb') as fp:
+        pickle.dump(results, fp)
+    save_pickle_file_to_s3(c.aws_region_name, c.s3_bucket, file_name)
+
+else:
+    with open(join(c.pickle_path, 'hypopt_cloud_1'), 'wb') as fp:
+        pickle.dump(results, fp)
 
 
 ##########################################################################################################
