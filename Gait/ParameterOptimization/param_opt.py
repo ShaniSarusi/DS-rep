@@ -54,10 +54,6 @@ if do_spark:
     for i in range(n_folds):
         data_i = []
         trials = Trials()
-        # sd_train = deepcopy(sd)
-        # sd_train.select_specific_samples(train[i])
-        # space['sd'] = sd_train
-
         space['sample_ids'] = train[i]
         data_i.append(objective)
         data_i.append(space)
@@ -86,11 +82,7 @@ else:
               str(i + 1) + ' of ' + str(n_folds) + '.')
         print('************************************************************************')
 
-        # Optimize params
-        # sd_train = deepcopy(sd)
-        # sd_train.select_specific_samples(train[i])
-        # space['sd'] = sd_train
-
+        # Optimize parameters
         space['sample_ids'] = train[i]
         trials = Trials()
         res = fmin(objective, space, algo=algorithm, max_evals=max_evals, trials=trials)
@@ -112,7 +104,7 @@ results['best'] = best
 results['rmse'] = root_mean_squared_error
 results['train'] = train
 results['test'] = test
-with open(join(c.pickle_path, 'hypopt3'), 'wb') as fp:
+with open(join(c.pickle_path, 'hypopt_cloud_1'), 'wb') as fp:
     pickle.dump(results, fp)
 
 

@@ -1,9 +1,16 @@
 from os.path import join, sep
 
 exp = 2  # can be either exp 1 or 2 for now
+run_on_cloud = True
 ###################################################################################
 # Paths
-data_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')
+local_windows_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')
+s3_path = 's3://intel-health-analytics/data/apdm-june2017'
+
+if run_on_cloud:
+    data_path = s3_path
+else:
+    data_path = local_windows_path
 if exp == 1:
     common_path = join(data_path, 'Intel APDM March 6 2017')
 elif exp == 2:
