@@ -30,11 +30,11 @@ alg = 'random'  # Can be 'tpe' or 'random'
 # Load input data to algorithms
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
-with open(join(c.pickle_path, 'acc'), 'rb') as fp:
-    acc = pickle.load(fp)
+# with open(join(c.pickle_path, 'acc'), 'rb') as fp:
+#     acc = pickle.load(fp)
 ids = sample[sample['StepCount'].notnull()].index.tolist()  # use only samples with step count
-sd = StepDetection(acc, sample)
-sd.select_specific_samples(ids)
+# sd = StepDetection(acc, sample)
+# sd.select_specific_samples(ids)
 
 
 ##########################################################################################################
@@ -54,9 +54,11 @@ if do_spark:
     for i in range(n_folds):
         data_i = []
         trials = Trials()
-        sd_train = deepcopy(sd)
-        sd_train.select_specific_samples(train[i])
-        space['sd'] = sd_train
+        # sd_train = deepcopy(sd)
+        # sd_train.select_specific_samples(train[i])
+        # space['sd'] = sd_train
+
+        space['sample_ids'] = train[i]
         data_i.append(objective)
         data_i.append(space)
         data_i.append(algorithm)
@@ -85,9 +87,11 @@ else:
         print('************************************************************************')
 
         # Optimize params
-        sd_train = deepcopy(sd)
-        sd_train.select_specific_samples(train[i])
-        space['sd'] = sd_train
+        # sd_train = deepcopy(sd)
+        # sd_train.select_specific_samples(train[i])
+        # space['sd'] = sd_train
+
+        space['sample_ids'] = train[i]
         trials = Trials()
         res = fmin(objective, space, algo=algorithm, max_evals=max_evals, trials=trials)
         results.append(res)
@@ -96,7 +100,7 @@ else:
 ##########################################################################################################
 # Evaluate results on test set and print out
 for i in range(n_folds):
-    root_mean_squared_error_i, best_params_i = evaluate_on_test_set(space, results[i], sd, test[i], objective, i, n_folds)
+    root_mean_squared_error_i, best_params_i = evaluate_on_test_set(space, results[i], test[i], objective, i, n_folds)
     root_mean_squared_error.append(root_mean_squared_error_i)
     best.append(best_params_i)
 

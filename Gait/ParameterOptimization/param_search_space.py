@@ -21,7 +21,7 @@ space['butter_freq'] = 1 + 0.1 * hp.randint('butter_freq', 140)
 # TODO - read into peak_utils more how to use
 space['peak_type'] = hp.choice('peak_type', ['scipy', 'peak_utils'])
 space['p1_sc'] = 1 + hp.randint('p1_sc', 21)
-space['p2_sc'] = 1 + hp.randint('p2_sc', 41)
+space['p2_sc'] = space['p1_sc'] + 1 + hp.randint('p2_sc', 40)
 space['p1_pu'] = hp.uniform('p1_pu', 0.1, 1)
 space['p2_pu'] = 5 + 5 * hp.randint('p2_pu', 9)
 
@@ -44,14 +44,14 @@ space_single_side = space
 #
 # # choose which smoothing to perform (or none at all if mva_win is equal to ~1
 # space['smoothing'] = 'mva'
-# space['mva_win'] = 12
+# space['mva_win'] = 48
 # space['butter_freq'] = 1 + 0.1 * hp.randint('butter_freq', 140)
 #
 # # choose peak detection algorithm and parameters
 # # TODO - read into peak_utils more how to use
-# space['peak_type'] = 'peak_utils'
+# space['peak_type'] = 'scipy'
 # space['p1_sc'] = 1 + hp.randint('p1_sc', 21)
-# space['p2_sc'] = 1 + hp.randint('p2_sc', 41)
+# space['p2_sc'] = space['p1_sc'] + 1 + hp.randint(40)
 # space['p1_pu'] = 0.378
 # space['p2_pu'] = 40
 #

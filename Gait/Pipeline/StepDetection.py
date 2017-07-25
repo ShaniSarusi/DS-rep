@@ -312,9 +312,15 @@ class StepDetection:
 
     def add_step_and_stride_durations(self, cols, n_samples):
         for col in cols:
-            step_idx = [self.res[col].iloc[i] for i in range(n_samples)]
-            step_timestamps = [self.acc[i]['lhs']['ts'].iloc[step_idx[i]] for i in range(n_samples)]
-            step_durations = [np.diff(step_timestamps[i]) / np.timedelta64(1, 's') for i in range(n_samples)]
+            step_durations = []
+            for i in range(n_samples):
+                step_idx = self.res[col].iloc[i]
+                if len(step_idx) > 0:
+                    step_timestamps = self.acc[i]['lhs']['ts'].iloc[step_idx]
+                    step_durations_i = np.diff(step_timestamps) / np.timedelta64(1, 's')
+                else:
+                    step_durations_i = []
+                step_durations.append(step_durations_i)
 
             stride_durations = []
             for i in range(n_samples):
