@@ -1,11 +1,13 @@
 from os.path import join, sep
 
 exp = 2  # can be either exp 1 or 2 for now
-run_on_cloud = True
+run_on_cloud = False
 ###################################################################################
 # Paths
 local_windows_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')
-s3_path = 's3://intel-health-analytics/data/apdm-june2017'
+s3_path = 'data'
+aws_region_name = 'us-west-2'
+s3_bucket = 'intel-health-analytics'
 
 if run_on_cloud:
     data_path = s3_path

@@ -1,11 +1,11 @@
 import pickle
-from copy import deepcopy
 from os.path import join
 import numpy as np
 import hyperopt as hp
 from hyperopt import fmin, Trials, tpe
 
 import Gait.config as c
+from Utils.Connections.connections import load_pickle_file_from_s3
 from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Preprocessing.other_utils import split_data
 import Gait.ParameterOptimization.param_search_space as param_search_space
@@ -27,20 +27,20 @@ max_evals = 3
 alg = 'random'  # Can be 'tpe' or 'random'
 
 ##########################################################################################################
-# Load input data to algorithms
-with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
-    sample = pickle.load(fp)
-# with open(join(c.pickle_path, 'acc'), 'rb') as fp:
-#     acc = pickle.load(fp)
-ids = sample[sample['StepCount'].notnull()].index.tolist()  # use only samples with step count
-# sd = StepDetection(acc, sample)
-# sd.select_specific_samples(ids)
+# Set data splits
+path_sample = join(c.pickle_path, 'metadata_sample')
+if c.run_on_cloud:
+    sample = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_sample)
+else:
+    with open(path_sample, 'rb') as fp:
+        sample = pickle.load(fp)
 
+ids = sample[sample['StepCount'].notnull()].index.tolist()  # use only samples with step count
+train, test = split_data(np.arange(len(ids)), n_folds=n_folds)
 
 ##########################################################################################################
 # The parameter optimization code
 objective = all_algorithms[objective_function]
-train, test = split_data(np.arange(len(ids)), n_folds=n_folds)
 best = []
 root_mean_squared_error = []
 if alg == 'tpe':

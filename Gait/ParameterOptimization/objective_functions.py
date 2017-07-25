@@ -1,26 +1,31 @@
 # functions (i.e. algorithms) to optimize
 from math import sqrt
 from sklearn.metrics import mean_squared_error
-from copy import copy
 from os.path import join
 import Gait.config as c
 from Gait.Pipeline.StepDetection import StepDetection
 import pickle
+from Utils.Connections.connections import load_pickle_file_from_s3
 
 
 def objective_step_detection_single_side(p):
     # Load input data to algorithms
-    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
-        sample = pickle.load(fp)
-    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
-        acc = pickle.load(fp)
+    path_sample = join(c.pickle_path, 'metadata_sample')
+    path_acc = join(c.pickle_path, 'acc')
+    if c.run_on_cloud:
+        sample = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_sample)
+        acc = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_acc)
+    else:
+        with open(path_sample, 'rb') as fp:
+            sample = pickle.load(fp)
+        with open(path_acc, 'rb') as fp:
+            acc = pickle.load(fp)
     s = StepDetection(acc, sample)
 
     # Set sample ids for dataset
     ids = sample[sample['StepCount'].notnull()].index.tolist()
     s.select_specific_samples(ids)
     s.select_specific_samples(p['sample_ids'])
-
 
     side = p['side']
     signal_to_use = p['signal_to_use']
