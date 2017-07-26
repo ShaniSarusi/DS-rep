@@ -13,7 +13,7 @@ elif machine == 2:
     data_type = 'split'
 elif machine == 3:
     search_space = 'small'
-    data_type = 'split'
+    data_type = 'all'
 elif machine == 4:
     search_space = 'small'
     data_type = 'split'
@@ -33,7 +33,7 @@ s3_bucket = 'intel-health-analytics'
 if run_on_cloud:
     data_path = s3_path
 elif run_on_cloud2:
-    data_path = 'Zeev'
+    data_path = '/home/hadoop/Zeev'
 else:
     data_path = local_windows_path
 if exp == 1:
