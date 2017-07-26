@@ -1,7 +1,27 @@
 from os.path import join, sep
 
+machine = 1  #1, 2, 3, 4
+n_folds = 5
+max_evals = 200
+alg = 'tpe'  # Can be 'tpe' or 'random'
+
+if machine == 1:
+    search_space = 'full'
+    data_type = 'all'
+elif machine == 2:
+    search_space = 'full'
+    data_type = 'split'
+elif machine == 3:
+    search_space = 'small'
+    data_type = 'split'
+elif machine == 4:
+    search_space = 'small'
+    data_type = 'split'
+
+
+#################################################################################
 exp = 2  # can be either exp 1 or 2 for now
-run_on_cloud = True
+run_on_cloud = False
 ###################################################################################
 # Paths
 local_windows_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')

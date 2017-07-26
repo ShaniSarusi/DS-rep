@@ -18,16 +18,18 @@ def merge_adjacent_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, p_ty
 
     # Or, keep the stronger of signal out of two adjacent peaks
     elif p_type == 'keep_max':
+        sig1 = pd_to_np(sig1)
+        sig2 = pd_to_np(sig2)
         peaks_raw = []
         for i in range(len(idx1)):
             for j in range(len(idx2)):
                 if abs(idx1[i] - idx2[j]) <= win_size:
                     # Prevent division by zero
-                    if sig1.iloc[i] == 0:
-                        sig1.iloc[i] += 0.00001
-                    if sig2.iloc[j] == 0:
-                        sig2.iloc[j] += 0.00001
-                    peaks_raw.append((idx1[i], idx2[j], sig1.iloc[i], sig2.iloc[j], sig1.iloc[i] - sig2.iloc[j]))
+                    if sig1[i] == 0:
+                        sig1[i] += 0.00001
+                    if sig2[j] == 0:
+                        sig2[j] += 0.00001
+                    peaks_raw.append((idx1[i], idx2[j], sig1[i], sig2[j], sig1[i] - sig2[j]))
 
         # keep only max signal
         peaks = []
