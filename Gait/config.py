@@ -22,6 +22,7 @@ elif machine == 4:
 #################################################################################
 exp = 2  # can be either exp 1 or 2 for now
 run_on_cloud = False
+run_on_cloud2 = True
 ###################################################################################
 # Paths
 local_windows_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')
@@ -31,6 +32,8 @@ s3_bucket = 'intel-health-analytics'
 
 if run_on_cloud:
     data_path = s3_path
+elif run_on_cloud2:
+    data_path = 'Zeev'
 else:
     data_path = local_windows_path
 if exp == 1:
@@ -52,5 +55,3 @@ if exp == 1:
 elif exp == 2:
     lhs_wrist_sensor = 1589  # 2nd exp values
     rhs_wrist_sensor = 1695  # 2nd exp values
-
-join('data', 'APDM June 2017', 'Pickled')
