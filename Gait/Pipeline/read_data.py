@@ -12,6 +12,11 @@ from Utils.DataHandling.reading_and_writing_files import read_all_files_in_direc
 sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
          {"name": 'rhs', "sensor": "/Sensors/" + str(c.rhs_wrist_sensor) + "/"}]
 
+sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
+         {"name": 'rhs', "sensor": "/Sensors/" + str(c.rhs_wrist_sensor) + "/"},
+         {"name": 'leg_lhs', "sensor": "/Sensors/" + str(c.lhs_leg_sensor) + "/"}
+         ]
+
 
 def pickle_metadata():
     # Make metadata data frame
@@ -217,6 +222,9 @@ def pickle_sensor_data(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
     with open(join(c.pickle_path, 'mag'), 'wb') as fp: pickle.dump(p_mag, fp)
     with open(join(c.pickle_path, 'temp'), 'wb') as fp: pickle.dump(p_temp, fp)
     with open(join(c.pickle_path, 'time'), 'wb') as fp: pickle.dump(p_time, fp)
+
+def pickle_sensor_data_legs(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
+    with open(join(c.pickle_path, 'acc_leg_lhs'), 'wb') as fp: pickle.dump(p_acc, fp)
 
 
 def load_sensor_data():

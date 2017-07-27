@@ -1,6 +1,6 @@
 from os.path import join, sep
 
-machine = 1  #1, 2, 3, 4
+machine = 2  #1, 2, 3, 4
 n_folds = 5
 max_evals = 200
 alg = 'tpe'  # Can be 'tpe' or 'random'
@@ -55,3 +55,7 @@ if exp == 1:
 elif exp == 2:
     lhs_wrist_sensor = 1589  # 2nd exp values
     rhs_wrist_sensor = 1695  # 2nd exp values
+    lhs_leg_sensor = 377
+    rhs_leg_sensor = 638
+    lumbar_sensor = 1429
+    trunk_sensor = 793

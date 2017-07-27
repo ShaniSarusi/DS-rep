@@ -3,6 +3,7 @@ from os.path import join
 import numpy as np
 import hyperopt as hp
 from hyperopt import fmin, Trials, tpe
+import pandas as pd
 
 import Gait.config as c
 from Gait.Pipeline.StepDetection import StepDetection
@@ -11,9 +12,9 @@ from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Gait.ParameterOptimization.evaluate_test_set_function import evaluate_on_test_set
 
 if c.search_space == 'full':
-    import Gait.ParameterOptimization.param_search_space2 as param_search_space
-elif c.search_space == 'small':
     import Gait.ParameterOptimization.param_search_space as param_search_space
+elif c.search_space == 'small':
+    import Gait.ParameterOptimization.param_search_space2 as param_search_space
 
 
 ##########################################################################################################
@@ -69,14 +70,14 @@ for k in range(len(objective_function_all)):
     space = space_all[k]
 
     objective = all_algorithms[objective_function]
-    best = []
-    root_mean_squared_error = []
     if alg == 'tpe':
         algorithm = tpe.suggest
     elif alg == 'random':
         algorithm = hp.rand.suggest
 
     for j in range(len(walk_tasks)):
+        best = []
+        root_mean_squared_error = []
         train = train_all[j]
         test = test_all[j]
         results = []
@@ -113,6 +114,8 @@ for k in range(len(objective_function_all)):
         results['rmse'] = root_mean_squared_error
         results['train'] = train
         results['test'] = test
+        r = pd.DataFrame(results)
+        r.to_csv(join(c.results_path, 'param_opt', objective_function + '_walk_task' + str(walk_tasks[j]) + '_all.csv'))
 
         with open(join(c.results_path, 'param_opt', objective_function + '_walk_task' + str(walk_tasks[j]) + '_all'), 'wb') as fp:
             results2 = [results, train_all, test_all]
