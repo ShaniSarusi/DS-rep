@@ -7,6 +7,7 @@ Created on Thu Jun 29 13:12:28 2017
 
 import os
 from os.path import join, sep
+from scipy import constants
 
 cloud_data_path = join(sep, 'mnt', 'intel-health-analytics', 'data', 'teva')
 exec_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists', 'Teva')
@@ -15,7 +16,8 @@ data_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'Datasets
 
 valid_users = [8, 25, 45, 51, 57, 63, 74, 82, 94, 108]
 report_values = range(5)
-accelerometer_baseline = 1000
+watch_acc_baseline = 1000
+phone_acc_baseline = constants.g
 
 
 # Watch accelerometer data:
