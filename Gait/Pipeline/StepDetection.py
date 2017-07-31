@@ -46,12 +46,16 @@ class StepDetection:
             self.acc = [self.acc[sample_ids]]
             # Check if self.res has been filled
             if len(self.res) > 0:
-                self.res = self.res.iloc[sample_ids:sample_ids+1]
+                self.res = self.res.iloc[sample_ids:sample_ids + 1]
+                self.apdm_measures = self.apdm_measures.iloc[sample_ids:sample_ids + 1]
+                self.apdm_events = self.apdm_events.iloc[sample_ids:sample_ids + 1]
         else:
             self.acc = [self.acc[i] for i in sample_ids]
             # Check if self.res has been filled
             if len(self.res) > 0:
                 self.res = self.res.iloc[[i for i in sample_ids]]
+                self.apdm_measures = self.apdm_measures.iloc[[i for i in sample_ids]]
+                self.apdm_events = self.apdm_events.iloc[[i for i in sample_ids]]
 
     def step_detection_single_side(self, side='lhs', signal_to_use='norm', smoothing=None, mva_win=20,
                                    vert_win=None, butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20,
@@ -575,6 +579,8 @@ if __name__ == "__main__":
     # Run the step detection algorithms
     sd.step_detection_single_side(side='lhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
                                   butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
+    # sd.step_detection_single_side(side='lhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
+    #                               butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
     sd.step_detection_single_side(side='rhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
                                   butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
     sd.step_detection_two_sides_overlap(signal_to_use='norm', smoothing='mva', mva_win=15,

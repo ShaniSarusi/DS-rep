@@ -170,5 +170,7 @@ def objective_step_detection_two_sides_combined_signal(p):
 # Store all algorithms in a dictionary
 all_algorithms = dict()
 all_algorithms['step_detection_single_side'] = objective_step_detection_single_side
+all_algorithms['step_detection_single_side_lhs'] = objective_step_detection_single_side
+all_algorithms['step_detection_single_side_rhs'] = objective_step_detection_single_side
 all_algorithms['step_detection_two_sides_overlap'] = objective_step_detection_two_sides_overlap
 all_algorithms['step_detection_two_sides_combined_signal'] = objective_step_detection_two_sides_combined_signal

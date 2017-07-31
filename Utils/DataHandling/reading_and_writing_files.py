@@ -1,4 +1,7 @@
-# useful functions for reading data from files and directories
+"""
+This module contains various functions for reading data from files and directories
+"""
+
 from os.path import isfile, join, isdir, split
 from os import listdir
 import pandas as pd
@@ -6,6 +9,18 @@ import pickle
 
 
 def read_all_files_in_directory(dir_path, file_type=None, prefix=None, do_sort=False):
+    """
+    Take a directory and return a list of all files in the directory. Optionally all files of a specific type.
+
+    Input:
+    dir_path (string): The path of the directory
+    file_type (string): If specified (default None), only file names of this type will be read. Example: 'csv'
+    prefix (string): If specified (default None), only file names that contain this prefix will be read.
+    do_sort (boolean): If true (default False), the input files will be sorted.
+
+    Output:
+    out1 (list of strings): Each string is a file in the input directory
+    """
     if isdir(dir_path) is False:
         return
     files = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]

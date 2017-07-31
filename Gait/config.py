@@ -22,7 +22,7 @@ elif machine == 4:
 #################################################################################
 exp = 2  # can be either exp 1 or 2 for now
 run_on_cloud = False
-run_on_cloud2 = True
+run_on_cloud2 = False
 ###################################################################################
 # Paths
 local_windows_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')

@@ -3,15 +3,15 @@ import pickle
 from os.path import join
 import numpy as np
 import Gait.config as c
-import Gait.Pipeline.gait_specific_utils as pre
+from Gait.Pipeline.gait_utils import set_filters, split_by_person
 from Utils.DataHandling.data_processing import multi_intersect
 
 # Load algorithm results
 with open(join(c.pickle_path, 'sc_alg'), 'rb') as fp:
     sc = pickle.load(fp)
-f = pre.set_filters(exp=2)
+f = set_filters(exp=2)
 walk_tasks = [1, 2, 3, 4, 5, 6, 7, 10]
-n = pre.split_by_person()
+n = split_by_person()
 
 inp_all = f['notnull']
 inp_good = np.intersect1d(inp_all, f['quality_good'])

@@ -55,7 +55,7 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
     assert num_files == p_len_raw_data, "Number of apdm files is not equal to length of raw data input"
 
     # Set measures DataFrame
-    cols_measures = ['cadence', 'asymmetry_step_time', 'cv_stride_time_lhs', 'cv_stride_time_rhs', 'cv_step_time_lhs',
+    cols_measures = ['cadence', 'step_time_asymmetry', 'cv_stride_time_lhs', 'cv_stride_time_rhs', 'cv_step_time_lhs',
                      'cv_step_time_lhs']
     measures = pd.DataFrame(index=range(num_files), columns=cols_measures)
     for i in range(num_files):
@@ -77,13 +77,13 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
         stride_r_m = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['Mean']
         stride_r_std = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['StDev']
 
-        asymmetry_step_time = 100.0*(np.abs(step_l_m - step_r_m) / np.mean([step_l_m, step_r_m]))
+        step_time_asymmetry = 100.0*(np.abs(step_l_m - step_r_m) / np.mean([step_l_m, step_r_m]))
         cv_stride_time_lhs = round(stride_l_std / stride_l_m, 3)
         cv_stride_time_rhs = round(stride_r_std / stride_r_m, 3)
         cv_step_time_lhs = round(step_l_std / step_l_m, 3)
         cv_step_time_rhs = round(step_r_std / step_r_m, 3)
 
-        row = [cadence, asymmetry_step_time, cv_stride_time_lhs, cv_stride_time_rhs, cv_step_time_lhs, cv_step_time_rhs]
+        row = [cadence, step_time_asymmetry, cv_stride_time_lhs, cv_stride_time_rhs, cv_step_time_lhs, cv_step_time_rhs]
         measures.iloc[i] = row
 
     # Set events DataFrame

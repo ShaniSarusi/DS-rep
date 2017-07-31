@@ -2,7 +2,7 @@ import pickle
 from os.path import join
 import pandas as pd
 import Gait.config as c
-import Gait.Pipeline.gait_specific_utils as pre
+from Gait.Pipeline.gait_utils import truncate
 from Utils.Preprocessing.denoising import butter_lowpass_filter
 from scipy.stats import pearsonr
 from scipy.integrate import trapz
@@ -118,8 +118,8 @@ def extract_generic_features():
     # pre-processing - truncate
     fr_pct = 10
     bk_pct = 10
-    acc = pre.truncate(acc, fr_pct, bk_pct)
-    gyr = pre.truncate(gyr, fr_pct, bk_pct)
+    acc = truncate(acc, fr_pct, bk_pct)
+    gyr = truncate(gyr, fr_pct, bk_pct)
 
     sides = ['lhs', 'rhs']
     axes = ['x', 'y', 'z', 'n']

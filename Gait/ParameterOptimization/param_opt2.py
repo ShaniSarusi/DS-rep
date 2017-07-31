@@ -26,9 +26,10 @@ space_all.append(param_search_space.space_combined)
 space_all.append(param_search_space.space_single_side_rhs)
 
 objective_function_all = list()
-objective_function_all.append('step_detection_single_side')
+objective_function_all.append('step_detection_single_side_lhs')
 objective_function_all.append('step_detection_two_sides_overlap')
 objective_function_all.append('step_detection_two_sides_combined_signal')
+objective_function_all.append('step_detection_single_side_rhs')
 
 n_folds = c.n_folds
 max_evals = c.max_evals
