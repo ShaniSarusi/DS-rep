@@ -19,6 +19,14 @@ from sklearn.linear_model import LogisticRegression
 def optimize_hyper_params(features_df, labels, patients, model_name,
                           hyper_params=None, scoring_measure=None,
                           eval_iterations=20):
+    """
+    Optimize a model's hyper-parameters, given the features, the labels and the model.
+    
+    Input:
+    features_df -- a Pandas DataFrame, where each column is a feature.
+    labels -- an ndarray, containing the labels.
+    patients -- 
+    """
     if model_name == 'svm':
         model = svm.SVC(kernel='rbf')
         hyper_params = {'C': hp.choice('C', [0.1, 1, 10]),
