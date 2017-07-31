@@ -9,10 +9,10 @@ Created on Sun Jul  9 03:24:45 2017
 input_signal = Input((250,3))#augment_or_not
 #
 #x = ZeroPadding1D(3)(input_signal) 
-x = Conv1D(32, 32, activation='relu', padding='same')(input_signal) 
+x = Conv1D(32, 32, activation='relu')(input_signal) 
 x = MaxPooling1D(2)(x)
 x = Dropout(0.25)(x)
-x = Conv1D(16, 16, activation='relu', padding='same')(x)
+x = Conv1D(16, 16, activation='relu')(x)
 x = MaxPooling1D(2)(x)
 x = Conv1D(4, 4, activation='relu', padding='same')(x)
 #BatchNormalization()(x)
@@ -112,7 +112,7 @@ for train, test in cv:
                                                     metrics=['accuracy'], loss_weights=[1.,0.1,0.2])
     
     best_score = 0
-    for i in range(1,8):
+    for i in range(1,4):
         print(i)
         if(i==3):
             K.set_value(symp_cluster.optimizer.lr,0.0005)

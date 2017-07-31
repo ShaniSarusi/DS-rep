@@ -36,7 +36,7 @@ tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,
 res = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
 res = data_reading.arrange_res(res,path = '/home/lfaivish/Desktop/mapTasksClusters.csv')
-tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.make_interval_from_all_data(res,5,3.5,1,1,50)
+tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.make_interval_from_all_data(res,10,5,1,1,50)
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_z_numpy = lab_z.as_matrix(); lab_z = lab_z_numpy[:,range(len(lab_x_numpy[0])-1)]
@@ -103,7 +103,7 @@ def create_labels(symptom_name, tags_data, condition_vector, binarize=True):
 labels = create_labels('dyskinesia', tags_data=tags_df, condition_vector=cond, binarize=True)
 features = features_data[cond==True]
 #tags_df_after_cond = tags_df[cond==True]
-subject_ids = np.asarray(pd.get_dummies(tags_df.SubjectId[cond==True]))
+subject_ids = np.asarray((tags_df.SubjectId[cond==True]))
 task_ids = tags_df.TaskID[cond==True]
 features = np.column_stack((subject_ids, features))
 patients = task_ids%3
@@ -140,7 +140,7 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
 
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
                                                    model_name='logistic_regression',
-                                                   hyper_params=None, scoring_measure=None,eval_iterations = 200)
+                                                   hyper_params=None, scoring_measure=None,eval_iterations = 100)
 final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments)
 
 

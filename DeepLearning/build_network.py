@@ -4,7 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """
-from keras.layers import merge, Input, Dropout, Dense, Conv2D, Conv1D, MaxPooling1D, UpSampling1D, Flatten, Reshape, ZeroPadding1D, LSTM, RepeatVector
+from keras.layers import Embedding, merge, Input, Dropout, Dense, Conv2D, Conv1D, MaxPooling1D, UpSampling1D, Flatten, Reshape, ZeroPadding1D, LSTM, RepeatVector
 from keras.layers.recurrent import GRU
 from keras.models import Model
 from keras.layers.normalization import BatchNormalization
@@ -241,44 +241,46 @@ def BuildCNNClassifirt(input_size, lost):  # number of nodes in first layer. in 
 
 def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1., 0.01]):  # number of nodes in first layer. in this case 126.
     #
-    input_signal = Input((250,3))
+    input_signal = Input((input_size,3))
     #
     #x = ZeroPadding1D(3)(input_signal) 
-    x = Conv1D(32, 32, activation='relu', padding='same')(input_signal) 
-    x = MaxPooling1D(2)(x)
+    x = Conv1D(32, 32, activation='relu')(input_signal) 
+    x = MaxPooling1D(4)(x)
     #x = Dropout(0.25)(x)
-    x = Conv1D(16, 16, activation='relu', padding='same')(x)
-    x = MaxPooling1D(2)(x)
-    x = Conv1D(8, 4, activation='relu', padding='same')(x)
+    x = Conv1D(16, 16, activation='relu')(x)
+    x = MaxPooling1D(4)(x)
+    x = Conv1D(28, 4, activation='relu', padding='same')(x)
     #BatchNormalization()(x)
     x = MaxPooling1D(4)(x)
-    x = Conv1D(4, 3, activation='relu', padding='same')(x)
-    x = MaxPooling1D(2)(x)
+    x = Conv1D(28, 3, activation='relu', padding='same')(x)
+    x = MaxPooling1D(4)(x)
     #x = GRU(32,  activation='tanh', return_sequences=True)(x)
     #attention_mul = attention_3d_block(x)
     #x = Flatten()(attention_mul)
     x = Flatten()(x)
-    OneForActandSymp = Dense(32, activation='relu',activity_regularizer=regularizers.l2(0.0001))(x)#
+    OneForActandSymp = Dense(64, activation='relu')(x)#
     #OneForActandSymp = BatchNormalization()(OneForActandSymp)
     
-    ActiveLayer = Dropout(0.5)(OneForActandSymp)
-    ActiveLayer= Dense(16, activation='relu', activity_regularizer=regularizers.l2(0.0001))(OneForActandSymp)
+    #ActiveLayer = Dropout(0.5)(OneForActandSymp)
+    ActiveLayer = Dense(32, activation='relu')(OneForActandSymp)
     ActiveLayer = BatchNormalization()(ActiveLayer)
     #ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
     End_point_Active = Dense(6, activation='softmax')(ActiveLayer)
     
     
-    #sympLayer=Dropout(0.5)(OneForActandSymp)
+    #sympLayer=Dropout(0.5)(ActiveLayer)
     sympLayer = Dense(19, activation='relu')(ActiveLayer)
-    input_user = Input((19,))
-    Embedding(19, 6)(input_user)
-    merging = layers.concatenate([sympLayer, input_user])
+    sympLayer = BatchNormalization()(sympLayer)
+    input_user = Input((20,))
+    #Fuck_YOU = Embedding(19, 20)(input_user)
+    Fuck_YOU = Dense(10)(input_user)
+    Fuck_YOU = Dense(10)(Fuck_YOU)
+    merging = layers.concatenate([sympLayer, Fuck_YOU])
     
-    #sympLayer = BatchNormalization()(sympLayer)
-    close_to_output = Dense(19, activation='relu',activity_regularizer=regularizers.l2(0.0001))(merging)
-    close_to_output = layers.concatenate([close_to_output, input_user])
+    #
+    close_to_output = Dense(19, activation='relu')(merging)
     close_to_output = Dense(8, activation='relu')(close_to_output)
-
+    close_to_output = Dense(8, activation='tanh')(close_to_output)
     End_point = Dense(1, activation='sigmoid')(close_to_output)
     
     symp_class = Model([input_signal, input_user], [End_point, End_point_Active])

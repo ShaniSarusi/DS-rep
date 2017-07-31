@@ -13,6 +13,7 @@ from keras import backend as K
 from keras import utils
 from keras.callbacks import LearningRateScheduler
 from sklearn.metrics import confusion_matrix
+from LDopa.AugmentedData.augmented_data import augment_data
 
 import Utils.Preprocessing.denoising as Denoiseing_func
 from DeepLearning.build_network import BuildCNNClassWithActivity
@@ -47,7 +48,7 @@ sympNew = np.where(augment_dys == 0, 0, 0.25)
 Task_for_predNew = np.where(Task_for_pred == 2, 0.5, 1)
 Task_andSymp = sympNew + Task_for_pred
 Task_andSymp = utils.to_categorical(Task_andSymp, num_classes=6)
-SubjectId_cat = utils.to_categorical(np.reshape(augment_SubjectId - 131, [len(augment_SubjectId), 1]), num_classes=19)
+SubjectId_cat = utils.to_categorical(np.reshape(augment_SubjectId - 131, [len(augment_SubjectId), 1]), num_classes=20)
 
 symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary_crossentropy')  
 
@@ -55,16 +56,16 @@ symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary
 def scheduler(epoch=10):
     if epoch == 1:
         K.set_value(symp_class.optimizer.lr, 0.0001)
+    if epoch == 2:
+        K.set_value(symp_class.optimizer.lr, 0.00005)
     if epoch == 5:
-        K.set_value(symp_class.optimizer.lr, 0.00005)
-    if epoch == 10:
-        K.set_value(symp_class.optimizer.lr, 0.00005)
-    if epoch == 20:
-        K.set_value(symp_class.optimizer.lr, 0.00005)
+        K.set_value(symp_class.optimizer.lr, 0.00003)
+    if epoch == 7:
+        K.set_value(symp_class.optimizer.lr, 0.00001)
     return K.get_value(symp_class.optimizer.lr)
 
 
-deep_params = {'epochs': 100,
+deep_params = {'epochs': 10,
                'class_weight': {0 : 1,  1: 1},
                'change_lr': LearningRateScheduler(scheduler),
                'batch_size': 128}
