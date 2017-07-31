@@ -6,6 +6,7 @@ import Gait.config as c
 from Gait.Pipeline.StepDetection import StepDetection
 import pickle
 from Utils.Connections.connections import load_pickle_file_from_s3
+from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
 
 
 def objective_step_detection_single_side(p):
@@ -49,17 +50,28 @@ def objective_step_detection_single_side(p):
         weak_signal_thresh = p['weak_signal_thresh']
     else:
         weak_signal_thresh = None
+    metric = p['metric']
 
     s.step_detection_single_side(side=side, signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                          vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
                                          peak_param1=peak_param1, peak_param2=peak_param2,
                                          weak_signal_thresh=weak_signal_thresh, verbose=True)
 
-    # ********** Calculate RMSE
+    # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
-    res_rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
-    print('\tResult: RMSE is ' + str(round(res_rmse,2)))
-    return res_rmse
+    if metric == 'both':
+        rmse = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
+        mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
+        print('\tResult: RMSE is ' + str(round(rmse, 2)))
+        return rmse, mape
+    elif metric == 'mape':
+        res = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
+        metric_name = 'Mean Absolute Percentage Error'
+    else:  # rmse
+        res = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
+        metric_name = 'RMSE'
+    print('\tResult: ' + metric_name + ' is ' + str(round(res, 2)))
+    return res
 
 
 def objective_step_detection_two_sides_overlap(p):
@@ -100,17 +112,28 @@ def objective_step_detection_two_sides_overlap(p):
         peak_param2 = p['p2_pu']
     win_size_merge = p['win_size_merge']
     win_size_remove_adjacent_peaks = p['win_size_remove_adjacent_peaks']
+    metric = p['metric']
 
     s.step_detection_two_sides_overlap(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                        vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
                                        peak_param1=peak_param1, peak_param2=peak_param2, win_size_merge=win_size_merge,
                                        win_size_remove_adjacent_peaks=win_size_remove_adjacent_peaks, verbose=True)
 
-    # ********** Calculate RMSE
+    # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
-    res_rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + 'overlap']))
-    print('\tResult: RMSE is ' + str(round(res_rmse,2)))
-    return res_rmse
+    if metric == 'both':
+        rmse = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
+        mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
+        print('\tResult: RMSE is ' + str(round(rmse, 2)))
+        return rmse, mape
+    elif metric == 'mape':
+        res = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
+        metric_name = 'Mean Absolute Percentage Error'
+    else:  # rmse
+        res = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap']))
+        metric_name = 'RMSE'
+    print('\tResult: ' + metric_name + ' is ' + str(round(res, 2)))
+    return res
 
 
 def objective_step_detection_two_sides_combined_signal(p):
@@ -153,6 +176,7 @@ def objective_step_detection_two_sides_combined_signal(p):
     elif p['peak_type'] == 'peak_utils':
         peak_param1 = p['p1_pu']
         peak_param2 = p['p2_pu']
+    metric = p['metric']
 
     s.step_detection_two_sides_combined_signal(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                                vert_win=vert_win, butter_freq=butter_freq,
@@ -160,11 +184,21 @@ def objective_step_detection_two_sides_combined_signal(p):
                                                factor=factor, peak_type=peak_type, peak_param1=peak_param1,
                                                peak_param2=peak_param2, verbose=True)
 
-    # ********** Calculate RMSE
+    # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
-    res_rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + 'combined']))
-    print('\tResult: RMSE is ' + str(round(res_rmse,2)))
-    return res_rmse
+    if metric == 'both':
+        rmse = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
+        mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
+        print('\tResult: RMSE is ' + str(round(rmse, 2)))
+        return rmse, mape
+    elif metric == 'mape':
+        res = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
+        metric_name = 'Mean Absolute Percentage Error'
+    else:  # rmse
+        res = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_combined']))
+        metric_name = 'RMSE'
+    print('\tResult: ' + metric_name + ' is ' + str(round(res, 2)))
+    return res
 
 
 # Store all algorithms in a dictionary

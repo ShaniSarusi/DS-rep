@@ -33,7 +33,8 @@ objective_function_all.append('step_detection_single_side_rhs')
 
 n_folds = c.n_folds
 max_evals = c.max_evals
-alg = 'tpe'  # Can be 'tpe' or 'random'
+alg = c.alg
+metric = c.metric_to_optimize
 
 ##########################################################################################################
 # Set data splits
@@ -79,6 +80,7 @@ for k in range(len(objective_function_all)):
     for j in range(len(walk_tasks)):
         best = []
         root_mean_squared_error = []
+        mape = []
         train = train_all[j]
         test = test_all[j]
         results = []
@@ -90,6 +92,7 @@ for k in range(len(objective_function_all)):
 
             # Optimize parameters
             space['sample_ids'] = train[i]
+            space['metric'] = metric
             trials = Trials()
             res = fmin(objective, space, algo=algorithm, max_evals=max_evals, trials=trials)
             results.append(res)
@@ -103,8 +106,9 @@ for k in range(len(objective_function_all)):
         ##########################################################################################################
         # Evaluate results on test set and print out
         for i in range(n_folds):
-            root_mean_squared_error_i, best_params_i = evaluate_on_test_set(space, results[i], test[i], objective, i, n_folds)
+            root_mean_squared_error_i, mape_i, best_params_i = evaluate_on_test_set(space, results[i], test[i], objective, i, n_folds)
             root_mean_squared_error.append(root_mean_squared_error_i)
+            mape.append(mape_i)
             best.append(best_params_i)
 
 
@@ -113,6 +117,7 @@ for k in range(len(objective_function_all)):
         results = dict()
         results['best'] = best
         results['rmse'] = root_mean_squared_error
+        results['mape'] = mape
         results['train'] = train
         results['test'] = test
         r = pd.DataFrame(results)

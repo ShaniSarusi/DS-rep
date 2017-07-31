@@ -6,7 +6,8 @@ import pprint
 def evaluate_on_test_set(p_space, p_res, test_set, objective, fold_i=None, folds=None, verbose=False):
     params = space_eval(p_space, p_res)
     params['sample_ids'] = test_set
-    root_mean_squared_error = objective(params)
+    params['metric'] = 'both'
+    root_mean_squared_error, mape = objective(params)
 
     # Print cross validation fold results
     if verbose:
@@ -15,4 +16,4 @@ def evaluate_on_test_set(p_space, p_res, test_set, objective, fold_i=None, folds
         pprint.pprint(params)
         print()
 
-    return root_mean_squared_error, params
+    return root_mean_squared_error, mape, params

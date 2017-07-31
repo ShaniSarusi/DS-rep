@@ -15,6 +15,8 @@ with open(join(c.pickle_path, 'sc_alg'), 'rb') as fp:
     sd = pickle.load(fp)
 # apdm_metrics = sd.apdm_measures.columns.tolist()
 apdm_metrics = ['cadence', 'step_time_asymmetry']
+# apdm_metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var_lhs', 'stride_time_var_rhs', 'step_time_var_lhs',
+# 'step_time_var_lhs']
 
 # set indices
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:

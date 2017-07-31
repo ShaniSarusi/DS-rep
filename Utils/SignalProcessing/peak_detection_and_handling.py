@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import scipy.signal as sig
+from scipy.signal import find_peaks_cwt
 import peakutils
 from Utils.DataHandling.data_processing import pd_to_np
 
@@ -128,7 +128,7 @@ def run_peak_utils_peak_detection(signal, param1, param2):
 
 
 def run_scipy_peak_detection(signal, param1, param2):
-    return sig.find_peaks_cwt(signal, np.arange(param1, param2))
+    return find_peaks_cwt(signal, np.arange(param1, param2))
 
 
 def max_filter(x, win_size):

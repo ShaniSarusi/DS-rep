@@ -34,7 +34,7 @@ for i in range(len(f)):
         res.set_value(idx, 'TaskNum', training_data)
         res.set_value(idx, 'FoldNum', str(j+1))
         res.set_value(idx, 'RMSE', f_i['rmse'][j])
-        # res.set_value(idx, 'MAPE', f_i['mape'][j])
+        res.set_value(idx, 'MAPE', f_i['mape'][j])
 
         # params
         p = ast.literal_eval(f_i['best'][j])

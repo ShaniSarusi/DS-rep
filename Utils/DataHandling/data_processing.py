@@ -37,19 +37,19 @@ def multi_intersect(input_tuple):
     return reduce(np.intersect1d, input_tuple)
 
 
-# TODO see if the below function can be replaced in the code by something more efficient. Essentially a single line pandas line
-def make_df(data, col_names):
+def make_df_from_hdf5_dataset(hdf5_dataset, col_names):
     """
-    Take the input data and column names and create a dataframe. This function is likely unnecessary and inefficient
+    Take the input data and column names and create a dataframe.
 
-    :param data (list of lists, maybe matrix...): Data likely in list format
-    :param col_names (list of strings): column names in the dataframe
-    :return: A Pandas DataFrame
+    hdf5_dataset (hdf5 dataset): Dataset read from hdf5 file in hdf5 format
+    col_names (list of strings): column names in the dataframe
+
+    Output:
+    out1 (Pandas DataFrame): Returns the input data and column names as a dataframe
     """
-    df = pd.DataFrame(index=range(data.shape[0]), columns=col_names)
-    for i in range(data.shape[0]):
-        df.iloc[i] = data[i]
-    return df
+
+    data = [hdf5_dataset[i] for i in range(hdf5_dataset.shape[0])]
+    return pd.DataFrame(data, columns=col_names)
 
 
 def chunk_it(seq, n, shuffle=False):

@@ -5,17 +5,17 @@ from os import listdir
 import numpy as np
 import Gait.config as c
 from os.path import join, isdir
-from Utils.DataHandling.data_processing import make_df
+from Utils.DataHandling.data_processing import make_df_from_hdf5_dataset
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory, pickle_excel_file
 
 # params and global variables
 sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
          {"name": 'rhs', "sensor": "/Sensors/" + str(c.rhs_wrist_sensor) + "/"}]
 
-sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
-         {"name": 'rhs', "sensor": "/Sensors/" + str(c.rhs_wrist_sensor) + "/"},
-         {"name": 'leg_lhs', "sensor": "/Sensors/" + str(c.lhs_leg_sensor) + "/"}
-         ]
+# sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
+#          {"name": 'rhs', "sensor": "/Sensors/" + str(c.rhs_wrist_sensor) + "/"},
+#          {"name": 'leg_lhs', "sensor": "/Sensors/" + str(c.lhs_leg_sensor) + "/"}
+#          ]
 
 
 def pickle_metadata():
@@ -55,8 +55,8 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
     assert num_files == p_len_raw_data, "Number of apdm files is not equal to length of raw data input"
 
     # Set measures DataFrame
-    cols_measures = ['cadence', 'step_time_asymmetry', 'cv_stride_time_lhs', 'cv_stride_time_rhs', 'cv_step_time_lhs',
-                     'cv_step_time_lhs']
+    cols_measures = ['cadence', 'step_time_asymmetry', 'stride_time_var_lhs', 'stride_time_var_rhs',
+                     'step_time_var_lhs', 'step_time_var_lhs']
     measures = pd.DataFrame(index=range(num_files), columns=cols_measures)
     for i in range(num_files):
         if "_TUG_" in p_apdm_files[i]:
@@ -78,23 +78,24 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
         stride_r_std = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['StDev']
 
         step_time_asymmetry = 100.0*(np.abs(step_l_m - step_r_m) / np.mean([step_l_m, step_r_m]))
-        cv_stride_time_lhs = round(stride_l_std / stride_l_m, 3)
-        cv_stride_time_rhs = round(stride_r_std / stride_r_m, 3)
-        cv_step_time_lhs = round(step_l_std / step_l_m, 3)
-        cv_step_time_rhs = round(step_r_std / step_r_m, 3)
+        stride_time_var_lhs = round(stride_l_std / stride_l_m, 3)
+        stride_time_var_rhs = round(stride_r_std / stride_r_m, 3)
+        step_time_var_lhs = round(step_l_std / step_l_m, 3)
+        step_time_var_rhs = round(step_r_std / step_r_m, 3)
 
-        row = [cadence, step_time_asymmetry, cv_stride_time_lhs, cv_stride_time_rhs, cv_step_time_lhs, cv_step_time_rhs]
+        row = [cadence, step_time_asymmetry, stride_time_var_lhs, stride_time_var_rhs, step_time_var_lhs,
+               step_time_var_rhs]
         measures.iloc[i] = row
 
     # Set events DataFrame
     # get time
     p_time = []
     for i in range(len(input_files)):
-        print('In file ' + str(i + 1) + ' of ' + str(len(input_files)))
+        print('Extract APDM results: In file ' + str(i + 1) + ' of ' + str(len(input_files)))
         f = h5py.File(join(c.common_path, input_files[i]), 'r')
         time_i = {}
         for side in sides:
-            time_i[side['name']] = make_df(f[side['sensor'] + 'Time'], ['value'])
+            time_i[side['name']] = make_df_from_hdf5_dataset(f[side['sensor'] + 'Time'], ['value'])
         p_time.append(time_i)
 
     with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
@@ -139,17 +140,17 @@ def read_input_files_names():
 def extract_sensor_data(input_files):
     p_acc = []; p_bar = []; p_gyr = []; p_mag = []; p_temp = []; p_time = []
     for i in range(len(input_files)):
-        print('In file ' + str(i + 1) + ' of ' + str(len(input_files)))  # TODO - consider using logger
+        print('Extract sensor data: In file ' + str(i + 1) + ' of ' + str(len(input_files)))
         f = h5py.File(join(c.common_path, input_files[i]), 'r')
 
         acc_i = {}; bar_i = {}; gyr_i = {}; mag_i = {}; temp_i = {}; time_i = {}
         for side in sides:
-            acc_i[side['name']] = make_df(f[side['sensor'] + 'Accelerometer'], ['x', 'y', 'z'])
-            bar_i[side['name']] = make_df(f[side['sensor'] + 'Barometer'], ['value'])
-            gyr_i[side['name']] = make_df(f[side['sensor'] + 'Gyroscope'], ['x', 'y', 'z'])
-            mag_i[side['name']] = make_df(f[side['sensor'] + 'Magnetometer'], ['x', 'y', 'z'])
-            temp_i[side['name']] = make_df(f[side['sensor'] + 'Temperature'], ['value'])
-            time_i[side['name']] = make_df(f[side['sensor'] + 'Time'], ['value'])
+            acc_i[side['name']] = make_df_from_hdf5_dataset(f[side['sensor'] + 'Accelerometer'], ['x', 'y', 'z'])
+            bar_i[side['name']] = make_df_from_hdf5_dataset(f[side['sensor'] + 'Barometer'], ['value'])
+            gyr_i[side['name']] = make_df_from_hdf5_dataset(f[side['sensor'] + 'Gyroscope'], ['x', 'y', 'z'])
+            mag_i[side['name']] = make_df_from_hdf5_dataset(f[side['sensor'] + 'Magnetometer'], ['x', 'y', 'z'])
+            temp_i[side['name']] = make_df_from_hdf5_dataset(f[side['sensor'] + 'Temperature'], ['value'])
+            time_i[side['name']] = make_df_from_hdf5_dataset(f[side['sensor'] + 'Time'], ['value'])
 
         # append current file data
         p_acc.append(acc_i); p_bar.append(bar_i); p_gyr.append(gyr_i); p_mag.append(mag_i); p_temp.append(temp_i)

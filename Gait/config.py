@@ -4,6 +4,7 @@ machine = 2  #1, 2, 3, 4
 n_folds = 5
 max_evals = 200
 alg = 'tpe'  # Can be 'tpe' or 'random'
+metric_to_optimize = 'rmse'  # 'rmse' or 'mape'
 
 if machine == 1:
     search_space = 'full'

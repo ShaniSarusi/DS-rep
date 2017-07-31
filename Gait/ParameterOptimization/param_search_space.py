@@ -65,7 +65,6 @@ d['p2_pu'] = 5 + 5 * hp.randint('p2_pu', 9)
 d['win_size_merge'] = 2 + 2 * hp.randint('win_size_merge', 20)
 d['win_size_remove_adjacent_peaks'] = 2 + 2 * hp.randint('win_size_remove_adjacent_peaks', 15)
 
-
 # Save
 space_overlap = d
 

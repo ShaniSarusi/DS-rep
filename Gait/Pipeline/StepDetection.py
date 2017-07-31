@@ -13,7 +13,7 @@ from sklearn.metrics import mean_squared_error
 from Utils.SignalProcessing.peak_detection_and_handling import merge_adjacent_peaks_from_two_signals, \
     run_scipy_peak_detection, run_peak_utils_peak_detection, merge_adjacent_peaks_from_single_signal, \
     score_max_peak_within_fft_frequency_range
-from Utils.DescriptiveStatistics.descriptive_statistics import cv, mean_and_std
+from Utils.BasicStatistics.statistics_functions import cv, mean_and_std
 from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter, butter_highpass_filter
 from Utils.Preprocessing.projections import project_gravity
 
@@ -154,12 +154,14 @@ class StepDetection:
             idx_rhs = [run_peak_utils_peak_detection(rhs[i], peak_param1, peak_param2) for i in range(len(rhs))]
 
         # Merge adjacent peaks from both sides into single peaks
-        if verbose: print("\tStep: Merge adjacent peaks from both sides into single peaks")
+        if verbose: print("\tStep: Merge adjacent peaks from both sides into single peaks with window: " +
+                          str(win_size_merge))
         merged_peaks = [merge_adjacent_peaks_from_two_signals(idx_lhs[i], idx_rhs[i], lhs[i][idx_lhs[i]], rhs[i][idx_rhs[i]],
                                                               'keep_max', win_size_merge) for i in range(len(lhs))]
 
         # Merge adjacent peaks from the merged peaks before
-        if verbose: print("\tStep: Merge adjacent peaks from the merged peaks before")
+        if verbose: print("\tStep: Merge adjacent peaks from the merged peaks before with window: " +
+                          str(win_size_remove_adjacent_peaks))
         idx = [merge_adjacent_peaks_from_single_signal(merged_peaks[i], win_size_remove_adjacent_peaks) for i in
                range(len(merged_peaks))]
 
