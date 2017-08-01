@@ -41,9 +41,17 @@ def load_pickle_file_from_s3(p_region_name, p_bucket, p_file_path):
 
 
 def save_pickle_file_to_s3(p_region_name, p_bucket, p_local_file):
+    """
+    Save the pickle file specified by p_local_file in the p_bucket in s3.
+
+    Input:
+    p_region_name (string): The AWS region name. Example: us-west-2
+    p_bucket (string):  The AWS bucket where the file will be saved. Example: 'intel-health-analytics'
+    p_local_file (string): The local path of the pickled file.
+    """
     session = boto3.session.Session(region_name=p_region_name)
     s3client = session.client('s3', config= boto3.session.Config(signature_version='s3v4'))
 
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    s3client.upload_file(p_local_file, p_bucket, 'param_opt_results-' + timestr)
+    time_string = time.strftime("%Y%m%d-%H%M%S")
+    s3client.upload_file(p_local_file, p_bucket, 'param_opt_results-' + time_string)
 

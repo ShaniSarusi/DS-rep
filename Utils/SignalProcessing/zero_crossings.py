@@ -3,14 +3,14 @@ import numpy as np
 
 def zero_crossings(input_signal):
     """
-    Returns the indices where a signal crosses zero.
+    Return the indices where the input signal crosses zero.
 
-    Args:
-        input_signal (list or numpy array): The signal to be analyzed
+    Input:
+    input_signal (list or numpy array): The signal to be analyzed
 
-    Returns:
-        crossings_idx: Numpy array of the indices where a signal crosses zero.
-        area: Numpy array of the area defined y=0 and every two consecutive zero crossings.
+    Output:
+    crossings_idx (numpy array): Numpy array of the indices where a signal crosses zero.
+    area (numpy array): Numpy array of the area defined y=0 and every two consecutive zero crossings.
     """
 
     # Find zero crossings
