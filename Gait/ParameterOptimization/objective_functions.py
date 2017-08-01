@@ -59,19 +59,18 @@ def objective_step_detection_single_side(p):
 
     # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
+    rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
+    mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
     if metric == 'both':
-        rmse = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
-        mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
         print('\tResult: RMSE is ' + str(round(rmse, 2)))
         return rmse, mape
     elif metric == 'mape':
-        res = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
-        metric_name = 'Mean Absolute Percentage Error'
+        print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
+        return mape
     else:  # rmse
-        res = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
-        metric_name = 'RMSE'
-    print('\tResult: ' + metric_name + ' is ' + str(round(res, 2)))
-    return res
+        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        return rmse
+
 
 
 def objective_step_detection_two_sides_overlap(p):
@@ -121,19 +120,17 @@ def objective_step_detection_two_sides_overlap(p):
 
     # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
+    rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap']))
+    mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
     if metric == 'both':
-        rmse = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
-        mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
         print('\tResult: RMSE is ' + str(round(rmse, 2)))
         return rmse, mape
     elif metric == 'mape':
-        res = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
-        metric_name = 'Mean Absolute Percentage Error'
+        print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
+        return mape
     else:  # rmse
-        res = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap']))
-        metric_name = 'RMSE'
-    print('\tResult: ' + metric_name + ' is ' + str(round(res, 2)))
-    return res
+        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        return rmse
 
 
 def objective_step_detection_two_sides_combined_signal(p):
@@ -186,19 +183,17 @@ def objective_step_detection_two_sides_combined_signal(p):
 
     # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
+    rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_combined']))
+    mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
     if metric == 'both':
-        rmse = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
-        mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
         print('\tResult: RMSE is ' + str(round(rmse, 2)))
         return rmse, mape
     elif metric == 'mape':
-        res = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
-        metric_name = 'Mean Absolute Percentage Error'
+        print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
+        return mape
     else:  # rmse
-        res = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_combined']))
-        metric_name = 'RMSE'
-    print('\tResult: ' + metric_name + ' is ' + str(round(res, 2)))
-    return res
+        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        return rmse
 
 
 # Store all algorithms in a dictionary

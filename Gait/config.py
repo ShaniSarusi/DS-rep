@@ -1,29 +1,39 @@
 from os.path import join, sep
+from os import getcwd
 
-machine = 2  #1, 2, 3, 4
-n_folds = 5
-max_evals = 200
+machine = 1  # 1, 2, 3, 4, 5, 6
+n_folds = 2
+max_evals = 1
 alg = 'tpe'  # Can be 'tpe' or 'random'
 metric_to_optimize = 'rmse'  # 'rmse' or 'mape'
 
 if machine == 1:
-    search_space = 'full'
     data_type = 'all'
+    search_space = 'fast'
 elif machine == 2:
-    search_space = 'full'
-    data_type = 'split'
-elif machine == 3:
-    search_space = 'small'
     data_type = 'all'
-elif machine == 4:
     search_space = 'small'
+elif machine == 2:
+    data_type = 'all'
+    search_space = 'full'
+elif machine == 4:
     data_type = 'split'
+    search_space = 'fast'
+elif machine == 5:
+    data_type = 'split'
+    search_space = 'small'
+elif machine == 6:
+    data_type = 'split'
+    search_space = 'full'
 
 
 #################################################################################
 exp = 2  # can be either exp 1 or 2 for now
 run_on_cloud = False
-run_on_cloud2 = False
+if 'hadoop' in getcwd():
+    run_on_cloud2 = True
+else:
+    run_on_cloud2 = False
 ###################################################################################
 # Paths
 local_windows_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')

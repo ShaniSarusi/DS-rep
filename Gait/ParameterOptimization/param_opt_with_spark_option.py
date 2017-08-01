@@ -8,7 +8,7 @@ import Gait.config as c
 from Utils.Connections.connections import load_pickle_file_from_s3, save_pickle_file_to_s3
 from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Preprocessing.other_utils import split_data
-import Gait.ParameterOptimization.param_search_space as param_search_space
+import Gait.ParameterOptimization.param_search_space_full as param_search_space
 from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Gait.ParameterOptimization.evaluate_test_set_function import evaluate_on_test_set
 

@@ -50,6 +50,8 @@ def mean_absolute_percentage_error(y_true, y_pred, handle_zeros=False):
     Output:
     out1 (float): Returns the mean absolute percentage error of the input
     """
+    y_true = pd_to_np(y_true)
+    y_pred = pd_to_np(y_pred)
     if handle_zeros:
-        y_true = [0.0001 if y_true[i] == 0 else y_true for i in range(len(y_true))]
+        y_true = [0.0001 if y_true[i] == 0 else y_true[i] for i in range(len(y_true))]
     return np.mean(np.abs((y_true - y_pred) / y_true)) * 100.0

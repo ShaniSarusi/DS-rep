@@ -10,11 +10,14 @@ from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Preprocessing.other_utils import split_data
 from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Gait.ParameterOptimization.evaluate_test_set_function import evaluate_on_test_set
+from Gait.ParameterOptimization.sum_results import sum_results
 
-if c.search_space == 'full':
-    import Gait.ParameterOptimization.param_search_space as param_search_space
+if c.search_space == 'fast':
+    import Gait.ParameterOptimization.param_search_space_fast as param_search_space
 elif c.search_space == 'small':
-    import Gait.ParameterOptimization.param_search_space2 as param_search_space
+    import Gait.ParameterOptimization.param_search_space_small as param_search_space
+elif c.search_space == 'full':
+    import Gait.ParameterOptimization.param_search_space_full as param_search_space
 
 
 ##########################################################################################################
@@ -35,6 +38,7 @@ n_folds = c.n_folds
 max_evals = c.max_evals
 alg = c.alg
 metric = c.metric_to_optimize
+save_dir = join(c.results_path, 'param_opt')
 
 ##########################################################################################################
 # Set data splits
@@ -98,7 +102,7 @@ for k in range(len(objective_function_all)):
             results.append(res)
 
             # show progress
-            with open(join(c.results_path, 'param_opt', objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(i+1)), 'wb') as fp:
+            with open(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(i+1)), 'wb') as fp:
                 results2 = [results, train_all, test_all]
                 pickle.dump(results2, fp)
 
@@ -121,9 +125,9 @@ for k in range(len(objective_function_all)):
         results['train'] = train
         results['test'] = test
         r = pd.DataFrame(results)
-        r.to_csv(join(c.results_path, 'param_opt', objective_function + '_walk_task' + str(walk_tasks[j]) + '_all.csv'))
+        r.to_csv(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_all.csv'))
 
-        with open(join(c.results_path, 'param_opt', objective_function + '_walk_task' + str(walk_tasks[j]) + '_all'), 'wb') as fp:
+        with open(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_all'), 'wb') as fp:
             results2 = [results, train_all, test_all]
             pickle.dump(results2, fp)
 
@@ -132,3 +136,7 @@ for k in range(len(objective_function_all)):
         # Print results
         print(best)
         print(root_mean_squared_error)
+
+##########################################################################################################
+# Summarize all results
+sum_results(save_dir)
