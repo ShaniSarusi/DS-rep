@@ -1,10 +1,12 @@
-import pickle
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.stats as st
 import math as m
+import pickle
 from os.path import join
-import Gait.config as c
+
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as st
+
+import Gait.Resources.config as c
 
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)

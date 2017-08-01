@@ -1,12 +1,14 @@
-from Gait.Pipeline.StepDetection import StepDetection
-from os.path import join
 import pickle
-import Gait.config as c
-from Gait.Pipeline.gait_utils import set_filters
+from os.path import join
+
 import matplotlib.pyplot as plt
-from scipy.stats import pearsonr
-import pandas as pd
 import numpy as np
+import pandas as pd
+from scipy.stats import pearsonr
+
+import Gait.Resources.config as c
+from Gait.Pipeline.gait_utils import set_filters
+from Gait.Pipeline.StepDetection import StepDetection
 
 # params
 f = set_filters(exp=2)
@@ -23,17 +25,19 @@ with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
 # idx = sample[sample['StepCount'].notnull()].index.tolist()
 
-# 1. Build result table from the optimized folds
+# 1. Get algorithm gait metrics
 # for now start with this
 with open(join(c.pickle_path, 'sc_alg'), 'rb') as fp:
     sd = pickle.load(fp)
+alg_res = sd.res
+alg_res = pd.read_csv(join(c.results_path, 'param_opt', 'gait_measures.csv'), index_col='SampleId')
 
 #for i in range(len(apdm_metrics)):
 for i in [0]:
     apdm_vals = sd.apdm_measures[apdm_metrics[i]]
     idx_keep = pd.notnull(apdm_vals)
     apdm_vals = apdm_vals[idx_keep]
-    alg_vals = [sd.res[apdm_metrics[i] + '_' + algs[j]][idx_keep] for j in range(len(algs))]
+    alg_vals = [alg_res[apdm_metrics[i] + '_' + algs[j]][idx_keep] for j in range(len(algs))]
 
     # Correlation - plot 1
     corr = [pearsonr(apdm_vals, alg_vals[j])[0] for j in range(len(algs))]

@@ -1,8 +1,10 @@
-from os.path import join
-import pandas as pd
-import matplotlib.pyplot as plt
 import pickle
-import Gait.config as c
+from os.path import join
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+import Gait.Resources.config as c
 
 data = join('C:\\Users\\zwaks\\Desktop\\apdm-june2017\\small_search_space', 'Summary.csv')
 data = join('C:\\Users\\zwaks\\Documents\\Data\\APDM June 2017\\Results\\param_opt', 'Summary.csv')

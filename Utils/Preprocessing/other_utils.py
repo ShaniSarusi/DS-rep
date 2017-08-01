@@ -13,7 +13,7 @@ def split_data(samples, n_folds):
     train = []
     test = []
     for i in range(n_folds):
-        test.append([x for x in idx_folds[i]])
+        test.append(sorted([x for x in idx_folds[i]]))
         tr_idx = np.setdiff1d(samples, idx_folds[i])
-        train.append([x for x in tr_idx])
+        train.append(sorted([x for x in tr_idx]))
     return train, test

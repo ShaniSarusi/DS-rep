@@ -1,12 +1,14 @@
 import pickle
 from os.path import join
+
+import numpy as np
 import pandas as pd
-import Gait.config as c
+from scipy.integrate import trapz
+from scipy.stats import pearsonr
+
+import Gait.Resources.config as c
 from Gait.Pipeline.gait_utils import truncate
 from Utils.Preprocessing.denoising import butter_lowpass_filter
-from scipy.stats import pearsonr
-from scipy.integrate import trapz
-import numpy as np
 
 
 def _add_feature(df, sensor, sensor_name, axes, sides, what):

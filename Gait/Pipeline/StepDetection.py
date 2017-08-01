@@ -1,21 +1,21 @@
-import Gait.config as c
-
 # External imports
 import pickle
 from math import sqrt, ceil
 from os.path import join
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 
+import Gait.Resources.config as c
+from Utils.BasicStatistics.statistics_functions import cv, mean_and_std
+from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter
+from Utils.Preprocessing.projections import project_gravity
 # Imports from Utils
 from Utils.SignalProcessing.peak_detection_and_handling import merge_adjacent_peaks_from_two_signals, \
     run_scipy_peak_detection, run_peak_utils_peak_detection, merge_adjacent_peaks_from_single_signal, \
     score_max_peak_within_fft_frequency_range
-from Utils.BasicStatistics.statistics_functions import cv, mean_and_std
-from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter, butter_highpass_filter
-from Utils.Preprocessing.projections import project_gravity
 
 
 class StepDetection:

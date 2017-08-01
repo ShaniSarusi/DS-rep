@@ -1,8 +1,9 @@
 # Two accelerometer pipeline
+from os.path import join
+
+import Gait.Resources.config as c
 from Gait.TwoPebbles import TwoAcc
 from Utils.DataHandling.reading_and_writing_files import read_export_tool_csv
-from os.path import join
-import Gait.config as c
 
 # Read data
 common_path = join(c.data_path, 'TwoPebbles_Exp2')

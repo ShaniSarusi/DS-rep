@@ -1,10 +1,12 @@
-import pandas as pd
-from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory
-import re
 import ast
-from os.path import join
 import pickle
-import Gait.config as c
+import re
+from os.path import join
+
+import pandas as pd
+
+import Gait.Resources.config as c
+from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory
 
 
 def sum_results(save_dir):
@@ -17,6 +19,10 @@ def sum_results(save_dir):
                                 'Sine-min Hz', 'Sine-max Hz', 'Sine-factor'])
     f = read_all_files_in_directory(dir_path=save_dir, file_type='csv')
     for i in range(len(f)):
+        if '_walk' not in f[i]:
+            continue
+        if 'task' not in f[i]:
+            continue
         alg = re.search('(.*)_walk', f[i]).group(1)
         training_data = re.search('task(.*)_', f[i]).group(1)
         if training_data == 'all':
