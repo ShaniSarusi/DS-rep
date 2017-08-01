@@ -1,9 +1,9 @@
 from os.path import join, sep
 from os import getcwd
 
-machine = 1  # 1, 2, 3, 4, 5, 6
+machine = 4  # 1, 2, 3, 4, 5, 6
 n_folds = 5
-max_evals = 200
+max_evals = 100
 alg = 'tpe'  # Can be 'tpe' or 'random'
 metric_to_optimize = 'rmse'  # 'rmse' or 'mape'
 

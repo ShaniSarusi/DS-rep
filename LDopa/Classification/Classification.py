@@ -22,10 +22,23 @@ def optimize_hyper_params(features_df, labels, patients, model_name,
     """
     Optimize a model's hyper-parameters, given the features, the labels and the model.
     
+    The optimization is done by calling Hyperopt's BayesianHyperOpt.
+    Thus, the arguments 'model_name', 'hyper_params', 'scoring_measure' and 'eval_iterations'
+    need to fit the specific used function.
+    
     Input:
-    features_df -- a Pandas DataFrame, where each column is a feature.
-    labels -- an ndarray, containing the labels.
-    patients -- 
+    features_df (Pandas DataFrame): Each column is a feature.
+    labels (ndarray): In the size as the number of rows in features_df. Contains the labels.
+    patients (pandas Series): In the size as the number of rows in features_df. Contains the patients' IDs. 
+    model_name (string): The name of the model, e.g. 'svm', 'random_forest'.
+    hyper_params (dictionary): Containing the hyper-parameters to be optimized. Each key is the name of the
+                               parameter, and the key is the search sapce, defined using hyperopt, for example:
+                               {'C': hyperopt.choice('C', [0.1, 1, 10]), 'gamma': hyperopt.uniform('gamma', 0, 5)}.
+    scoring_measure (string): The metric used in order to evaluate (and optimize) the hyper-parameters space.
+                              If None, so accuracy is used.
+    eval_iterations (int): The number of iterations made, before returning the best scored set of hyper-parameters.
+    Output:
+    The best estimator model, which can then be used.
     """
     if model_name == 'svm':
         model = svm.SVC(kernel='rbf')
@@ -95,7 +108,6 @@ def make_cv_predictions_prob_for_all_segments(features_df, labels, patients,
         # Fit the model and predict:
         model.fit(train_features, train_labels)
         pred = model.predict_proba(test_features)
-#        all_preds.append(pred[:,1])
         all_preds.extend(pred[:, 1])
         true_labels.extend(test_labels)
         patients_id.extend([patient]*len(pred[:, 1]))
@@ -105,36 +117,7 @@ def make_cv_predictions_prob_for_all_segments(features_df, labels, patients,
                              'prediction_probability': all_preds,
                              'true_label': true_labels})
     return preds_df
-#    return all_preds
 
-
-'''
-This is the old version of the function crating the features for each aggregated
-segment:
-
-def create_features_for_aggregated_segments(all_predictions, labels, task_ids):
-    prob_min = []; prob_max = []; prob_mean=[]; prob_median=[]; label_task = [];
-    #Take the first probability for each user as their identifier (for CV purposes)
-    pred_as_vector = np.asarray([(sublist[0],item) for sublist in all_predictions for item in sublist]) 
-    patient_label = pred_as_vector[:,0]
-    pred_as_vector = normlize_sig(pred_as_vector[:,1])        
-    for j in range(len(pred_as_vector)):
-        index = np.where(task_ids==task_ids.as_matrix()[j])
-        prob_min.append(np.min(pred_as_vector[index]))
-        prob_max.append(np.max(pred_as_vector[index]))
-        prob_mean.append(np.mean(pred_as_vector[index]))
-        prob_median.append(np.median(pred_as_vector[index]))
-        label_task.append(np.max(labels[index])) 
-    prob_mat_table = pd.DataFrame({'patient':patient_label,
-                                   'min_prob':prob_min,
-                                   'max_prob':prob_max,
-                                   'mean_prob':prob_mean,
-                                   'median_prob':prob_median,
-                                   'symp_label':label_task}
-                                  )
-    prob_mat_unique = prob_mat_table.drop_duplicates()
-    return prob_mat_unique
-'''
 
 
 def make_cv_predictions_for_agg_segments(aggregated_df, model,
