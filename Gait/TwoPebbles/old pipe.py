@@ -1,12 +1,14 @@
-from Utils.DataHandling.reading_and_writing_files import read_export_tool_csv
+from os.path import join
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import signal
-import matplotlib.pyplot as plt
-from os.path import join
-import Gait.config as c
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
+
+import Gait.Resources.config as c
+from Utils.DataHandling.reading_and_writing_files import read_export_tool_csv
 
 # Read data***************************
 common_path = join(c.data_path, 'TwoPebbles_Exp2')

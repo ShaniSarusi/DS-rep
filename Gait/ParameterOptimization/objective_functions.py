@@ -1,12 +1,14 @@
 # functions (i.e. algorithms) to optimize
-from math import sqrt
-from sklearn.metrics import mean_squared_error
-from os.path import join
-import Gait.config as c
-from Gait.Pipeline.StepDetection import StepDetection
 import pickle
-from Utils.Connections.connections import load_pickle_file_from_s3
+from math import sqrt
+from os.path import join
+
+from sklearn.metrics import mean_squared_error
+
+import Gait.Resources.config as c
+from Gait.Pipeline.StepDetection import StepDetection
 from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
+from Utils.Connections.connections import load_pickle_file_from_s3
 
 
 def objective_step_detection_single_side(p):
@@ -51,11 +53,15 @@ def objective_step_detection_single_side(p):
     else:
         weak_signal_thresh = None
     metric = p['metric']
+    if 'verbose' not in p:
+        verbose = True
+    else:
+        verbose = p['verbose']
 
     s.step_detection_single_side(side=side, signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                          vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
                                          peak_param1=peak_param1, peak_param2=peak_param2,
-                                         weak_signal_thresh=weak_signal_thresh, verbose=True)
+                                         weak_signal_thresh=weak_signal_thresh, verbose=verbose)
 
     # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
@@ -67,6 +73,11 @@ def objective_step_detection_single_side(p):
     elif metric == 'mape':
         print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
         return mape
+    elif metric == 'rmse' :
+        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        return rmse
+    elif metric == 'get_res':
+        return s.res
     else:  # rmse
         print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
@@ -128,6 +139,11 @@ def objective_step_detection_two_sides_overlap(p):
     elif metric == 'mape':
         print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
         return mape
+    elif metric == 'rmse':
+        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        return rmse
+    elif metric == 'get_res':
+        return s.res
     else:  # rmse
         print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
@@ -191,6 +207,11 @@ def objective_step_detection_two_sides_combined_signal(p):
     elif metric == 'mape':
         print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
         return mape
+    elif metric == 'rmse':
+        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        return rmse
+    elif metric == 'get_res':
+        return s.res
     else:  # rmse
         print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse

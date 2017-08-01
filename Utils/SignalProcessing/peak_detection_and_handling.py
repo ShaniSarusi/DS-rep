@@ -6,9 +6,28 @@ import peakutils
 from Utils.DataHandling.data_processing import pd_to_np
 
 
-# input is peak indices (idx1, idx2) and signal value at peaks (sig1, sig2)
-# Output is DataFrame in the with columns ['idx', 'maxsignal', 'sig1_minus_2'])
 def merge_adjacent_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, p_type='keep_max', win_size=10):
+    # input is peak indices (idx1, idx2) and signal value at peaks (sig1, sig2).
+    # Output is DataFrame in the with columns ['idx', 'maxsignal', 'sig1_minus_2'])
+
+    if len(idx1) == 0:
+        return
+    elif len(idx2) == 0:
+        return
+    elif sig1 is None:
+        return
+    elif sig2 is None:
+        return
+
+    # Sort signals
+    a = np.argsort(idx1)
+    idx1 = idx1[a]
+    sig1 = sig1[a]
+    b = np.argsort(idx2)
+    idx2 = idx2[b]
+    sig2 = sig2[b]
+
+    cols = ['idx', 'maxsignal', 'sig1_minus_2']
     # Keep first signal out of two adjacent peaks
     if p_type == 'keep_first_signal':
         l = [range(i - win_size, i + win_size) for i in idx1]
@@ -20,39 +39,33 @@ def merge_adjacent_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, p_ty
     elif p_type == 'keep_max':
         sig1 = pd_to_np(sig1)
         sig2 = pd_to_np(sig2)
-        peaks_raw = []
+        adjacent = []
+        k = 0
         for i in range(len(idx1)):
-            for j in range(len(idx2)):
+            for j in range(k, len(idx2)):
+                if idx2[j] - idx1[i] > win_size:
+                    k = j
+                    break
                 if abs(idx1[i] - idx2[j]) <= win_size:
                     # Prevent division by zero
                     if sig1[i] == 0:
                         sig1[i] += 0.00001
                     if sig2[j] == 0:
                         sig2[j] += 0.00001
-                    peaks_raw.append((idx1[i], idx2[j], sig1[i], sig2[j], sig1[i] - sig2[j]))
+                    adjacent.append((idx1[i], idx2[j], sig1[i], sig2[j], sig1[i] - sig2[j]))
+        if len(adjacent) == 0:
+            return pd.DataFrame(columns=cols)
 
         # keep only max signal
-        peaks = []
-        for i in range(len(peaks_raw)):
-            if peaks_raw[i][2] >= peaks_raw[i][3]:
-                peaks.append([peaks_raw[i][0], peaks_raw[i][2], peaks_raw[i][4]])
-            else:
-                peaks.append([peaks_raw[i][1], peaks_raw[i][3], peaks_raw[i][4]])
+        p_idx = [adjacent[i][0] if adjacent[i][2] >= adjacent[i][3] else adjacent[i][1] for i in
+                 range(len(adjacent))]
+        p_max_sig = [adjacent[i][2] if adjacent[i][2] >= adjacent[i][3] else adjacent[i][3] for i in
+                     range(len(adjacent))]
+        p_sig_diff = [adjacent[i][4] for i in range(len(adjacent))]
 
-        peaks = pd.DataFrame(peaks, columns=['idx', 'maxsignal', 'sig1_minus_2'])
-        peaks = peaks.sort_values(by='idx')
-
-        # remove duplicates
-        remove = []
-        for i in range(peaks.shape[0]):
-            for j in range(i + 1, peaks.shape[0]):
-                if peaks['idx'].iloc[i] == peaks['idx'].iloc[j]:
-                    if peaks['maxsignal'].iloc[i] >= peaks['maxsignal'].iloc[j]:
-                        remove.append(j)
-                    else:
-                        remove.append(i)
-        if len(remove) > 0:
-            peaks = peaks.drop(peaks.index[np.unique(remove)], axis=0)
+        peaks = pd.DataFrame(list(zip(p_idx, p_max_sig, p_sig_diff)), columns=cols)
+        peaks = peaks.sort_values(['idx', 'maxsignal'])
+        peaks = peaks.drop_duplicates(keep='first')
         return peaks
     else:
         return
@@ -61,6 +74,10 @@ def merge_adjacent_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, p_ty
 # Input is DataFrame containing two columns ['idx', 'maxsignal'] and optionally additional columns as 'sig1_minus_2'
 # Output is list of indices of remaining peaks after merging adjacent peaks
 def merge_adjacent_peaks_from_single_signal(peaks, win_size=20):
+    if peaks is None:
+        return []
+    if peaks.shape[0] == 0:
+        return []
     peaks.sort_values(by='idx')
     i = 0
     while i < peaks.shape[0] - 1:

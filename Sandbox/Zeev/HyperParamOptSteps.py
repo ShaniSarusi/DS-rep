@@ -1,13 +1,15 @@
-from Gait.Pipeline.StepDetection import StepDetection
-from os.path import join
-import pickle
-import Gait.config as c
-import numpy as np
 import copy
+import pickle
 import random
+from math import sqrt
+from os.path import join
+
+import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
-from math import sqrt
+
+import Gait.Resources.config as c
+from Gait.Pipeline.StepDetection import StepDetection
 
 
 class HyperParamOptSteps:

@@ -1,7 +1,8 @@
-from Gait.Pipeline.StepDetection import StepDetection
-from os.path import join
 import pickle
-import Gait.config as c
+from os.path import join
+
+import Gait.Resources.config as c
+from Gait.Pipeline.StepDetection import StepDetection
 
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)

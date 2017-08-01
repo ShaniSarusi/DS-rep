@@ -1,11 +1,13 @@
 import pickle
+from os.path import join
+
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_auc_score
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
-from os.path import join
-import Gait.config as c
+from sklearn.metrics import roc_auc_score
+
+import Gait.Resources.config as c
 
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)

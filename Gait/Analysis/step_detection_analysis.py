@@ -1,8 +1,9 @@
-from Gait.Pipeline.StepDetection import StepDetection
 import pickle
 from os.path import join
+
 import numpy as np
-import Gait.config as c
+
+import Gait.Resources.config as c
 from Gait.Pipeline.gait_utils import set_filters, split_by_person
 from Utils.DataHandling.data_processing import multi_intersect
 

@@ -1,6 +1,8 @@
-from hyperopt import hp
-import Gait.config as c
 from copy import copy
+
+from hyperopt import hp
+
+import Gait.Resources.config as c
 
 #################################################################
 # Dictionary for: step_detection_single_side

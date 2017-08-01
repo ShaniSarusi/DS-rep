@@ -1,10 +1,12 @@
 import pickle
-import pandas as pd
-import h5py
 from os import listdir
-import numpy as np
-import Gait.config as c
 from os.path import join, isdir
+
+import h5py
+import numpy as np
+import pandas as pd
+
+import Gait.Resources.config as c
 from Utils.DataHandling.data_processing import make_df_from_hdf5_dataset
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory, pickle_excel_file
 

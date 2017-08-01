@@ -1,9 +1,11 @@
-import numpy as np
-from os.path import join
-import pickle
-import Gait.config as c
 import copy
+import pickle
+from os.path import join
+
+import numpy as np
 import pandas as pd
+
+import Gait.Resources.config as c
 
 
 def split_by_person():
