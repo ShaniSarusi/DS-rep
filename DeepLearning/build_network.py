@@ -239,57 +239,62 @@ def BuildCNNClassifirt(input_size, lost):  # number of nodes in first layer. in 
     #
     return encoder, feature_extract
 
-def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1., 0.01]):  # number of nodes in first layer. in this case 126.
+def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1, 1, 0.1]):  # number of nodes in first layer. in this case 126.
     #
     input_signal = Input((input_size,3))
     #
     #x = ZeroPadding1D(3)(input_signal) 
     x = Conv1D(32, 32, activation='relu')(input_signal) 
-    x = MaxPooling1D(4)(x)
+    x = MaxPooling1D(2)(x)
     #x = Dropout(0.25)(x)
     x = Conv1D(16, 16, activation='relu')(x)
     x = MaxPooling1D(4)(x)
     x = Conv1D(28, 4, activation='relu', padding='same')(x)
     #BatchNormalization()(x)
-    x = MaxPooling1D(4)(x)
+    x = MaxPooling1D(2)(x)
     x = Conv1D(28, 3, activation='relu', padding='same')(x)
-    x = MaxPooling1D(4)(x)
+    x = MaxPooling1D(2)(x)
     #x = GRU(32,  activation='tanh', return_sequences=True)(x)
     #attention_mul = attention_3d_block(x)
     #x = Flatten()(attention_mul)
     x = Flatten()(x)
-    OneForActandSymp = Dense(64, activation='relu')(x)#
+    OneForActandSymp = Dense(32, activation='relu')(x)#
     #OneForActandSymp = BatchNormalization()(OneForActandSymp)
     
     #ActiveLayer = Dropout(0.5)(OneForActandSymp)
     ActiveLayer = Dense(32, activation='relu')(OneForActandSymp)
     ActiveLayer = BatchNormalization()(ActiveLayer)
     #ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
-    End_point_Active = Dense(6, activation='softmax')(ActiveLayer)
+    End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
     
     
     #sympLayer=Dropout(0.5)(ActiveLayer)
     sympLayer = Dense(19, activation='relu')(ActiveLayer)
     sympLayer = BatchNormalization()(sympLayer)
-    input_user = Input((20,))
+    input_user = Input((3,))
     #Fuck_YOU = Embedding(19, 20)(input_user)
-    Fuck_YOU = Dense(10)(input_user)
-    Fuck_YOU = Dense(10)(Fuck_YOU)
+    Fuck_YOU = Dense(3)(input_user)
+    Fuck_YOU = Dense(3)(Fuck_YOU)
     merging = layers.concatenate([sympLayer, Fuck_YOU])
     
     #
     close_to_output = Dense(19, activation='relu')(merging)
-    close_to_output = Dense(8, activation='relu')(close_to_output)
     close_to_output = Dense(8, activation='tanh')(close_to_output)
-    End_point = Dense(1, activation='sigmoid')(close_to_output)
+    close_to_output = Dense(8, activation='tanh')(close_to_output)
     
-    symp_class = Model([input_signal, input_user], [End_point, End_point_Active])
+    close_to_output2 = Dense(19, activation='relu')(sympLayer)
+    close_to_output2 = Dense(8, activation='tanh')(close_to_output2)
+    close_to_output2 = Dense(8, activation='tanh')(close_to_output2)
+    End_point = Dense(1, activation='sigmoid')(close_to_output)
+    End_point2 = Dense(1, activation='sigmoid')(close_to_output2)
+    
+    symp_class = Model([input_signal, input_user], [End_point, End_point2 ,End_point_Active])
     #active_class = Model(input_signal, End_point_Active)
     
     optimizer = optimizers.adam(lr = lr)
     feature_extract = Model([input_signal , input_user],close_to_output)
     
-    symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy'],metrics=['accuracy'], loss_weights=loss_weights)
+    symp_class.compile(optimizer=optimizer, loss=[lost, lost, 'categorical_crossentropy'],metrics=['accuracy'], loss_weights=loss_weights)
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract

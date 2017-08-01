@@ -36,7 +36,7 @@ tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,
 res = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
 res = data_reading.arrange_res(res,path = '/home/lfaivish/Desktop/mapTasksClusters.csv')
-tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.make_interval_from_all_data(res,10,5,1,1,50)
+tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.make_interval_from_all_data(res,5,3.5,1,0.5,50)
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_z_numpy = lab_z.as_matrix(); lab_z = lab_z_numpy[:,range(len(lab_x_numpy[0])-1)]
@@ -112,7 +112,7 @@ patients = task_ids%3
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
 optimized_model = classifier.optimize_hyper_params(features, labels, np.asarray(patients), 'xgboost',
-                                        hyper_params=None, scoring_measure = None,eval_iterations = 50)
+                                        hyper_params=None, scoring_measure = 'roc_auc',eval_iterations = 50)
 
 '''
 Make predictions for each segment in the data.

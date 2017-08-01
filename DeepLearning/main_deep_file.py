@@ -47,8 +47,8 @@ Task_for_pred  = augment_Task.reshape((len(augment_Task),1))
 sympNew = np.where(augment_dys == 0, 0, 0.25)
 Task_for_predNew = np.where(Task_for_pred == 2, 0.5, 1)
 Task_andSymp = sympNew + Task_for_pred
-Task_andSymp = utils.to_categorical(Task_andSymp, num_classes=6)
-SubjectId_cat = utils.to_categorical(np.reshape(augment_SubjectId - 131, [len(augment_SubjectId), 1]), num_classes=20)
+Task_andSymp = utils.to_categorical(Task_for_predNew, num_classes=4)
+SubjectId_cat = utils.to_categorical(np.reshape(augment_SubjectId - 131, [len(augment_SubjectId), 1]), num_classes=19)
 
 symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary_crossentropy')  
 
@@ -56,11 +56,11 @@ symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary
 def scheduler(epoch=10):
     if epoch == 1:
         K.set_value(symp_class.optimizer.lr, 0.0001)
-    if epoch == 2:
+    if epoch == 4:
         K.set_value(symp_class.optimizer.lr, 0.00005)
-    if epoch == 5:
-        K.set_value(symp_class.optimizer.lr, 0.00003)
-    if epoch == 7:
+    if epoch == 9:
+        K.set_value(symp_class.optimizer.lr, 0.00005)
+    if epoch == 15:
         K.set_value(symp_class.optimizer.lr, 0.00001)
     return K.get_value(symp_class.optimizer.lr)
 
