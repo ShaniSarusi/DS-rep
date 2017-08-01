@@ -21,9 +21,13 @@ class wavtransform():
 
     def toDWT(self, sig):
         """
-        Input: time signal
-        Output: Wavelet tranformation after we using interpolation to make the signal length
-        as exponent of 2
+        Wavelet tranfrom
+        
+        Input: 
+            sig (1D numpy) - time signal
+        Output: 
+            ywav (1D numpy) - Wavelet tranformation after 
+                              interpolation to make the signal length as exponent of 2
         """
         x = np.arange(0, len(sig))
         f = interpolate.interp1d(x, sig)
@@ -34,9 +38,13 @@ class wavtransform():
 
     def contrib(self, x, rel=False):
         """
-        Input:Signal in frequency domaion (Wavelet tranfrom)
-        rel: if true we get relative features, else contributions features
-        OutPut: Features as described in "Clustering functional data using wavelets"
+        Features as described in "Clustering functional data using wavelets"
+        
+        Input:
+            x (1D numpy)- Signal in frequency domaion (Wavelet tranfrom)
+            rel: if true we get relative features, else contributions features
+        OutPut: 
+            res(1D numpy) - Features as described in "Clustering functional data using wavelets"
         """
         J = len(x)
         res = np.zeros(J)
@@ -49,8 +57,13 @@ class wavtransform():
 
     def createWavFeatures(self, LargeData):
         """
-        Input: numpy array
-        Output: Wavelet features for each row
+        Features as described in "Clustering functional data using wavelets"
+        
+        Input: 
+            LargeData (numpy matrix) - every row is time signal
+        Output: 
+            contData (numpy matrix)- contributions features for each row
+            relData (numpy matrix)- relative features for each row
         """
         print("Doing toDWT")
         WavData = lmap(self.toDWT, LargeData)
