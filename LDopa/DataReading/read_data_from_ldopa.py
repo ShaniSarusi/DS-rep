@@ -19,6 +19,15 @@ Give you dsn (For example ConnectSmoove2) and read ALL of the labeled data
 
 
 def read_all_data(dsn):
+    """
+    Read data from sql using dsn you have
+    
+    Input:
+        dsn (String): SQL dsn
+    Output:
+        res (numpy): A data set contain SessionId samples of X, Y, Z, task, userID, TSStart and TSEnd
+                     per timestamp.
+    """
     lab_tagged_sessions_harvard = np.concatenate([range(10100, 10136), range(10137, 10143)])  # ldhp 10136 is not good
     lab_tagged_sessions_mtsinai = np.concatenate([range(10150, 10152), range(10153, 10175)])  # IntelUsername starts with ldms
     session_ids = np.concatenate([lab_tagged_sessions_harvard, lab_tagged_sessions_mtsinai])
@@ -46,6 +55,17 @@ Input
 '''
 # path = 'C:/Users/awagner'
 def arrange_res(res, path):
+    """
+    Arrange our dataxet in new format
+    
+    Input:
+        res (numpy)- A data set contain SessionId samples of X, Y, Z, task, userID, task cluster, TSStart and TSEnd
+              per timestamp.
+        path (string)- Path of the clusters per task
+    Output:
+        res - Organize dataset res with TaskID (Same Inteval TimeStamp) and tasks clusters
+    
+    """
     res[['TS', 'TSStart', 'TSEnd']] = res[['TS', 'TSStart', 'TSEnd']].apply(pd.to_datetime)
     res['AnnotationStrValue'] = res['AnnotationStrValue'].str.replace(' - .*', '')
     res.ix[(res.AnnotationStrValue.str.contains('Finger')) & (res.BradykinesiaGA.isnull()), ['AnnotationStrValue']] = 'Rest finger to nose'
@@ -90,17 +110,35 @@ def arrange_res(res, path):
 
 
 def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end,frequency):
+    """
+    Get dataset per timestamp and reorgenize as intervals
+    
+    Input:
+        res (numpy): The output of arrange_res function
+        window_size (float): length of intervals in seconds
+        slide_by (float): Next Inteval start time - This Inteval start time in seconds
+        trim_start (float): For every task trim the start in seconds
+        trim_start (float): For every task trim the end in seconds
+        frequency (float): Samples frequency in Hertz
+    Output:
+        meta (pandas) - A dataFrame with SessionId', 'DeviceID', 'Task', 'BradykinesiaGA',
+             'DyskinesiaGA', 'TremorGA', 'SubjectId','TSStart', 'TSEnd', 'IntelUsername', 
+             'TaskClusterId', 'TaskClusterName
+        raw_x (pandas)- X samples in intevals
+        raw_y (pandas)- Y samples in intevals
+        raw_z (pandas)- Z samples in intevals
+    """
     raw = res.copy()
     raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 'TremorGA', 'SubjectId',
                     'TSStart', 'TSEnd', 'IntelUsername', 'TaskClusterId', 'TaskClusterName'], axis=1)
     raw = raw.sort_values('TS')
 
     win_idx = pd.DataFrame()
-    win_idx['st'] = raw['TaskID'].drop_duplicates(keep='first').sort_values().index
-    win_idx['en'] = raw['TaskID'].drop_duplicates(keep='last').sort_values().index
+    win_idx['st'] = raw['TaskID'].drop_duplicates(keep='first').sort_values().index + trim_start*frequency
+    win_idx['en'] = raw['TaskID'].drop_duplicates(keep='last').sort_values().index - trim_end*frequency
     win_idx['len'] = win_idx['en'] - win_idx['st'] + 1
     win_idx['dur'] = (win_idx['len']-1)/frequency
-    tmp = np.ceil((win_idx['dur'] - trim_end - trim_end - window_size)/slide_by)
+    tmp = np.ceil((win_idx['dur'] - trim_start - trim_end - window_size)/slide_by)
     tmp[tmp < 0] = 0
     win_idx['num_samples'] = tmp.astype(np.int)
     tot_samples = sum(win_idx['num_samples'])

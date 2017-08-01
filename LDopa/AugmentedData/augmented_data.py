@@ -12,6 +12,27 @@ import numpy as np
 
 def augment_data(XYZ, temp_labels, task_clusters, task_subjectID, task_ids,num_iter=20,
                  num_iter_symp = 20,group = [0,1,2]):
+    """
+    Augmented data by orthonormal transformation
+    
+    Input:
+        XYZ (numpy): origin data
+        temp_labels (1D numpy): labels per segment
+        task_clasters (1D numpy): clusters per segment
+        task_subjectID (1D numpy)- User ID per segment
+        task_ids (1D numpy) - task_ids per segment
+        num_iter (integer) - numpy of random transformation per segment
+        group (list of ineger) - group clusters
+    
+    Output:
+        augment_XYZ (numpy): augmented XYZ
+        augment_symp (numpy): aegmented symptom per segment
+        augment_task (numpy): aegmented task per segment
+        augment_subject_id (numpy): aegmented user name per segment
+        augment_task_ids (numpy): aegmented task_ids per segment
+        augment_or_not (numpy): The data is augmented or from original data XYZ
+    """
+    
     augment_XYZ = []
     augment_symp = []
     augment_task = []
