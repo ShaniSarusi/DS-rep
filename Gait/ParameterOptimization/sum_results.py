@@ -9,7 +9,7 @@ import Gait.Resources.config as c
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory
 
 
-def sum_results(save_dir):
+def sum_results(save_dir, return_file_path=False):
     # Start code
     with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
         task_filters = pickle.load(fp)
@@ -82,8 +82,14 @@ def sum_results(save_dir):
                 res.set_value(idx, 'Sine-factor', p['factor'])
 
     # Save
-    res.to_csv(join(save_dir, 'Summary_search_' + c.search_space + '_alg_' + c.alg + '_evals_' + str(c.max_evals) +
-                    '_folds_' + str(c.n_folds) + '.csv'), index=False)
+    file_name = 'Summary_search_' + c.search_space + '_alg_' + c.alg + '_evals_' + str(c.max_evals) + '_folds_' + \
+                str(c.n_folds) + '.csv'
+
+    file_path = join(save_dir, file_name)
+    res.to_csv(file_path, index=False)
+
+    if return_file_path:
+        return file_path
 
 if __name__ == '__main__':
     save_path = join(c.results_path, 'param_opt')

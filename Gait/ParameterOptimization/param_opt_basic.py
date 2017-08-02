@@ -10,6 +10,7 @@ import Gait.Resources.config as c
 from Gait.ParameterOptimization.evaluate_test_set_function import evaluate_on_test_set
 from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Gait.ParameterOptimization.sum_results import sum_results
+from Gait.ParameterOptimization.create_alg_performance_plot import create_alg_performance_plot
 from Utils.Preprocessing.other_utils import split_data
 
 if c.search_space == 'fast':
@@ -64,7 +65,7 @@ elif c.data_type == 'all':
 train_all = []
 test_all = []
 for k in range(len(task_ids)):
-    train_i, test_i = split_data(np.arange(len(task_ids[k])), n_folds=n_folds)
+    train_i, test_i = split_data(task_ids[k], n_folds=n_folds)
     train_all.append(train_i)
     test_all.append(test_i)
 
@@ -164,7 +165,12 @@ for i in range(len(objective_function_all)):
 
 ##########################################################################################################
 # Summarize and save all optimization results
-sum_results(save_dir)
+file_name = sum_results(save_dir, return_file_path=True)
+
+# Create performance metric plots
+data_file = join(save_dir, file_name)
+metric = 'MAPE'  # 'MAPE' or 'RMSE'
+create_alg_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False)
 
 # Summarize and save gait measure results
 res_gait = df_gait_measures_by_alg[0]
@@ -175,4 +181,7 @@ for i in range(1, len(df_gait_measures_by_alg)):
     cols_shared = list(set(cols_left).intersection(cols_right))
     right = right.drop(cols_shared, axis=1)
     res_gait = res_gait.join(right, how='outer')
+res_gait = res_gait.sort_index()
 res_gait.to_csv(join(save_dir, 'gait_measures.csv'))
+
+

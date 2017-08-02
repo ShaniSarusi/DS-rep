@@ -26,8 +26,6 @@ def objective_step_detection_single_side(p):
     s = StepDetection(acc, sample)
 
     # Set sample ids for dataset
-    ids = sample[sample['StepCount'].notnull()].index.tolist()
-    s.select_specific_samples(ids)
     s.select_specific_samples(p['sample_ids'])
 
     side = p['side']
@@ -99,8 +97,6 @@ def objective_step_detection_two_sides_overlap(p):
     s = StepDetection(acc, sample)
 
     # Set sample ids for dataset
-    ids = sample[sample['StepCount'].notnull()].index.tolist()
-    s.select_specific_samples(ids)
     s.select_specific_samples(p['sample_ids'])
 
     signal_to_use = p['signal_to_use']
@@ -164,8 +160,6 @@ def objective_step_detection_two_sides_combined_signal(p):
     s = StepDetection(acc, sample)
 
     # Set sample ids for dataset
-    ids = sample[sample['StepCount'].notnull()].index.tolist()
-    s.select_specific_samples(ids)
     s.select_specific_samples(p['sample_ids'])
 
     signal_to_use = p['signal_to_use']
