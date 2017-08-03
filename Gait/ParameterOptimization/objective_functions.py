@@ -66,20 +66,19 @@ def objective_step_detection_single_side(p):
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
     if metric == 'both':
-        print('\tResult: RMSE is ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
         return rmse, mape
     elif metric == 'mape':
-        print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
+        if verbose: print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
         return mape
     elif metric == 'rmse' :
-        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
     elif metric == 'get_res':
         return s.res
     else:  # rmse
-        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
-
 
 
 def objective_step_detection_two_sides_overlap(p):
@@ -119,29 +118,33 @@ def objective_step_detection_two_sides_overlap(p):
     win_size_merge = p['win_size_merge']
     win_size_remove_adjacent_peaks = p['win_size_remove_adjacent_peaks']
     metric = p['metric']
+    if 'verbose' not in p:
+        verbose = True
+    else:
+        verbose = p['verbose']
 
     s.step_detection_two_sides_overlap(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                        vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
                                        peak_param1=peak_param1, peak_param2=peak_param2, win_size_merge=win_size_merge,
-                                       win_size_remove_adjacent_peaks=win_size_remove_adjacent_peaks, verbose=True)
+                                       win_size_remove_adjacent_peaks=win_size_remove_adjacent_peaks, verbose=verbose)
 
     # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
     if metric == 'both':
-        print('\tResult: RMSE is ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
         return rmse, mape
     elif metric == 'mape':
-        print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
+        if verbose: print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
         return mape
     elif metric == 'rmse':
-        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
     elif metric == 'get_res':
         return s.res
     else:  # rmse
-        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
 
 
@@ -184,30 +187,34 @@ def objective_step_detection_two_sides_combined_signal(p):
         peak_param1 = p['p1_pu']
         peak_param2 = p['p2_pu']
     metric = p['metric']
+    if 'verbose' not in p:
+        verbose = True
+    else:
+        verbose = p['verbose']
 
     s.step_detection_two_sides_combined_signal(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                                vert_win=vert_win, butter_freq=butter_freq,
                                                mva_win_combined=mva_win_combined, min_hz=min_hz, max_hz=max_hz,
                                                factor=factor, peak_type=peak_type, peak_param1=peak_param1,
-                                               peak_param2=peak_param2, verbose=True)
+                                               peak_param2=peak_param2, verbose=verbose)
 
     # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_combined']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
     if metric == 'both':
-        print('\tResult: RMSE is ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
         return rmse, mape
     elif metric == 'mape':
-        print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
+        if verbose: print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
         return mape
     elif metric == 'rmse':
-        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
     elif metric == 'get_res':
         return s.res
     else:  # rmse
-        print('\tResult: RMSE ' + str(round(rmse, 2)))
+        if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
 
 

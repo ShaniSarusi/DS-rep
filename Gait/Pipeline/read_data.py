@@ -58,7 +58,7 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
 
     # Set measures DataFrame
     cols_measures = ['cadence', 'step_time_asymmetry', 'stride_time_var_lhs', 'stride_time_var_rhs',
-                     'step_time_var_lhs', 'step_time_var_lhs']
+                     'step_time_var_lhs', 'step_time_var_rhs']
     measures = pd.DataFrame(index=range(num_files), columns=cols_measures)
     for i in range(num_files):
         if "_TUG_" in p_apdm_files[i]:
