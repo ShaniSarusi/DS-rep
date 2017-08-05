@@ -10,6 +10,24 @@ from future.utils import lmap
 
 
 def project_gravity(x, y, z, num_samples_per_interval=None, round_up_or_down='down', return_only_vertical=False):
+    """
+    Projection of 3D time signal to 2D
+    
+    Input:
+        x (1D numpy) - time signal X samples
+        y (1D numpy) - time signal Y samples
+        z (1D numpy) - time signal Z samples
+        num_samples_per_interval (integer) - cut the signal to num_samples_per_interval subntevals
+                                     and preform the 2D projection on the subintevals
+        round_up_or_down (string, down or up) - length(x)/num_samples_per_interval should 
+                                                be ceil or floor
+        return_only_vertical (boolean) - If True return only vertical axis
+    
+    Output:
+        v (1D numpy) - vertical projection
+        h (1D numpy) - horizontal projection
+                                  
+    """
     if num_samples_per_interval is None:
         v, h = project_gravity_xyz(x, y, z)
         if return_only_vertical:
