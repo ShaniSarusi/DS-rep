@@ -91,7 +91,7 @@ d['mva_win_combined'] = 5 + 2 * hp.randint('mva_win_combined', 25)
 # Choosing the more sine-like combined signal
 d['min_hz'] = hp.uniform('min_hz', 0.1, 2)
 d['max_hz'] = d['min_hz'] + 0.1 + hp.uniform('max_hz', 0.1, 3)
-d['factor'] = 0.5 + 0.1 * hp.randint('butter_freq', 10)
+d['factor'] = 0.5 + 0.1 * hp.randint('factor', 10)
 
 
 # Peak detection algorithm and parameters

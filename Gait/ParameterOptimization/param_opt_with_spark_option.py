@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 
 import Gait.Resources.config as c
 import Gait.Resources.param_search_space_full as param_search_space
-from Gait.ParameterOptimization.evaluate_test_set_function import evaluate_on_test_set
+from Gait.ParameterOptimization.evaluate_test_set import evaluate_on_test_set
 from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Utils.Connections.connections import load_pickle_file_from_s3, save_pickle_file_to_s3
 from Utils.Preprocessing.other_utils import split_data

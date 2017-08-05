@@ -24,8 +24,8 @@ d['butter_freq'] = 1
 d['peak_type'] = 'peak_utils'
 d['p1_sc'] = 1
 d['p2_sc'] = 2
-d['p1_pu'] = hp.uniform('p1_pu', 0.1, 1)
-d['p2_pu'] = 5 + 5 * hp.randint('p2_pu', 9)
+d['p1_pu'] = hp.uniform('p1_pu', 0.01, 1)
+d['p2_pu'] = 20 + hp.randint('p2_pu', 70)
 
 # Choose whether to remove weak signals
 d['remove_weak_signals'] = False
@@ -58,8 +58,8 @@ d['butter_freq'] = 1
 d['peak_type'] = 'peak_utils'
 d['p1_sc'] = 1
 d['p2_sc'] = 2
-d['p1_pu'] = hp.uniform('p1_pu', 0.1, 1)
-d['p2_pu'] = 5 + 5 * hp.randint('p2_pu', 9)
+d['p1_pu'] = hp.uniform('p1_pu', 0.01, 1)
+d['p2_pu'] = 20 + hp.randint('p2_pu', 70)
 
 # Signal merging parameters
 d['win_size_merge'] = 2 + 2 * hp.randint('win_size_merge', 20)
@@ -96,8 +96,8 @@ d['factor'] = 0.5 + 0.1 * hp.randint('factor', 10)
 d['peak_type'] = 'peak_utils'
 d['p1_sc'] = 1
 d['p2_sc'] = 2
-d['p1_pu'] = hp.uniform('p1_pu', 0.1, 1)
-d['p2_pu'] = 5 + 5 * hp.randint('p2_pu', 9)
+d['p1_pu'] = hp.uniform('p1_pu', 0.01, 1)
+d['p2_pu'] = 20 + hp.randint('p2_pu', 70)
 
 # Save
 space_combined = d

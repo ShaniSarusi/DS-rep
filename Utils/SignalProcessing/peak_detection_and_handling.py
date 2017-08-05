@@ -43,8 +43,9 @@ def merge_adjacent_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, p_ty
         k = 0
         for i in range(len(idx1)):
             for j in range(k, len(idx2)):
-                if idx2[j] - idx1[i] > win_size:
+                if idx1[i] - idx2[j] > win_size:
                     k = j
+                if idx2[j] - idx1[i] > win_size:
                     break
                 if abs(idx1[i] - idx2[j]) <= win_size:
                     # Prevent division by zero

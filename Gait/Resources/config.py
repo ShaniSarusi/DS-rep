@@ -1,28 +1,42 @@
 from os.path import join, sep
 from os import getcwd
 
-machine = 4  # 1, 2, 3, 4, 5, 6
+machine = 0  # 1, 2, 3, 4, 5, 6
 n_folds = 5
-max_evals = 100
+max_evals = 500
 alg = 'tpe'  # Can be 'tpe' or 'random'
 metric_to_optimize = 'rmse'  # 'rmse' or 'mape'
+do_verbose = False
+
+data_type = 'both'
+search_space = 'fast2' or 3 ..
 
 if machine == 1:
-    data_type = 'all'
-    search_space = 'fast'
+    data_type = 'both'
+    search_space = 'fast2'
 elif machine == 2:
-    data_type = 'all'
+    data_type = 'both'
     search_space = 'small'
-elif machine == 2:
-    data_type = 'all'
+elif machine == 3:
+    data_type = 'both'
     search_space = 'full'
-elif machine == 4:
-    data_type = 'split'
+
+if machine == 4:
+    data_type = 'all'
     search_space = 'fast'
 elif machine == 5:
-    data_type = 'split'
+    data_type = 'all'
     search_space = 'small'
 elif machine == 6:
+    data_type = 'all'
+    search_space = 'full'
+elif machine == 7:
+    data_type = 'split'
+    search_space = 'fast'
+elif machine == 8:
+    data_type = 'split'
+    search_space = 'small'
+elif machine == 9:
     data_type = 'split'
     search_space = 'full'
 
