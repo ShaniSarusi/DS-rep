@@ -50,13 +50,9 @@ def read_all_data(dsn):
     return res
 
 
-'''
-Input
-'''
-# path = 'C:/Users/awagner'
 def arrange_res(res, path):
     """
-    Arrange our dataxet in new format
+    Arrange our dataset in new format
     
     Input:
         res (numpy)- A data set contain SessionId samples of X, Y, Z, task, userID, task cluster, TSStart and TSEnd
@@ -74,11 +70,11 @@ def arrange_res(res, path):
     res.ix[(res.AnnotationStrValue.str.contains('Alternating')) & (res.BradykinesiaGA.notnull()), ['AnnotationStrValue']] = 'Active alternating hand movements'
     res.rename(columns={'AnnotationStrValue': 'Task'}, inplace=True)
 
-    # calculate norm
+    # Calculate norm
     print('calculating norm')
     res['Norm'] = (res.X**2 + res.Y**2 + res.Z**2)**0.5
 
-    # Map Tasks to clusters
+    # Map tasks to clusters
     print('mapping tasks to clusters')
     map_t_c = pd.read_csv(path)
     res = pd.merge(res, map_t_c, left_on=res.Task, right_on=map_t_c.Task,
@@ -86,7 +82,7 @@ def arrange_res(res, path):
     res = res.drop('Task_y', 1)
     res.rename(columns={'Task_x': 'Task'}, inplace=True)
 
-    # add task id
+    # Add task id
     print('adding task ids - sorting')
     res = res.sort_values(['SessionId', 'TSStart'])
     res = res.reset_index(drop=True)
@@ -105,13 +101,13 @@ def arrange_res(res, path):
         print(i)
         res['TaskID'].loc[range(st[i-1], st[i])] = i
         time.sleep(0.01)
-    res['TaskID'].loc[range(st[i], res.shape[0])] = i+1
+    res['TaskID'].loc[range(st[i], res.shape[0])] = i + 1
     return res
 
 
 def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end,frequency):
     """
-    Get dataset per timestamp and reorgenize as intervals
+    Get dataset per timestamp and reorganize as intervals
     
     Input:
         res (numpy): The output of arrange_res function

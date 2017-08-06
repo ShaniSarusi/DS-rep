@@ -17,8 +17,8 @@ def project_gravity(x, y, z, num_samples_per_interval=None, round_up_or_down='do
         x (1D numpy) - time signal X samples
         y (1D numpy) - time signal Y samples
         z (1D numpy) - time signal Z samples
-        num_samples_per_interval (integer) - cut the signal to num_samples_per_interval subntevals
-                                     and preform the 2D projection on the subintevals
+        num_samples_per_interval (integer) - cut the signal to num_samples_per_interval sub intervals
+                                     and preform the 2D projection on the sub intervals
         round_up_or_down (string, down or up) - length(x)/num_samples_per_interval should 
                                                 be ceil or floor
         return_only_vertical (boolean) - If True return only vertical axis
@@ -74,6 +74,7 @@ def project_gravity_xyz(x, y, z):
 
 
 def project_gravity_core(xyz):
+    # TODO - Avishai - fill this in with docstrings
     ver = []
     hor = []
     G = [np.mean(xyz[:, 0]), np.mean(xyz[:, 1]), np.mean(xyz[:, 2])]

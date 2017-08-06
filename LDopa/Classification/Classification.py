@@ -26,18 +26,19 @@ def optimize_hyper_params(features_df, labels, patients, model_name, hyper_param
     need to fit the specific used function.
     
     Input:
-    features_df (Pandas DataFrame): Each column is a feature.
-    labels (ndarray): In the size as the number of rows in features_df. Contains the labels.
-    patients (pandas Series): In the size as the number of rows in features_df. Contains the patients' IDs. 
-    model_name (string): The name of the model, e.g. 'svm', 'random_forest'.
-    hyper_params (dictionary): Containing the hyper-parameters to be optimized. Each key is the name of the
+        features_df (Pandas DataFrame): Each column is a feature.
+        labels (ndarray): In the size as the number of rows in features_df. Contains the labels.
+        patients (pandas Series): In the size as the number of rows in features_df. Contains the patients' IDs.
+        model_name (string): The name of the model, e.g. 'svm', 'random_forest'.
+        hyper_params (dictionary): Containing the hyper-parameters to be optimized. Each key is the name of the
                                parameter, and the key is the search sapce, defined using hyperopt, for example:
                                {'C': hyperopt.choice('C', [0.1, 1, 10]), 'gamma': hyperopt.uniform('gamma', 0, 5)}.
-    scoring_measure (string): The metric used in order to evaluate (and optimize) the hyper-parameters space.
-                              If None, so accuracy is used.
-    eval_iterations (int): The number of iterations made, before returning the best scored set of hyper-parameters.
+        scoring_measure (string): The metric used in order to evaluate (and optimize) the hyper-parameters space.
+                                  If None, so accuracy is used.
+        eval_iterations (int): The number of iterations made, before returning the best scored set of hyper-parameters.
+
     Output:
-    The best estimator model, which can then be used.
+        The best estimator model, which can then be used.
     """
     if model_name == 'svm':
         model = svm.SVC(kernel='rbf')
@@ -105,7 +106,6 @@ def make_cv_predictions_prob_for_all_segments(features_df, labels, patients, mod
     preds_df = pd.DataFrame({'patient': patients_id, 'task': all_tasks, 'prediction_probability': all_preds,
                              'true_label': true_labels})
     return preds_df
-
 
 
 def make_cv_predictions_for_agg_segments(aggregated_df, model, binary_class_thresh=0.5):

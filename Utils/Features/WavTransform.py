@@ -14,20 +14,20 @@ from future.utils import lmap
 import numpy as np
 
 
-class wavtransform():
+class WavTransform():
 
     def __init__(self):
         print("Hello")
 
     def toDWT(self, sig):
         """
-        Wavelet tranfrom
+        Wavelet transform
         
         Input: 
             sig (1D numpy) - time signal
+
         Output: 
-            ywav (1D numpy) - Wavelet tranformation after 
-                              interpolation to make the signal length as exponent of 2
+            ywav (1D numpy) - Wavelet transformation after interpolation to make the signal length as exponent of 2
         """
         x = np.arange(0, len(sig))
         f = interpolate.interp1d(x, sig)
@@ -41,7 +41,7 @@ class wavtransform():
         Features as described in "Clustering functional data using wavelets"
         
         Input:
-            x (1D numpy)- Signal in frequency domaion (Wavelet tranfrom)
+            x (1D numpy)- Signal in frequency domain (Wavelet transform)
             rel: if true we get relative features, else contributions features
         OutPut: 
             res(1D numpy) - Features as described in "Clustering functional data using wavelets"
