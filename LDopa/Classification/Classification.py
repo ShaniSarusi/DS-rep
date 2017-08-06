@@ -16,8 +16,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 
-def optimize_hyper_params(features_df, labels, patients, model_name,
-                          hyper_params=None, scoring_measure=None,
+def optimize_hyper_params(features_df, labels, patients, model_name, hyper_params=None, scoring_measure=None,
                           eval_iterations=20):
     """
     Optimize a model's hyper-parameters, given the features, the labels and the model.
@@ -42,39 +41,32 @@ def optimize_hyper_params(features_df, labels, patients, model_name,
     """
     if model_name == 'svm':
         model = svm.SVC(kernel='rbf')
-        hyper_params = {'C': hp.choice('C', [0.1, 1, 10]),
-                        'gamma': hp.uniform('gamma', 0, 5)}
+        hyper_params = {'C': hp.choice('C', [0.1, 1, 10]), 'gamma': hp.uniform('gamma', 0, 5)}
     elif model_name == 'random_forest':
         model = RandomForestClassifier(n_jobs=-1)
         hyper_params = {'n_estimators': hp.choice('n_estimators', range(10, 200)),
                         'max_depth': hp.choice('max_depth', [2, 5, 10, 30]),
-                        'min_samples_split': hp.choice('min_samples_split',
-                                                       list(range(2, 12, 2))),
-                        'min_samples_leaf': hp.choice('min_samples_leaf',
-                                                      list(range(2, 12, 2)))}
+                        'min_samples_split': hp.choice('min_samples_split', list(range(2, 12, 2))),
+                        'min_samples_leaf': hp.choice('min_samples_leaf', list(range(2, 12, 2)))}
     elif model_name == 'random_forest_for_agg':
         model = RandomForestClassifier(n_jobs=-1)
         hyper_params = {'n_estimators': hp.choice('n_estimators', range(10, 500)),
                         'max_depth': hp.choice('max_depth', range(1, 5)),
-                        'min_samples_split': hp.choice('min_samples_split',
-                                                       list(range(2, 12, 2))),
-                        'min_samples_leaf': hp.choice('min_samples_leaf',
-                                                      list(range(1, 13, 2)))}
+                        'min_samples_split': hp.choice('min_samples_split', list(range(2, 12, 2))),
+                        'min_samples_leaf': hp.choice('min_samples_leaf', list(range(1, 13, 2)))}
     elif model_name == 'xgboost':
         model = XGBClassifier()
         hyper_params = {'learning_rate': hp.uniform('learning_rate', 0, 1),
                         'n_estimators': hp.choice('n_estimators', range(40, 50)),
                         'max_depth': hp.choice('max_depth', range(4, 20)),
-                        'min_child_weight': hp.choice('min_child_weight',
-                                                      range(3)),
+                        'min_child_weight': hp.choice('min_child_weight', range(3)),
                         'gamma': hp.uniform('gamma', 0, 1),
                         'subsample': hp.uniform('subsample', 0, 1)}
     elif model_name == 'logistic_regression':
         model = LogisticRegression(n_jobs=-1)
         hyper_params = {'penalty': hp.choice('penalty', ['l1', 'l2']),
                         'C': hp.uniform('C', 0, 5),
-                        'class_weight': hp.choice('class_weight',
-                                                  ['balanced', None])}
+                        'class_weight': hp.choice('class_weight', ['balanced', None])}
     if hyper_params is None:
         print('Cannot train model  - hyper parameters are not defined!')
         return
@@ -82,8 +74,7 @@ def optimize_hyper_params(features_df, labels, patients, model_name,
     # Optimize the hyper-parameters of the model:
     logo = LeaveOneGroupOut()
     cv = logo.split(features_df, labels, patients)
-    hyper_opt = BayesianHyperOpt(estimator=model, space=hyper_params,
-                                 scoring=scoring_measure, cv=list(cv),
+    hyper_opt = BayesianHyperOpt(estimator=model, space=hyper_params, scoring=scoring_measure, cv=list(cv),
                                  max_evals=eval_iterations)
     print("Optimizing the model's hyper parameters...")
     hyper_opt.fit(features_df, labels)
@@ -92,8 +83,7 @@ def optimize_hyper_params(features_df, labels, patients, model_name,
     return hyper_opt_model
 
 
-def make_cv_predictions_prob_for_all_segments(features_df, labels, patients,
-                                              model, task_ids):
+def make_cv_predictions_prob_for_all_segments(features_df, labels, patients, model, task_ids):
     all_preds = []
     patients_id = []
     true_labels = []
@@ -112,23 +102,18 @@ def make_cv_predictions_prob_for_all_segments(features_df, labels, patients,
         true_labels.extend(test_labels)
         patients_id.extend([patient]*len(pred[:, 1]))
         all_tasks.extend(tasks)
-    preds_df = pd.DataFrame({'patient': patients_id,
-                             'task': all_tasks,
-                             'prediction_probability': all_preds,
+    preds_df = pd.DataFrame({'patient': patients_id, 'task': all_tasks, 'prediction_probability': all_preds,
                              'true_label': true_labels})
     return preds_df
 
 
 
-def make_cv_predictions_for_agg_segments(aggregated_df, model,
-                                         binary_class_thresh=0.5):
+def make_cv_predictions_for_agg_segments(aggregated_df, model, binary_class_thresh=0.5):
     patients = []
     binary_preds = []
     prob_preds = []
     labels = []
-    features_cols = [x for x in aggregated_df.columns if x not in ['patient',
-                                                                   'true_label',
-                                                                   'task']]
+    features_cols = [x for x in aggregated_df.columns if x not in ['patient', 'true_label', 'task']]
     for patient in aggregated_df.patient.unique():
         print('making predictions for patient', patient)
         train_features = aggregated_df[features_cols][aggregated_df.patient != patient]
@@ -145,8 +130,6 @@ def make_cv_predictions_for_agg_segments(aggregated_df, model,
         binary_preds.extend(binary_pred)
         labels.extend(test_labels)
         patients.extend([patient]*len(test_labels))
-    preds_df = pd.DataFrame({'patient': patients,
-                             'binary_prediction': binary_preds,
-                             'proba_prediction': prob_preds,
+    preds_df = pd.DataFrame({'patient': patients, 'binary_prediction': binary_preds, 'proba_prediction': prob_preds,
                              'true_label': labels})
     return preds_df
