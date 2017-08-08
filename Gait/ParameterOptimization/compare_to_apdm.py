@@ -52,7 +52,7 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
         # Scatter plots
         if len(algs) > 4:
             f, axarr = plt.subplots(3, 3)
-        if len(algs) == 4:
+        else:
             f, axarr = plt.subplots(2, 2)
         corr = []
         for j in range(len(algs)):
@@ -94,6 +94,6 @@ if __name__ == '__main__':
     algorithms = ['lhs', 'rhs', 'overlap', 'combined']
     algorithms = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
     metrics = ['cadence', 'step_time_asymmetry', 'step_time_var', 'stride_time_var']
-    metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var']
+    metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var', 'step_time_asymmetry2_median']
 
     compare_to_apdm(alg_data_path, algorithms, metrics, show_plot=True)

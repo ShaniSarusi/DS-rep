@@ -85,7 +85,7 @@ def sum_results(save_dir, return_file_path=False):
                 res.set_value(idx, 'Sine-factor', p['factor'])
 
     # Save
-    file_name = 'Summary_search_' + c.search_space + '_alg_' + c.alg + '_evals_' + str(c.max_evals) + '_folds_' + \
+    file_name = 'Summary_search_' + c.search_space + '_alg_' + c.opt_alg + '_evals_' + str(c.max_evals) + '_folds_' + \
                 str(c.n_folds) + '.csv'
 
     file_path = join(save_dir, file_name)

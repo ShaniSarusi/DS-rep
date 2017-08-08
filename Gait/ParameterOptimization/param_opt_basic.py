@@ -1,11 +1,9 @@
 import pickle
 from os.path import join
-
 import hyperopt as hp
 import numpy as np
 import pandas as pd
 from hyperopt import fmin, Trials, tpe, space_eval
-
 import Gait.Resources.config as c
 from Gait.ParameterOptimization.evaluate_test_set import evaluate_on_test_set
 from Gait.ParameterOptimization.objective_functions import all_algorithms
@@ -14,6 +12,8 @@ from Gait.ParameterOptimization.alg_performance_plot import create_alg_performan
 from Gait.Pipeline.gait_utils import gait_measure_analysis
 from Utils.Preprocessing.other_utils import split_data
 
+
+# Set search spaces
 if c.search_space == 'fast':
     import Gait.Resources.param_search_space_fast as param_search_space
 elif c.search_space == 'small':
@@ -24,29 +24,35 @@ if c.search_space == 'fast2':
     import Gait.Resources.param_search_space_fast2 as param_search_space
 if c.search_space == 'fast3':
     import Gait.Resources.param_search_space_fast3 as param_search_space
-if c.search_space == 'fast4_test':
-    import Gait.Resources.param_search_space_fast4_test as param_search_space
+if c.search_space == 'fast4':
+    import Gait.Resources.param_search_space_fast4 as param_search_space
+if c.search_space == 'fast5':
+    import Gait.Resources.param_search_space_fast5 as param_search_space
 
-
-##########################################################################################################
-# Running parameters
+# Set algorithms
+algs = c.algs
 space_all = list()
-space_all.append(param_search_space.space_single_side_lhs)
-space_all.append(param_search_space.space_overlap)
-space_all.append(param_search_space.space_overlap_strong)
-space_all.append(param_search_space.space_combined)
-space_all.append(param_search_space.space_single_side_rhs)
-
 objective_function_all = list()
-objective_function_all.append('step_detection_single_side_lhs')
-objective_function_all.append('step_detection_two_sides_overlap')
-objective_function_all.append('step_detection_two_sides_overlap_strong')
-objective_function_all.append('step_detection_two_sides_combined_signal')
-objective_function_all.append('step_detection_single_side_rhs')
+if 'lhs' in algs:
+    space_all.append(param_search_space.space_single_side_lhs)
+    objective_function_all.append('step_detection_single_side_lhs')
+if 'overlap' in algs:
+    objective_function_all.append('step_detection_two_sides_overlap')
+    space_all.append(param_search_space.space_overlap)
+if 'overlap_strong' in algs:
+    objective_function_all.append('step_detection_two_sides_overlap_strong')
+    space_all.append(param_search_space.space_overlap_strong)
+if 'combined' in algs:
+    objective_function_all.append('step_detection_two_sides_combined_signal')
+    space_all.append(param_search_space.space_combined)
+if 'rhs' in algs:
+    objective_function_all.append('step_detection_single_side_rhs')
+    space_all.append(param_search_space.space_single_side_rhs)
 
+# Set running parameters
 n_folds = c.n_folds
 max_evals = c.max_evals
-alg = c.alg
+alg = c.opt_alg
 metric = c.metric_to_optimize
 save_dir = join(c.results_path, 'param_opt')
 do_verbose = c.do_verbose
@@ -209,8 +215,7 @@ create_alg_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.p
 create_alg_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
 
 # Summarize and save gait measure results
-algs = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
-metrics = ['cadence', 'step_time_asymmetry']
+metrics = ['cadence', 'step_time_asymmetry', 'step_time_asymmetry2_median', 'stride_time_var']
 if c.data_type == 'both':
     save_name = 'gait_measures_split.csv'
     gait_measure_analysis(df_gait_measures_by_alg_split, save_dir, save_name, algs, metrics, prefix='split')
