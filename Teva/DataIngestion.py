@@ -7,9 +7,11 @@ Created on Wed Jun 28 16:17:35 2017
 
 import pandas as pd
 from os.path import join, sep
+import os
 import imp
 
-exec_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists', 'Teva')
+root_path = join('C:', sep, 'Users', 'imazeh', 'Itzik', 'Health_prof', 'git_team', 'DataScientists')
+os.chdir(root_path)
 import Teva.Config as c
 valid_users = c.valid_users
 imp.reload(c)
