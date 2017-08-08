@@ -211,13 +211,13 @@ def run_peak_utils_peak_detection(signal, param1, param2):
         return np.array([])
 
     # Set threshold value
-    if max(signal) == 0:
-        val = 1
-    else:
-        val = param1 / max(signal)
+    # if max(signal) == 0:
+    #     val = 1
+    # else:
+    #     val = param1 / max(signal)
 
     # Run peakutils
-    res = peakutils.indexes(signal, thres=val, min_dist=param2)
+    res = peakutils.indexes(signal, thres=param1, min_dist=param2)
     return res
 
 
