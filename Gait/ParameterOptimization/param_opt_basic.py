@@ -11,7 +11,7 @@ from Gait.ParameterOptimization.evaluate_test_set import evaluate_on_test_set
 from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Gait.ParameterOptimization.sum_results import sum_results
 from Gait.ParameterOptimization.alg_performance_plot import create_alg_performance_plot
-from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
+from Gait.Pipeline.gait_utils import gait_measure_analysis
 from Utils.Preprocessing.other_utils import split_data
 
 if c.search_space == 'fast':
@@ -24,6 +24,8 @@ if c.search_space == 'fast2':
     import Gait.Resources.param_search_space_fast2 as param_search_space
 if c.search_space == 'fast3':
     import Gait.Resources.param_search_space_fast3 as param_search_space
+if c.search_space == 'fast4_test':
+    import Gait.Resources.param_search_space_fast4_test as param_search_space
 
 
 ##########################################################################################################
@@ -31,12 +33,14 @@ if c.search_space == 'fast3':
 space_all = list()
 space_all.append(param_search_space.space_single_side_lhs)
 space_all.append(param_search_space.space_overlap)
+space_all.append(param_search_space.space_overlap_strong)
 space_all.append(param_search_space.space_combined)
 space_all.append(param_search_space.space_single_side_rhs)
 
 objective_function_all = list()
 objective_function_all.append('step_detection_single_side_lhs')
 objective_function_all.append('step_detection_two_sides_overlap')
+objective_function_all.append('step_detection_two_sides_overlap_strong')
 objective_function_all.append('step_detection_two_sides_combined_signal')
 objective_function_all.append('step_detection_single_side_rhs')
 
@@ -87,11 +91,11 @@ for k in range(len(task_ids)):
 ##########################################################################################################
 # The parameter optimization code
 df_gait_measures_by_alg = []
-if c.data_type == 'both':
-    df_gait_measures_by_alg_split = []
-    df_gait_measures_by_alg_all = []
-else:
-    df_gait_measures_by_alg = []
+# The two lists below are relevant only for c.data_type == 'both':
+df_gait_measures_by_alg_split = []
+df_gait_measures_by_alg_all = []
+
+# Loop over the different algorithms (objective functions) to optimize
 for i in range(len(objective_function_all)):
     objective_function = objective_function_all[i]
     space = space_all[i]
@@ -104,6 +108,7 @@ for i in range(len(objective_function_all)):
     else:
         algorithm = tpe.suggest
 
+    # Loop over the different training sets (walking tasks) on which to perform optimization
     df_gait_measures_by_task = []
     for j in range(len(walk_tasks)):
         best = []
@@ -112,6 +117,8 @@ for i in range(len(objective_function_all)):
         train = train_all[j]
         test = test_all[j]
         results = []
+
+        # Optimize each fold
         for k in range(n_folds):
             print('************************************************************************')
             print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + objective_function + '.   Using '
@@ -133,7 +140,7 @@ for i in range(len(objective_function_all)):
                 results2 = [results, train_all, test_all]
                 pickle.dump(results2, fp)
 
-        ##########################################################################################################
+        ################################################################################################################
         # Evaluate results on cross validation test sets
         print('*****************************************************************************************')
         print('Finished running folds. Below are the best params and test set RMSE from each fold')
@@ -147,7 +154,7 @@ for i in range(len(objective_function_all)):
             mape.append(mape_k)
             best.append(best_params_k)
 
-        ##########################################################################################################
+        ################################################################################################################
         # Save gait specific metrics
         df_list = []
         for k in range(n_folds):
@@ -160,7 +167,7 @@ for i in range(len(objective_function_all)):
         df_for_task_j = pd.concat(df_list)
         df_gait_measures_by_task.append(df_for_task_j)
 
-        ##########################################################################################################
+        ################################################################################################################
         # Save results
         results = dict()
         results['best'] = best
@@ -175,7 +182,7 @@ for i in range(len(objective_function_all)):
             to_save = [results, train_all, test_all]
             pickle.dump(to_save, fp)
 
-        ##########################################################################################################
+        ################################################################################################################
         # Print results
         print('Best params are:')
         print(best)
@@ -191,41 +198,24 @@ for i in range(len(objective_function_all)):
         df_for_alg_i = pd.concat(df_gait_measures_by_task)
         df_gait_measures_by_alg.append(df_for_alg_i)
 
-##########################################################################################################
+########################################################################################################################
 # Summarize and save all optimization results
 print('***Summarizing and saving results***')
 file_name = sum_results(save_dir, return_file_path=True)
 
 # Create performance metric plots
 data_file = join(save_dir, file_name)
-metric = 'MAPE'  # 'MAPE' or 'RMSE'
-create_alg_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False)
-
-
-def _gait_measure_analysis(df, dir, p_save_name, p_algs, p_metrics, prefix=""):
-    res_gait = df[0]
-    for i in range(1, len(df)):
-        right = df[i]
-        cols_left = res_gait.columns.tolist()
-        cols_right = right.columns.tolist()
-        cols_shared = list(set(cols_left).intersection(cols_right))
-        right = right.drop(cols_shared, axis=1)
-        res_gait = res_gait.join(right, how='outer')
-    res_gait = res_gait.sort_index()
-    gait_measure_path = join(dir, p_save_name)
-    res_gait.to_csv(gait_measure_path)
-
-    # Plot gait metric comparisons to APDM
-    compare_to_apdm(gait_measure_path, p_algs, p_metrics, name_prefix=prefix)
+create_alg_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True, show_plot=False)
+create_alg_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
 
 # Summarize and save gait measure results
-algs = ['lhs', 'rhs', 'overlap', 'combined']
+algs = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
 metrics = ['cadence', 'step_time_asymmetry']
 if c.data_type == 'both':
     save_name = 'gait_measures_split.csv'
-    _gait_measure_analysis(df_gait_measures_by_alg_split, save_dir, save_name, algs, metrics, prefix='split')
+    gait_measure_analysis(df_gait_measures_by_alg_split, save_dir, save_name, algs, metrics, prefix='split')
     save_name = 'gait_measures_all.csv'
-    _gait_measure_analysis(df_gait_measures_by_alg_all, save_dir, save_name, algs, metrics, prefix='all')
+    gait_measure_analysis(df_gait_measures_by_alg_all, save_dir, save_name, algs, metrics, prefix='all')
 else:
     save_name = 'gait_measures.csv'
-    _gait_measure_analysis(df_gait_measures_by_alg, save_dir, save_name, algs, metrics)
+    gait_measure_analysis(df_gait_measures_by_alg, save_dir, save_name, algs, metrics)

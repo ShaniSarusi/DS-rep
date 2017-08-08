@@ -23,7 +23,7 @@ import Utils.Preprocessing.denoising as Denoiseing_func
 import LDopa.DataReading.read_data_from_ldopa as data_reading
 import LDopa.Classification.Classification as classifier
 import LDopa.Evaluation.evaluation as evaluation
-from Utils.Preprocessing.other_utils import normlize_sig
+from Utils.Preprocessing.other_utils import normalize_signal
 ###
 """
 Read with SQL
@@ -56,8 +56,8 @@ Perform signal denoising:
 lab_ver_denoised = Denoiseing_func.denoise_signal(lab_ver_proj)
 lab_hor_denoised = Denoiseing_func.denoise_signal(lab_hor_proj)
 
-lab_ver_denoised_norm = lmap(normlize_sig, lab_ver_denoised)
-lab_hor_denoised_norm = lmap(normlize_sig, lab_hor_denoised)
+lab_ver_denoised_norm = lmap(normalize_signal, lab_ver_denoised)
+lab_hor_denoised_norm = lmap(normalize_signal, lab_hor_denoised)
 
 '''
 Extract features:

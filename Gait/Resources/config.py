@@ -2,14 +2,14 @@ from os.path import join, sep
 from os import getcwd
 
 machine = 0  # 1, 2, 3, 4, 5, 6
-n_folds = 5
-max_evals = 500
+n_folds = 2
+max_evals = 2
 alg = 'tpe'  # Can be 'tpe' or 'random'
 metric_to_optimize = 'rmse'  # 'rmse' or 'mape'
 do_verbose = False
 
 data_type = 'both'
-search_space = 'fast2' or 3 ..
+search_space = 'fast4_test' # or 3 ..
 
 if machine == 1:
     data_type = 'both'

@@ -15,7 +15,7 @@ from Utils.Preprocessing.projections import project_gravity
 # Imports from Utils
 from Utils.SignalProcessing.peak_detection_and_handling import merge_adjacent_peaks_from_two_signals, \
     run_scipy_peak_detection, run_peak_utils_peak_detection, merge_adjacent_peaks_from_single_signal, \
-    score_max_peak_within_fft_frequency_range
+    score_max_peak_within_fft_frequency_range, merge_adjacent_peaks_from_two_signals_opt2
 
 
 class StepDetection:
@@ -174,6 +174,72 @@ class StepDetection:
         res = pd.Series(idx, index=self.res.index, name='idx_' + 'overlap')
         self.res = pd.concat([self.res, res], axis=1)
 
+    def step_detection_two_sides_overlap_opt_strong(self, signal_to_use='norm', smoothing=None, mva_win=15,
+                                         vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2,
+                                         peak_param2=15, win_size_merge=25, win_size_remove_adjacent_peaks=20, z=0.5,
+                                         verbose=True):
+
+        if verbose: print("Running: step_detection_two_sides_overlap on side with single side strong option")
+
+        # Set data
+        lhs = [self.acc[i]['lhs'] for i in range(len(self.acc))]
+        rhs = [self.acc[i]['rhs'] for i in range(len(self.acc))]
+
+        # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
+        if verbose: print("\tStep: Selecting " + signal_to_use + " signal")
+        if signal_to_use == 'norm':
+            lhs = [lhs[i]['n'] for i in range(len(lhs))]
+            rhs = [rhs[i]['n'] for i in range(len(rhs))]
+        if signal_to_use == 'vertical':
+            if verbose and vert_win is not None: print("\tStep: Vertical projection window size is: " + str(vert_win))
+            lhs = [project_gravity(lhs[i]['x'], lhs[i]['y'], lhs[i]['z'], num_samples_per_interval=vert_win,
+                                   return_only_vertical=True) for i in range(len(lhs))]
+            rhs = [project_gravity(rhs[i]['x'], rhs[i]['y'], rhs[i]['z'], num_samples_per_interval=vert_win,
+                                   return_only_vertical=True) for i in range(len(rhs))]
+
+        # Smoothing
+        if smoothing == 'mva':
+            if verbose: print("\tStep: Smoothing, using " + smoothing + " with window size " + str(mva_win))
+            lhs = [moving_average_no_nans(lhs[i], mva_win) for i in range(len(lhs))]
+            rhs = [moving_average_no_nans(rhs[i], mva_win) for i in range(len(rhs))]
+        if smoothing == 'butter':
+            if verbose: print("\tStep: Smoothing, using " + smoothing + "filter with frequency " + str(butter_freq))
+            lhs = [butter_lowpass_filter(lhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(lhs))]
+            rhs = [butter_lowpass_filter(rhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(rhs))]
+        # TODO add option for lowpass and highpass bf. maybe just do in single one, with low zero being highpass.
+
+        # Mean normalization
+        lhs = [lhs[i] - lhs[i].mean() for i in range(len(lhs))]
+        rhs = [rhs[i] - rhs[i].mean() for i in range(len(rhs))]
+
+        # Peak detection
+        if verbose: print("\tStep: Peak detection, using " + peak_type + " with params: " + str(peak_param1) + " and " +
+                          str(peak_param2))
+        if peak_type == 'scipy':
+            idx_lhs = [run_scipy_peak_detection(lhs[i], peak_param1, peak_param2) for i in range(len(lhs))]
+            idx_rhs = [run_scipy_peak_detection(rhs[i], peak_param1, peak_param2) for i in range(len(rhs))]
+        if peak_type == 'peak_utils':
+            idx_lhs = [run_peak_utils_peak_detection(lhs[i], peak_param1, peak_param2) for i in range(len(lhs))]
+            idx_rhs = [run_peak_utils_peak_detection(rhs[i], peak_param1, peak_param2) for i in range(len(rhs))]
+
+        # Merge adjacent peaks from both sides into single peaks
+        if verbose: print("\tStep: Merge adjacent peaks from both sides into single peaks with window: " +
+                          str(win_size_merge))
+        merged_peaks = [merge_adjacent_peaks_from_two_signals_opt2(idx_lhs[i], idx_rhs[i], lhs[i][idx_lhs[i]],
+                                                                   rhs[i][idx_rhs[i]], win_size_merge, z=z) for i in
+                        range(len(lhs))]
+
+        # Merge adjacent peaks from the merged peaks before
+        if verbose: print("\tStep: Merge adjacent peaks from the merged peaks before with window: " +
+                          str(win_size_remove_adjacent_peaks))
+        idx = [merge_adjacent_peaks_from_single_signal(merged_peaks[i], win_size_remove_adjacent_peaks) for i in
+               range(len(merged_peaks))]
+
+        # Save results
+        if verbose: print("\tStep: Saving results")
+        res = pd.Series(idx, index=self.res.index, name='idx_' + 'overlap_strong')
+        self.res = pd.concat([self.res, res], axis=1)
+
     def step_detection_two_sides_combined_signal(self, signal_to_use='norm', smoothing=None, mva_win=15, vert_win=None,
                                                  butter_freq=12, mva_win_combined=40, min_hz=0.3, max_hz=2.0,
                                                  factor=1.1, peak_type='peak_utils', peak_param1=0.5, peak_param2=30,
@@ -308,6 +374,7 @@ class StepDetection:
         self.add_step_and_stride_durations(cols, n_samples)
         self.add_step_and_stride_time_variability(cols, n_samples)
         self.add_step_time_asymmetry(cols, n_samples)
+        self.add_step_time_asymmetry2(cols, n_samples)
         # self.add_gait_pci_asymmetry()
 
     def add_total_step_count_and_cadence(self, cols, n_samples):
@@ -395,6 +462,26 @@ class StepDetection:
             step_time_asymmetry = [100.0*(np.abs(side1[i] - side2[i]) / np.mean([side1[i], side2[i]])) for i in
                                    range(n_samples)]
             res = pd.Series(step_time_asymmetry, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry_'))
+            self.res = pd.concat([self.res, res], axis=1)
+
+    def add_step_time_asymmetry2(self, cols, n_samples):
+        for col in cols:
+            asym = []
+            asym_mean = []
+            for i in range(n_samples):
+                side1 = self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]
+                side2 = self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]
+                asym_i = []
+                for j in range(min(len(side1), len(side2))):
+                    val = np.abs(side1[j] - side2[j])/np.mean([side1[j], side2[j]])
+                    asym_i.append(val)
+                asym.append(asym_i)
+                asym_mean.append(np.median(asym_i))
+
+            res = pd.Series(asym, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry2_values_'))
+            self.res = pd.concat([self.res, res], axis=1)
+
+            res = pd.Series(asym_mean, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry2_median_'))
             self.res = pd.concat([self.res, res], axis=1)
 
     def create_results_table(self, ids, algo='lhs', save_name=None):
@@ -592,6 +679,10 @@ if __name__ == "__main__":
     sd.step_detection_two_sides_overlap(signal_to_use='norm', smoothing='mva', mva_win=15,
                                      vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
                                      win_size_merge=30, win_size_remove_adjacent_peaks=40, verbose=True)
+    sd.step_detection_two_sides_overlap_opt_strong(signal_to_use='norm', smoothing='mva', mva_win=15,
+                                     vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
+                                     win_size_merge=30, win_size_remove_adjacent_peaks=40, z=0.3, verbose=True)
+
     sd.step_detection_two_sides_combined_signal(signal_to_use='norm', smoothing='mva', mva_win=15, vert_win=None,
                                              butter_freq=12, mva_win_combined=40, min_hz=0.3, max_hz=2.0,
                                              factor=1.1, peak_type='peak_utils', peak_param1=0.5, peak_param2=30)

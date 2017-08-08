@@ -5,7 +5,8 @@ import pandas as pd
 import Gait.Resources.config as c
 
 
-def create_alg_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False):
+def create_alg_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False,
+                                set_y_lim=True, y_min=0, y_max=30):
     data = pd.read_csv(data_file)
 
     with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
@@ -22,6 +23,7 @@ def create_alg_performance_plot(data_file, metric, save_name='alg_performance.pn
     xlabs = [x[6:] if 'Walk - ' in x else x for x in xlabs]
 
     algs = data['Algorithm'].unique().tolist()
+    algs.sort()
 
     means = []
     stds = []
@@ -40,7 +42,7 @@ def create_alg_performance_plot(data_file, metric, save_name='alg_performance.pn
     legends = algs
     groups = means
     errors = stds
-    colors = ['r', 'g', 'b', 'm']
+    colors = ['r', 'g', 'b', 'm', 'k']
 
     x = range(len(groups[0]))
     list_dots = list()
@@ -59,6 +61,8 @@ def create_alg_performance_plot(data_file, metric, save_name='alg_performance.pn
     else:
         ax.set_xticklabels(xlabs)
     ax.set_xlim(0, max(x)+1-0.2)
+    if set_y_lim:
+        ax.set_ylim(y_min, y_max)
 
     # Hide the right and top spines
     ax.spines['bottom'].set_visible(True)
@@ -81,7 +85,7 @@ def create_alg_performance_plot(data_file, metric, save_name='alg_performance.pn
 if __name__ == '__main__':
     input_file = join('C:\\Users\\zwaks\\Desktop\\apdm-june2017\\small_search_space', 'Summary.csv')
     input_file = join('C:\\Users\\zwaks\\Documents\\Data\\APDM June 2017\\Results\\param_opt',
-                'Summary_search_fast_alg_tpe_evals_100_folds_5.csv')
+                'Summary_search_fast4_test_alg_tpe_evals_2_folds_2.csv')
     rotate = True
     metric = 'MAPE'  # 'MAPE' or 'RMSE'
     show_plot = True

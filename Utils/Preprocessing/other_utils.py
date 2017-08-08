@@ -2,8 +2,8 @@ from Utils.DataHandling.data_processing import chunk_it
 import numpy as np
 
 
-''' Normlize a signal: '''
-def normlize_sig(sig):
+def normalize_signal(sig):
+    ''' Normalize a signal: '''
     y = (sig - np.min(sig))/(np.max(sig)-np.min(sig))
     return y
 
