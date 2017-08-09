@@ -1,11 +1,10 @@
 import numpy as np
 import pandas as pd
-from os import join
+from os.path import join
 
 
-def read_data_windows(data_path, read_also_home_data=False, sample_freq=50,
-                      window_size=5):
-    samples_in_window = sample_freq*window_size
+def read_data_windows(data_path, read_also_home_data=False, sample_freq=50, window_size=5):
+    samples_in_window = sample_freq * window_size
 
     lab_x = pd.read_csv(join(data_path, 'lab_x.csv'), header=None)
     lab_x = lab_x.as_matrix()

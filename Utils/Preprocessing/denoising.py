@@ -77,7 +77,7 @@ def denoise(data):
 
 def denoise_signal(signal_data, high_cut=12):
     """
-    denoise_Sgnal
+    denoise_signal
     Input:
         signal_data - numpy array
     Output:

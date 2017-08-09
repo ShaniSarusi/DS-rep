@@ -16,7 +16,7 @@ def sum_results(save_dir, return_file_path=False):
     res = pd.DataFrame(columns=['Algorithm', 'WalkingTask', 'TaskNum', 'FoldNum', 'RMSE', 'MAPE', 'Signal', 'Smoothing',
                                 'Smoothing(window/filter frequency)', 'Peaks', 'Peak_param1', 'Peak_param2',
                                 'Overlap_Merge_Window', 'Overlap_adjacent_peaks_window', 'Mva_combined_window',
-                                'Sine-min Hz', 'Sine-max Hz', 'Sine-factor'])
+                                'Sine-min Hz', 'Sine-max Hz', 'Sine-factor', 'Z'])
     f = read_all_files_in_directory(dir_path=save_dir, file_type='csv')
     for i in range(len(f)):
         if '_walk' not in f[i]:
@@ -75,6 +75,9 @@ def sum_results(save_dir, return_file_path=False):
                 res.set_value(idx, 'Overlap_Merge_Window', p['win_size_merge'])
                 res.set_value(idx, 'Overlap_adjacent_peaks_window', p['win_size_remove_adjacent_peaks'])
 
+            if "overlap_strong" in alg:
+                res.set_value(idx, 'Z', p['z'])
+
             if "combined" in alg:
                 res.set_value(idx, 'Mva_combined_window', p['mva_win_combined'])
                 res.set_value(idx, 'Sine-min Hz', p['min_hz'])
@@ -82,7 +85,7 @@ def sum_results(save_dir, return_file_path=False):
                 res.set_value(idx, 'Sine-factor', p['factor'])
 
     # Save
-    file_name = 'Summary_search_' + c.search_space + '_alg_' + c.alg + '_evals_' + str(c.max_evals) + '_folds_' + \
+    file_name = 'Summary_search_' + c.search_space + '_alg_' + c.opt_alg + '_evals_' + str(c.max_evals) + '_folds_' + \
                 str(c.n_folds) + '.csv'
 
     file_path = join(save_dir, file_name)

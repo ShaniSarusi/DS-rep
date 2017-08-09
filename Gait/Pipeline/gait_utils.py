@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 import Gait.Resources.config as c
-
+from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
 
 def split_by_person():
     with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
@@ -17,6 +17,23 @@ def split_by_person():
     for name in names:
         filt[name] = sample[sample['Person'] == name]['SampleId'].as_matrix()
     return filt
+
+
+def gait_measure_analysis(df, p_dir, p_save_name, p_algs, p_metrics, prefix=""):
+    res_gait = df[0]
+    for i in range(1, len(df)):
+        right = df[i]
+        cols_left = res_gait.columns.tolist()
+        cols_right = right.columns.tolist()
+        cols_shared = list(set(cols_left).intersection(cols_right))
+        right = right.drop(cols_shared, axis=1)
+        res_gait = res_gait.join(right, how='outer')
+    res_gait = res_gait.sort_index()
+    gait_measure_path = join(p_dir, p_save_name)
+    res_gait.to_csv(gait_measure_path)
+
+    # Plot gait metric comparisons to APDM
+    compare_to_apdm(gait_measure_path, p_algs, p_metrics, name_prefix=prefix)
 
 
 def set_filters(exp=2):

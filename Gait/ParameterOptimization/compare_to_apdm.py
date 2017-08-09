@@ -50,7 +50,10 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             alg_vals = [alg_res[metric + '_' + algs[j]][idx_keep] for j in range(len(algs))]
 
         # Scatter plots
-        f, axarr = plt.subplots(2, 2)
+        if len(algs) > 4:
+            f, axarr = plt.subplots(3, 3)
+        else:
+            f, axarr = plt.subplots(2, 2)
         corr = []
         for j in range(len(algs)):
             idx_keep_j = pd.notnull(alg_vals[j])
@@ -86,9 +89,11 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
 
 if __name__ == '__main__':
     alg_file_name = 'gait_measures.csv'
+    alg_file_name = 'gait_measures_all.csv'
     alg_data_path = join(c.results_path, 'param_opt', alg_file_name)
     algorithms = ['lhs', 'rhs', 'overlap', 'combined']
+    algorithms = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
     metrics = ['cadence', 'step_time_asymmetry', 'step_time_var', 'stride_time_var']
-    metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var']
+    metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var', 'step_time_asymmetry2_median']
 
     compare_to_apdm(alg_data_path, algorithms, metrics, show_plot=True)

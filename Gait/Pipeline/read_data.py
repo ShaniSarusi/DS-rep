@@ -58,7 +58,7 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
 
     # Set measures DataFrame
     cols_measures = ['cadence', 'step_time_asymmetry', 'stride_time_var_lhs', 'stride_time_var_rhs',
-                     'step_time_var_lhs', 'step_time_var_rhs']
+                     'step_time_var_lhs', 'step_time_var_rhs', 'step_time_asymmetry2_values', 'step_time_asymmetry2_median']
     measures = pd.DataFrame(index=range(num_files), columns=cols_measures)
     for i in range(num_files):
         if "_TUG_" in p_apdm_files[i]:
@@ -85,9 +85,18 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
         step_time_var_lhs = round(step_l_std / step_l_m, 3)
         step_time_var_rhs = round(step_r_std / step_r_m, 3)
 
+        asym2_vals = []
+        for j in range(5, measures_i.shape[1]):
+            side1 = measures_i.loc['Gait - Lower Limb - Step Duration L (s)'][str(j-4)]
+            side2 = measures_i.loc['Gait - Lower Limb - Step Duration R (s)'][str(j-4)]
+            val = np.abs(side1-side2)/np.mean([side1, side2])
+            asym2_vals.append(val)
+        asym2_mean = np.median(asym2_vals)
+
         row = [cadence, step_time_asymmetry, stride_time_var_lhs, stride_time_var_rhs, step_time_var_lhs,
-               step_time_var_rhs]
+               step_time_var_rhs, 0, asym2_mean]
         measures.iloc[i] = row
+        measures.set_value(i, 'step_time_asymmetry2_values', asym2_vals)
 
     # Set events DataFrame
     # get time
@@ -279,6 +288,6 @@ if __name__ == '__main__':
     pickle_sensor_data(acc, bar, gyr, mag, temp, time)
 
     # Read, process, and store apdm data
-    apdm_measures, apdm_events = extract_apdm_results(apdm_files, p_len_raw_data=len(acc))
+    apdm_measures, apdm_events = extract_apdm_results(apdm_files, raw_data_input_file_names, p_len_raw_data=len(acc))
     with open(join(c.pickle_path, 'apdm_measures'), 'wb') as fp: pickle.dump(apdm_measures, fp)
     with open(join(c.pickle_path, 'apdm_events'), 'wb') as fp: pickle.dump(apdm_events, fp)

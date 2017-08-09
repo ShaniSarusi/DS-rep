@@ -108,7 +108,7 @@ Extract features:
 '''
 # Create wavelet features for each projected dimension,
 # and stack both dimensions horizontally:
-WavFeatures = WavTransform.wavtransform()
+WavFeatures = WavTransform.WavTransform()
 lab_ver_features = WavFeatures.createWavFeatures(lab_ver_denoised)
 lab_hor_features = WavFeatures.createWavFeatures(lab_hor_denoised)
 features_data = np.column_stack((lab_ver_features, lab_hor_features))

@@ -11,11 +11,11 @@ def mean_and_std(values, round_by=2):
     Take the values and return the string of mean and standard deviation, rounded to the round_by decimal
 
     Input:
-    values (list, Pandas Series, or np.array): Input for which to calculate the mean and standard deviation
-    round_by (int): Decimal to which to round the output mean and standard deviation. Default is 2
+        values (list, Pandas Series, or np.array): Input for which to calculate the mean and standard deviation
+        round_by (int): Decimal to which to round the output mean and standard deviation. Default is 2
 
     Output:
-    out1 (str): Return the string of the mean +- the standard deviation of the input, rounded to the round_by decimal
+        out1 (str): Return the string of the mean +- the standard deviation of the input, rounded to the round_by decimal
     """
     values = pd_to_np(values)
     # return str(round(np.mean(values), round_by)) + u" \u00B1 " + str(round(np.std(values), round_by))
@@ -27,11 +27,11 @@ def cv(values, round_by=3):
     Take the values and return the coefficient of variation (CV), rounded to the round_by decimal
 
     Input:
-    values (list, Pandas Series, or np.array): Input for which to calculate the CV
-    round_by (int): Decimal to which to round the output CV. Default is 3
+        values (list, Pandas Series, or np.array): Input for which to calculate the CV
+        round_by (int): Decimal to which to round the output CV. Default is 3
 
     Output:
-    out1 (str): Return the string of the CV value, rounded to the round_by decimal
+        out1 (str): Return the string of the CV value, rounded to the round_by decimal
     """
     values = pd_to_np(values)
     coefficient_of_var = np.std(values) / np.mean(values)

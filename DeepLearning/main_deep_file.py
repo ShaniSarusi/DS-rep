@@ -19,7 +19,7 @@ import Utils.Preprocessing.denoising as Denoiseing_func
 from DeepLearning.build_network import BuildCNNClassWithActivity
 from LDopa.AugmentedData.augmented_data import augment_data
 from Utils.Preprocessing.frequency_method import spectogram_and_normalize
-from Utils.Preprocessing.other_utils import normlize_sig
+from Utils.Preprocessing.other_utils import normalize_signal
 
 data_path = '/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER'
 os.chdir(os.getcwd()+"/Documents/DataScientists")
