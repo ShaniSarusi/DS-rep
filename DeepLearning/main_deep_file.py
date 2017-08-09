@@ -29,11 +29,12 @@ XYZ = XYZ[cond==True]
 task_clusters_for_deep = task_clusters[cond==True]
 
 augment_XYZ, augment_dys, augment_Task, augment_SubjectId, augment_task_ids, augment_or_not = augment_data(XYZ, 
-                                            labels, np.asarray(task_clusters_for_deep), np.asarray(tags_df.SubjectId[cond==True]), np.asarray(task_ids))
+                                            labels, np.asarray(task_clusters_for_deep), np.asarray(tags_df.SubjectId[cond==True]), np.asarray(task_ids),
+                                                              num_iter=15, num_iter_symp = 30)
 
-x_denoise = lmap(Denoiseing_func.denoise, augment_XYZ[:, :, 0])
-y_denoise = lmap(Denoiseing_func.denoise, augment_XYZ[:, :, 1])
-z_denoise = lmap(Denoiseing_func.denoise, augment_XYZ[:, :, 2])
+x_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 0])
+y_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 1])
+z_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 2])
 
 XYZ_denoise = np.stack((x_denoise, y_denoise, z_denoise), axis=2)
 
@@ -59,7 +60,7 @@ def scheduler(epoch=10):
     if epoch == 4:
         K.set_value(symp_class.optimizer.lr, 0.00005)
     if epoch == 9:
-        K.set_value(symp_class.optimizer.lr, 0.00005)
+        K.set_value(symp_class.optimizer.lr, 0.00001)
     if epoch == 15:
         K.set_value(symp_class.optimizer.lr, 0.00001)
     return K.get_value(symp_class.optimizer.lr)
@@ -75,10 +76,12 @@ labels_for_deep = augment_task_ids%3;
 
 symp = augment_dys.copy()#{'Dys': augment_dys, 'brady': augment_brady, 'trem': augment_tremor}
 
-res1, order1, symp_res = make_cross_val(TagLow, symp, Task_andSymp, labels_for_deep, augment_task_ids,
-                            symp_class,  SubjectId_cat, augment_or_not, deep_params)
-results = np.asarray([x for (y,x) in sorted(zip(order1,res1))])
-results_feature = np.asarray([x for (y,x) in sorted(zip(order1,features_from_deep_res1))])
+res1, order1, symp_res, feature_deep = make_cross_val(TagLow, symp, Task_andSymp, labels_for_deep, augment_task_ids,
+                            symp_class,  feature_extract, augment_or_not, deep_params)
+
+feature_deep1 = np.vstack(feature_deep)
+feature_deep1 = np.column_stack((task_ids1, feature_deep1))
+feature_deep2 = feature_deep1[feature_deep1[:,0].argsort()]
 
 plt.boxplot([res1[symp[test] == 1], res1[symp[test] == 0]])
 confusion_matrix(np.vstack(symp_res), np.where(np.vstack(res1) > 0.75,1,0))
@@ -89,5 +92,11 @@ gc.collect()
 
 all_pred['prediction_probability'] = np.vstack(res1)
 all_pred['true_label'] = np.vstack(symp_res).flatten()
-all_pred['task'] = order1.copy()
-all_pred['patient'] = order1%3
+all_pred['task'] = np.hstack(order1)
+all_pred['patient'] = all_pred['task']%3
+        
+feature_deep2 = []
+for i in order:
+    for j in task_ids1:
+        
+    

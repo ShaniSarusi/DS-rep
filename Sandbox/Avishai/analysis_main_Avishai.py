@@ -105,14 +105,14 @@ features = features_data[cond==True]
 #tags_df_after_cond = tags_df[cond==True]
 subject_ids = np.asarray((tags_df.SubjectId[cond==True]))
 task_ids = tags_df.TaskID[cond==True]
-features = np.column_stack((subject_ids, features))
+features = np.column_stack((feature_deep2[:,1:], features))
 patients = task_ids%3
 
 '''
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
 optimized_model = classifier.optimize_hyper_params(features, labels, np.asarray(patients), 'xgboost',
-                                        hyper_params=None, scoring_measure = 'roc_auc',eval_iterations = 50)
+                                        hyper_params=None, scoring_measure = None,eval_iterations = 50)
 
 '''
 Make predictions for each segment in the data.
@@ -139,8 +139,8 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
 
 
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
-                                                   model_name='logistic_regression',
-                                                   hyper_params=None, scoring_measure=None,eval_iterations = 100)
+                                                   model_name='random_forest',
+                                                   hyper_params=None, scoring_measure=None,eval_iterations = 30)
 final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments)
 
 

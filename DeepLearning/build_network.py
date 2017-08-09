@@ -239,7 +239,7 @@ def BuildCNNClassifirt(input_size, lost):  # number of nodes in first layer. in 
     #
     return encoder, feature_extract
 
-def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1, 1, 0.1]):  # number of nodes in first layer. in this case 126.
+def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1,0.1]):  # number of nodes in first layer. in this case 126.
     #
     input_signal = Input((input_size,3))
     #
@@ -258,11 +258,11 @@ def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1, 1,
     #attention_mul = attention_3d_block(x)
     #x = Flatten()(attention_mul)
     x = Flatten()(x)
-    OneForActandSymp = Dense(32, activation='relu')(x)#
+    OneForActandSymp = Dense(32, activation='relu')(x)
     #OneForActandSymp = BatchNormalization()(OneForActandSymp)
     
     #ActiveLayer = Dropout(0.5)(OneForActandSymp)
-    ActiveLayer = Dense(32, activation='relu')(OneForActandSymp)
+    ActiveLayer = Dense(32, activation='tanh')(OneForActandSymp)
     ActiveLayer = BatchNormalization()(ActiveLayer)
     #ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
     End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
@@ -271,30 +271,19 @@ def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1, 1,
     #sympLayer=Dropout(0.5)(ActiveLayer)
     sympLayer = Dense(19, activation='relu')(ActiveLayer)
     sympLayer = BatchNormalization()(sympLayer)
-    input_user = Input((3,))
-    #Fuck_YOU = Embedding(19, 20)(input_user)
-    Fuck_YOU = Dense(3)(input_user)
-    Fuck_YOU = Dense(3)(Fuck_YOU)
-    merging = layers.concatenate([sympLayer, Fuck_YOU])
-    
-    #
-    close_to_output = Dense(19, activation='relu')(merging)
-    close_to_output = Dense(8, activation='tanh')(close_to_output)
-    close_to_output = Dense(8, activation='tanh')(close_to_output)
     
     close_to_output2 = Dense(19, activation='relu')(sympLayer)
-    close_to_output2 = Dense(8, activation='tanh')(close_to_output2)
-    close_to_output2 = Dense(8, activation='tanh')(close_to_output2)
-    End_point = Dense(1, activation='sigmoid')(close_to_output)
-    End_point2 = Dense(1, activation='sigmoid')(close_to_output2)
+    close_to_output2 = Dense(16, activation='tanh')(close_to_output2)
+    close_to_output2 = Dense(16, activation='tanh')(close_to_output2)
+    End_point = Dense(1, activation='sigmoid')(close_to_output2)
     
-    symp_class = Model([input_signal, input_user], [End_point, End_point2 ,End_point_Active])
+    symp_class = Model([input_signal], [End_point,End_point_Active])
     #active_class = Model(input_signal, End_point_Active)
     
     optimizer = optimizers.adam(lr = lr)
-    feature_extract = Model([input_signal , input_user],close_to_output)
+    feature_extract = Model([input_signal],close_to_output2)
     
-    symp_class.compile(optimizer=optimizer, loss=[lost, lost, 'categorical_crossentropy'],metrics=['accuracy'], loss_weights=loss_weights)
+    symp_class.compile(optimizer=optimizer, loss=[lost,  'categorical_crossentropy'],metrics=['accuracy'], loss_weights=loss_weights)
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract
@@ -355,20 +344,20 @@ def BuildCNNClassWithLSTM(input_size, lost, lr = 0.0001, loss_weights=[1., 0.1])
     return symp_class, feature_extract
 
 
-def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.001, loss_weights=[1.,0.8]):  # number of nodes in first layer. in this case 126.
+def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.00001, loss_weights=[1. ,0.5 ]):  # number of nodes in first layer. in this case 126.
     #
     input_signal = Input((input_size,3))
     #
     #x = ZeroPadding1D(3)(input_signal) 
-    x = Conv1D(32, 32, activation='relu', padding='same')(input_signal) 
+    x = Conv1D(32, 32, activation='relu')(input_signal) 
     x = MaxPooling1D(2)(x)
     #x = Dropout(0.25)(x)
-    x = Conv1D(16, 16, activation='relu', padding='same')(x)
+    x = Conv1D(16, 16, activation='relu')(x)
     x = MaxPooling1D(2)(x)
-    x = Conv1D(4, 4, activation='relu', padding='same')(x)
+    x = Conv1D(20, 4, activation='relu', padding='same')(x)
     #BatchNormalization()(x)
     x = MaxPooling1D(4)(x)
-    x = Conv1D(4, 3, activation='relu', padding='same')(x)
+    x = Conv1D(20, 3, activation='relu', padding='same')(x)
     x = MaxPooling1D(2)(x)
     #x = GRU(32,  activation='tanh', return_sequences=True)(x)
     #attention_mul = attention_3d_block(x)
@@ -379,27 +368,26 @@ def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.001, loss_weights=[1.,
     
     ##Here is activity
     #ActiveLayer = Dropout(0.2)(OneForActandSymp)
-    ActiveLayer= Dense(16, activation='relu')(OneForActandSymp)
+    ActiveLayer= Dense(32, activation='relu')(OneForActandSymp)
     ActiveLayer = BatchNormalization()(ActiveLayer)
-    #ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
-    #End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
+    sympLayer = Dense(32, activation='tanh')(ActiveLayer)
     
     ##Here is autoencoer
-    autoencoder_layer = Dense(32, activation='relu')(OneForActandSymp)
+    autoencoder_layer = Dense(32, activation='relu')(sympLayer)
     autoencoder_layer = Reshape((16,2))(autoencoder_layer)
     autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
     autoencoder_layer = Conv1D(4,4, activation='relu',padding='same')(autoencoder_layer)
     autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
     autoencoder_layer = Conv1D(16,4, activation='relu',padding='same')(autoencoder_layer)
     autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
-    autoencoder_layer = Conv1D(4,4, activation='relu')(autoencoder_layer)
+    autoencoder_layer = Conv1D(4,4, activation='tanh')(autoencoder_layer)
     autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
-    autoencoder_layer = Conv1D(3,1, activation='relu')(autoencoder_layer)
+    autoencoder_layer = Conv1D(3,1, activation='linear')(autoencoder_layer)
     ##Here is the final symtpoms
-    sympLayer = Dense(16, activation='relu')(ActiveLayer)
-    #sympLayer = BatchNormalization()(sympLayer)
-    close_to_output = Dense(16, activation='relu')(sympLayer)
     
+    #sympLayer = BatchNormalization()(sympLayer)
+    close_to_output = Dense(16, activation='tanh')(sympLayer)
+    close_to_output = Dense(8, activation='tanh')(close_to_output)
     input_home_or_not = Input((1,))
     #attention_probs = Dense(16, activation='softmax', name='attention_vec')(close_to_output)
     #attention_mul = Multiply((close_to_output, attention_probs), output_shape=32, name='attention_mul')
@@ -409,11 +397,11 @@ def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.001, loss_weights=[1.,
     #active_class = Model(input_signal, End_point_Active)
     
     optimizer = optimizers.adam(lr = lr)
-    feature_extract = Model(input_signal,close_to_output)
+    feature_extract = Model(input_signal,sympLayer)
     
     def penalized_loss(fake_or_not):
-        def loss(y_true, y_pred):
-            return K.mean(K.binary_crossentropy(y_pred,y_true)*fake_or_not,axis = -1)
+        def loss(y_pred, y_true):
+            return K.mean(K.square(y_pred - y_true)*fake_or_not,axis = -1)
         return loss
 
     symp_class.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse'],metrics=['accuracy'], loss_weights = loss_weights)

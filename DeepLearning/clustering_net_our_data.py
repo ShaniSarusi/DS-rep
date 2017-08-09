@@ -26,11 +26,11 @@ x = Flatten()(x)
 OneForActandSymp = Dense(32, activation='relu')(x)#,activity_regularizer=regularizers.l2(0.001)
 #OneForActandSymp = BatchNormalization()(OneForActandSymp)
 
-Input_for_cluster =  Input((16,))
-##Here is activity
-ActiveLayer = Dropout(0.2)(OneForActandSymp)
-ActiveLayer= Dense(16, activation='linear')(ActiveLayer)
+Input_for_cluster =  Input((32,))
+#ActiveLayer = Dropout(0.2)(OneForActandSymp)
+ActiveLayer= Dense(32, activation='tanh')(OneForActandSymp)
 ActiveLayer = BatchNormalization()(ActiveLayer)
+
 #ActiveLayer = Dense(16, activation='relu')(ActiveLayer)
 #End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
 
@@ -42,13 +42,16 @@ autoencoder_layer = Conv1D(4,4, activation='relu',padding='same')(autoencoder_la
 autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
 autoencoder_layer = Conv1D(16,4, activation='relu',padding='same')(autoencoder_layer)
 autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
-autoencoder_layer = Conv1D(4,4, activation='relu')(autoencoder_layer)
+autoencoder_layer = Conv1D(4,4, activation='tanh')(autoencoder_layer)
 autoencoder_layer = UpSampling1D(2)(autoencoder_layer)
-autoencoder_layer = Conv1D(3,1, activation='relu')(autoencoder_layer)
+autoencoder_layer = Conv1D(3,1, activation='linear')(autoencoder_layer)
 ##Here is the final symtpoms
-sympLayer = Dense(16, activation='relu')(ActiveLayer)
+sympLayer = Dense(16, activation='tanh')(ActiveLayer)
+sympLayer  = BatchNormalization()(sympLayer )
+close_to_output = Dense(16, activation='tanh')(sympLayer )
 #sympLayer = BatchNormalization()(sympLayer)
-close_to_output = Dense(16, activation='relu')(sympLayer)
+
+close_to_output = Dense(16, activation='tanh')(close_to_output)
 
 input_home_or_not = Input((1,))
 #attention_probs = Dense(16, activation='softmax', name='attention_vec')(close_to_output)
@@ -56,13 +59,15 @@ input_home_or_not = Input((1,))
 End_point = Dense(1, activation='sigmoid')(close_to_output)
 
 symp_cluster = Model([input_signal, input_home_or_not], [End_point, autoencoder_layer, ActiveLayer])
+feature_extract = Model(input_signal, sympLayer)
+
 #active_class = Model(input_signal, End_point_Active)
 
-optimizer = optimizers.adam(lr = 0.001)
+optimizer = optimizers.adam(lr = 0.0001)
 
 def penalized_loss(fake_or_not):
     def loss(y_true, y_pred):
-        return K.mean(K.binary_crossentropy(y_pred,y_true)*fake_or_not,axis = -1)
+        return K.mean(K.square(y_pred-y_true)*fake_or_not,axis = -1)
     return loss
 
 def cluster_function(cluster_center):
@@ -72,6 +77,7 @@ def cluster_function(cluster_center):
 
 
 symp_cluster.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse','mse'],metrics=['accuracy'], loss_weights=[1.,0.5,0.])
+feature_extract.compile(optimizer=optimizer, loss = 'mse',metrics=['accuracy'])
 
 weights_start_symp = symp_cluster.get_weights()
 
@@ -91,35 +97,36 @@ for train, test in cv:
     
     
     symp_cluster.set_weights(weights_start_symp)
-    optimizer = optimizers.adam(lr = 0.001)
+    optimizer = optimizers.adam(lr = 0.0001)
 
     symp_cluster.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse','mse'],metrics=['accuracy'], loss_weights=[1.,0.5,0.])
 
-    Mytrain = train[range(len(train) - len(train)%deep_params['batch_size'])]
-    Mytest = test[range(len(test) - len(test)%deep_params['batch_size'])]
 
     xtest = TagLow[test]
-    xtrain = TagLow[Mytrain]
+    xtrain = TagLow[train]
     
-    MyCenters = np.reshape(np.random.normal(0,2,16*len(labels_for_deep)),[len(labels_for_deep),16])
+    MyCenters = np.reshape(np.random.normal(0,2,32*len(labels_for_deep)),[len(labels_for_deep),32])
 
-    symp_cluster.fit([xtrain, home_or_not[Mytrain]], [augment_dys[Mytrain],xtrain,MyCenters[Mytrain]],epochs=1 , batch_size = 128, shuffle=True,verbose=2)#
-    cluster_features = symp_cluster.predict([xtrain, home_or_not[Mytrain]])[2]
+    symp_cluster.fit([xtrain, home_or_not[train]], [augment_dys[train],xtrain,MyCenters[train]],epochs=1 , batch_size = 128, shuffle=True,verbose=2)#
+    cluster_features = symp_cluster.predict([xtrain, home_or_not[train]])[2]
     cluster_labels = KMeans(n_clusters=5).fit(cluster_features)
     MyCenters = [cluster_labels.cluster_centers_[j] for j in cluster_labels.labels_]
     MyCenters = np.vstack(MyCenters)
     symp_cluster.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse','mse'],
-                                                    metrics=['accuracy'], loss_weights=[1.,0.1,0.2])
+                                                    metrics=['accuracy'], loss_weights=[1.,1.,1.])
     
     best_score = 0
     for i in range(1,4):
         print(i)
+        if(i==2):
+            K.set_value(symp_cluster.optimizer.lr,0.00005)
         if(i==3):
-            K.set_value(symp_cluster.optimizer.lr,0.0005)
-        #if(i==5):
-        #    K.set_value(symp_cluster.optimizer.lr,0.00005)
-        symp_cluster.fit([xtrain, home_or_not[Mytrain]], [augment_dys[Mytrain],xtrain,MyCenters],epochs=i , batch_size = 128, shuffle=True,verbose=2, validation_data=([xtest[augment_or_not[test] == 1],home_or_not[test][augment_or_not[test] == 1]], [augment_dys[test][augment_or_not[test] == 1],xtest[augment_or_not[test] == 1],MyCenters[range(len(test))][augment_or_not[test] == 1]]))
-        cluster_features =  symp_cluster.predict([xtrain, home_or_not[Mytrain]])
+            K.set_value(symp_cluster.optimizer.lr,0.00001)
+        symp_cluster.fit([xtrain, home_or_not[train]], [augment_dys[train],xtrain,MyCenters],epochs=i , batch_size = 128, 
+                         shuffle=True,verbose=2, validation_data=([xtest[augment_or_not[test] == 1],
+                         home_or_not[test][augment_or_not[test] == 1]], [augment_dys[test][augment_or_not[test] == 1],
+                         xtest[augment_or_not[test] == 1],MyCenters[range(len(test))][augment_or_not[test] == 1]]))
+        cluster_features =  symp_cluster.predict([xtrain, home_or_not[train]])
         cluster_labels = KMeans(n_clusters=5, random_state = 1234).fit(cluster_features[2])
         MyCenters = [cluster_labels.cluster_centers_[j] for j in cluster_labels.labels_]
         MyCenters = np.vstack(MyCenters)
@@ -127,6 +134,7 @@ for train, test in cv:
     res.append(temp_res[0])
     symp_cor_res.append(augment_dys[test][augment_or_not[test] == 1])
     order_final.append(augment_task_ids[test][augment_or_not[test] == 1])
+    features_from_deep.append(feature_extract.predict(xtest[augment_or_not[test] == 1]))
     print(confusion_matrix(symp_cor_res[len(symp_cor_res)-1],np.where(temp_res[0]>0.5,1,0)))
     
 print(confusion_matrix(np.vstack(symp_cor_res),np.where(np.vstack(res)>0.5,1,0)))
