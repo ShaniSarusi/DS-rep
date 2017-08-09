@@ -144,13 +144,14 @@ for i in range(len(objective_function_all)):
                 print('************************************************************************')
                 space['sample_ids'] = train[k]
                 results = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=Trials())
+                return results
 
                 # show progress
-                with open(
-                        join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(k + 1)),
-                        'wb') as fp:
-                    results2 = [results, train_all, test_all]
-                    pickle.dump(results2, fp)
+                # with open(
+                #         join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(k + 1)),
+                #         'wb') as fp:
+                #     results2 = [results, train_all, test_all]
+                #     pickle.dump(results2, fp)
 
             # The parallel code
             pool = Pool(processes=cpu_count())
