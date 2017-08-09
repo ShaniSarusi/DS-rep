@@ -51,7 +51,7 @@ d['vert_win'] = 5
 
 # choose which smoothing to perform (or none at all if mva_win is equal to ~1
 d['smoothing'] = 'mva'
-d['mva_win'] = 2 + hp.randint('mva_win', 50)
+d['mva_win'] = 2 + hp.randint('mva_win', 60)
 d['butter_freq'] = 1
 
 # Peak detection algorithm and parameters
@@ -59,11 +59,11 @@ d['peak_type'] = 'peak_utils'
 d['p1_sc'] = 1
 d['p2_sc'] = 2
 d['p1_pu'] = 0.01 + 0.01 * hp.randint('p1_pu', 70)
-d['p2_pu'] = 35 + hp.randint('p2_pu', 26)
+d['p2_pu'] = 2 + hp.randint('p2_pu', 69)
 
 # Signal merging parameters
-d['win_size_merge'] = 5 + hp.randint('win_size_merge', 46)
-d['win_size_remove_adjacent_peaks'] = 1 + hp.randint('win_size_remove_adjacent_peaks', 40)
+d['win_size_merge'] = 2 + hp.randint('win_size_merge', 49)
+d['win_size_remove_adjacent_peaks'] = 1 + hp.randint('win_size_remove_adjacent_peaks', 50)
 
 # Save
 space_overlap = d
@@ -86,11 +86,11 @@ d['vert_win'] = 5
 
 # Smoothing to perform on signals before combining(or none at all if mva_win is equal to ~1)
 d['smoothing'] = 'mva'
-d['mva_win'] = 5 + hp.randint('mva_win', 50)
+d['mva_win'] = 2 + hp.randint('mva_win', 60)
 d['butter_freq'] = 1
 
 # Smoothing after combining signals
-d['mva_win_combined'] = 5 + 2 * hp.randint('mva_win_combined', 25)
+d['mva_win_combined'] = 2 + hp.randint('mva_win_combined', 50)
 
 # Choosing the more sine-like combined signal
 d['min_hz'] = hp.uniform('min_hz', 0.1, 2)
@@ -103,7 +103,7 @@ d['peak_type'] = 'peak_utils'
 d['p1_sc'] = 1
 d['p2_sc'] = 2
 d['p1_pu'] = 0.01 + 0.01 * hp.randint('p1_pu', 70)
-d['p2_pu'] = 20 + hp.randint('p2_pu', 70)
+d['p2_pu'] = 15 + hp.randint('p2_pu', 70)
 
 # Save
 space_combined = d

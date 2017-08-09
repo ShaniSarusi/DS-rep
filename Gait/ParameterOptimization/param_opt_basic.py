@@ -143,8 +143,8 @@ for i in range(len(objective_function_all)):
                       str(c.max_evals))
                 print('************************************************************************')
                 space['sample_ids'] = train[k]
-                results = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=Trials())
-                return results
+                par_results = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=Trials())
+                return par_results
 
                 # show progress
                 # with open(
@@ -154,8 +154,9 @@ for i in range(len(objective_function_all)):
                 #     pickle.dump(results2, fp)
 
             # The parallel code
-            pool = Pool(processes=cpu_count())
-            result = pool.map(par_fmin, range(n_folds))
+            # pool = Pool(processes=cpu_count())
+            pool = Pool(processes=n_folds)
+            results = pool.map(par_fmin, range(n_folds))
         else:
             for k in range(n_folds):
                 print('************************************************************************')
