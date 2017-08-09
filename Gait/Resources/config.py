@@ -3,16 +3,18 @@ from os import getcwd
 
 machine = 0  # 1, 2, 3, 4, 5, 6
 n_folds = 5
-max_evals = 200
+max_evals = 5
 # algs = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
 # algs = ['lhs', 'rhs', 'overlap', 'overlap_strong']
 algs = ['lhs', 'overlap', 'overlap_strong']
 opt_alg = 'tpe'  # Can be 'tpe' or 'random'
+opt_alg = 'random'
 metric_to_optimize = 'rmse'  # 'rmse' or 'mape'
 do_verbose = False
+do_multi_core = True
 
 data_type = 'both'
-search_space = 'fast4' # or 5 ..
+search_space = 'param6' # or 5 ..
 
 if machine == 1:
     data_type = 'both'

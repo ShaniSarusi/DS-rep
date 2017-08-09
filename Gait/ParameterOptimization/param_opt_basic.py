@@ -11,6 +11,7 @@ from Gait.ParameterOptimization.sum_results import sum_results
 from Gait.ParameterOptimization.alg_performance_plot import create_alg_performance_plot
 from Gait.Pipeline.gait_utils import gait_measure_analysis
 from Utils.Preprocessing.other_utils import split_data
+from multiprocessing import Pool, cpu_count
 
 
 # Set search spaces
@@ -28,6 +29,10 @@ if c.search_space == 'fast4':
     import Gait.Resources.param_search_space_fast4 as param_search_space
 if c.search_space == 'fast5':
     import Gait.Resources.param_search_space_fast5 as param_search_space
+if c.search_space == 'param6':
+    import Gait.Resources.param_space_6 as param_search_space
+if c.search_space == 'param7':
+    import Gait.Resources.param_space_7 as param_search_space
 
 # Set algorithms
 algs = c.algs
@@ -108,11 +113,11 @@ for i in range(len(objective_function_all)):
 
     objective = all_algorithms[objective_function]
     if alg == 'tpe':
-        algorithm = tpe.suggest
+        opt_algorithm = tpe.suggest
     elif alg == 'random':
-        algorithm = hp.rand.suggest
+        opt_algorithm = hp.rand.suggest
     else:
-        algorithm = tpe.suggest
+        opt_algorithm = tpe.suggest
 
     # Loop over the different training sets (walking tasks) on which to perform optimization
     df_gait_measures_by_task = []
@@ -125,26 +130,50 @@ for i in range(len(objective_function_all)):
         results = []
 
         # Optimize each fold
-        for k in range(n_folds):
-            print('************************************************************************')
-            print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + objective_function + '.   Using '
-                  + alg + " search.   Running fold " + str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' +
-                  str(c.max_evals))
-            print('************************************************************************')
+        space['metric'] = metric
+        space['verbose'] = do_verbose
+        if c.do_multi_core:
+            # The parallel function. It is defined each time so that it uses various parameters from the outer
+            # scope: objective, space, opt_algorithm, and max_evals
+            def par_fmin(k):
+                print('************************************************************************')
+                print('\rOptimizing Walk Task ' + str(
+                    walk_tasks[j]) + ': algorithm- ' + objective_function + '.   Using '
+                      + alg + " search.   Running fold " + str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' +
+                      str(c.max_evals))
+                print('************************************************************************')
+                space['sample_ids'] = train[k]
+                results = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=Trials())
 
-            # Optimize parameters
-            space['sample_ids'] = train[k]
-            space['metric'] = metric
-            space['verbose'] = do_verbose
-            trials = Trials()
-            res = fmin(objective, space, algo=algorithm, max_evals=max_evals, trials=trials)
-            results.append(res)
+                # show progress
+                with open(
+                        join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(k + 1)),
+                        'wb') as fp:
+                    results2 = [results, train_all, test_all]
+                    pickle.dump(results2, fp)
 
-            # show progress
-            with open(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(k+1)),
-                      'wb') as fp:
-                results2 = [results, train_all, test_all]
-                pickle.dump(results2, fp)
+            # The parallel code
+            pool = Pool(processes=cpu_count())
+            result = pool.map(par_fmin, range(n_folds))
+        else:
+            for k in range(n_folds):
+                print('************************************************************************')
+                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + objective_function + '.   Using '
+                      + alg + " search.   Running fold " + str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' +
+                      str(c.max_evals))
+                print('************************************************************************')
+
+                # Optimize parameters
+                space['sample_ids'] = train[k]
+                trials = Trials()
+                res = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=trials)
+                results.append(res)
+
+                # show progress
+                with open(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(k+1)),
+                          'wb') as fp:
+                    results2 = [results, train_all, test_all]
+                    pickle.dump(results2, fp)
 
         ################################################################################################################
         # Evaluate results on cross validation test sets
@@ -175,17 +204,17 @@ for i in range(len(objective_function_all)):
 
         ################################################################################################################
         # Save results
-        results = dict()
-        results['best'] = best
-        results['rmse'] = root_mean_squared_error
-        results['mape'] = mape
-        results['train'] = train
-        results['test'] = test
-        r = pd.DataFrame(results)
+        save_results = dict()
+        save_results['best'] = best
+        save_results['rmse'] = root_mean_squared_error
+        save_results['mape'] = mape
+        save_results['train'] = train
+        save_results['test'] = test
+        r = pd.DataFrame(save_results)
         r.to_csv(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_all.csv'))
 
         with open(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_all'), 'wb') as fp:
-            to_save = [results, train_all, test_all]
+            to_save = [save_results, train_all, test_all]
             pickle.dump(to_save, fp)
 
         ################################################################################################################
