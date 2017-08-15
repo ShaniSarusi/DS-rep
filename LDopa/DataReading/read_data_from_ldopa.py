@@ -64,10 +64,14 @@ def arrange_res(res, path):
     """
     res[['TS', 'TSStart', 'TSEnd']] = res[['TS', 'TSStart', 'TSEnd']].apply(pd.to_datetime)
     res['AnnotationStrValue'] = res['AnnotationStrValue'].str.replace(' - .*', '')
-    res.ix[(res.AnnotationStrValue.str.contains('Finger')) & (res.BradykinesiaGA.isnull()), ['AnnotationStrValue']] = 'Rest finger to nose'
-    res.ix[(res.AnnotationStrValue.str.contains('Finger')) & (res.BradykinesiaGA.notnull()), ['AnnotationStrValue']] = 'Active finger to nose'
-    res.ix[(res.AnnotationStrValue.str.contains('Alternating')) & (res.BradykinesiaGA.isnull()), ['AnnotationStrValue']] = 'Rest alternating hand movements'
-    res.ix[(res.AnnotationStrValue.str.contains('Alternating')) & (res.BradykinesiaGA.notnull()), ['AnnotationStrValue']] = 'Active alternating hand movements'
+    res.ix[(res.AnnotationStrValue.str.contains('Finger')) & (res.BradykinesiaGA.isnull()), 
+           ['AnnotationStrValue']] = 'Rest finger to nose'
+    res.ix[(res.AnnotationStrValue.str.contains('Finger')) & (res.BradykinesiaGA.notnull()), 
+           ['AnnotationStrValue']] = 'Active finger to nose'
+    res.ix[(res.AnnotationStrValue.str.contains('Alternating')) & (res.BradykinesiaGA.isnull()), 
+           ['AnnotationStrValue']] = 'Rest alternating hand movements'
+    res.ix[(res.AnnotationStrValue.str.contains('Alternating')) & (res.BradykinesiaGA.notnull()), 
+           ['AnnotationStrValue']] = 'Active alternating hand movements'
     res.rename(columns={'AnnotationStrValue': 'Task'}, inplace=True)
 
     # Calculate norm
@@ -90,8 +94,10 @@ def arrange_res(res, path):
 
     print('adding task ids - copying data')
     tmp = res.copy()
-    tmp = tmp.drop(['DeviceID', 'TS', 'X', 'Y', 'Z', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 'TremorGA', 'TSEnd',
-                    'SubjectId', 'IntelUsername', 'Norm', 'TaskClusterId', 'TaskClusterName', 'TaskID'], axis=1)
+    tmp = tmp.drop(['DeviceID', 'TS', 'X', 'Y', 'Z', 'Task', 'BradykinesiaGA', 
+                    'DyskinesiaGA', 'TremorGA', 'TSEnd',
+                    'SubjectId', 'IntelUsername', 'Norm', 'TaskClusterId', 
+                    'TaskClusterName', 'TaskID'], axis=1)
     print('adding task ids - dropping duplicates')
     st = tmp.drop_duplicates(keep='first').index.values
     st.sort()
@@ -116,6 +122,7 @@ def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end
         trim_start (float): For every task trim the start in seconds
         trim_start (float): For every task trim the end in seconds
         frequency (float): Samples frequency in Hertz
+        
     Output:
         meta (pandas) - A dataFrame with SessionId', 'DeviceID', 'Task', 'BradykinesiaGA',
              'DyskinesiaGA', 'TremorGA', 'SubjectId','TSStart', 'TSEnd', 'IntelUsername', 
@@ -125,8 +132,10 @@ def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end
         raw_z (pandas)- Z samples in intevals
     """
     raw = res.copy()
-    raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 'TremorGA', 'SubjectId',
-                    'TSStart', 'TSEnd', 'IntelUsername', 'TaskClusterId', 'TaskClusterName'], axis=1)
+    raw = raw.drop(['SessionId', 'DeviceID', 'Task', 'BradykinesiaGA', 'DyskinesiaGA', 
+    'TremorGA', 'SubjectId',
+                    'TSStart', 'TSEnd', 'IntelUsername', 
+                    'TaskClusterId', 'TaskClusterName'], axis=1)
     raw = raw.sort_values('TS')
 
     win_idx = pd.DataFrame()

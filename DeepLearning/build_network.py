@@ -12,6 +12,7 @@ from keras import regularizers
 from keras import optimizers 
 from keras.callbacks import EarlyStopping 
 from keras import backend as K
+from keras import layers
 #cannot change border mode to same in maxpooling in theano. need to go to tensor flow.
 
 
@@ -338,7 +339,21 @@ def BuildCNNClassWithLSTM(input_size, lost, lr = 0.0001, loss_weights=[1., 0.1])
     feature_extract = Model(input_signal,close_to_output)
     
     symp_class.compile(optimizer=optimizer, loss=[lost,'categorical_crossentropy'],
-                       metrics=['accuracy'], loss_weights=loss_weights)
+                      import os
+
+import numpy as np
+from future.utils import lmap
+from keras import backend as K
+from keras import utils
+from keras.callbacks import LearningRateScheduler
+from sklearn.metrics import confusion_matrix
+from LDopa.AugmentedData.augmented_data import augment_data
+
+import Utils.Preprocessing.denoising as Denoiseing_func
+from DeepLearning.build_network import BuildCNNClassWithActivity
+from LDopa.AugmentedData.augmented_data import augment_data
+from Utils.Preprocessing.frequency_method import spectogram_and_normalize
+from Utils.Preprocessing.other_utils import normalize_signal metrics=['accuracy'], loss_weights=loss_weights)
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract
@@ -397,7 +412,7 @@ def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.00001, loss_weights=[1
     #active_class = Model(input_signal, End_point_Active)
     
     optimizer = optimizers.adam(lr = lr)
-    feature_extract = Model(input_signal,sympLayer)
+    feature_extract = Model(input_signal,close_to_output)
     
     def penalized_loss(fake_or_not):
         def loss(y_pred, y_true):

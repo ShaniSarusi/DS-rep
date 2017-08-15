@@ -74,14 +74,30 @@ def project_gravity_xyz(x, y, z):
 
 
 def project_gravity_core(xyz):
-    # TODO - Avishai - fill this in with docstrings
+    """
+    Prjection of data set to 2 dim
+    
+    Input:
+        xyz (3d numy array) - 0 dimention is number os samples, 1 dimenstion is length of signals 
+                    and 2 dim is number of axis
+                    
+    Output:
+        ver (1d numpy) - Vertical projection
+        hor (1d numpy) - Horizontal projection
+        
+    """
     ver = []
     hor = []
+    
+    # mean for each axis
     G = [np.mean(xyz[:, 0]), np.mean(xyz[:, 1]), np.mean(xyz[:, 2])]
     G_norm = G/np.sqrt(sum(np.power(G, 2)))
+    
+    # The projection is here
     for i in range(len(xyz[:, 0])):
         ver.append(np.dot([xyz[i, :]], G))
         hor.append(np.sqrt(np.dot(xyz[i, :]-ver[i]*G_norm, xyz[i, :]-ver[i]*G_norm)))
+        
     ver = np.reshape(np.asarray(ver), len(ver))
     return np.asarray(ver), np.asarray(hor)
 
@@ -93,6 +109,7 @@ def project_from_3_to_2_dims(x, y, z, interval_length=None):
         y - y axis numpy array, every raw is sample
         z - z axis numpy array, every raw is sample
         interval_length - interval_length is the length of each interval, in number of samples
+        
     Ouput:
         ver_proj - vertical projection
         hor_proj - horizontal projection

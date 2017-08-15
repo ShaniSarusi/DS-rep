@@ -36,7 +36,7 @@ tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,
 res = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
 res = data_reading.arrange_res(res,path = '/home/lfaivish/Desktop/mapTasksClusters.csv')
-tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.make_interval_from_all_data(res,5,3.5,1,0.5,50)
+tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.make_interval_from_all_data(res,5,3.5,1,1,50)
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_z_numpy = lab_z.as_matrix(); lab_z = lab_z_numpy[:,range(len(lab_x_numpy[0])-1)]
@@ -68,10 +68,10 @@ lab_ver_features = WavFeatures.createWavFeatures(lab_ver_denoised)
 lab_hor_features = WavFeatures.createWavFeatures(lab_hor_denoised)
 features_data = np.column_stack((lab_ver_features, lab_hor_features))
 
-lab_ver_for_tsf = TSFresh.convert_signals_for_ts_fresh(lab_ver_denoised,"ver")
+lab_ver_for_tsf = convert_signals_for_ts_fresh(lab_ver_denoised,"ver")
 lab_ver_tsf_features = extract_features(lab_ver_for_tsf, default_fc_parameters=ComprehensiveFCParameters(),
                                         column_id="signal_id", column_sort="time")
-lab_hor_for_tsf = TSFresh.convert_signals_for_ts_fresh(lab_hor_denoised,   "hor")
+lab_hor_for_tsf = convert_signals_for_ts_fresh(lab_hor_denoised,   "hor")
 lab_hor_tsf_features = extract_features(lab_hor_for_tsf, default_fc_parameters=EfficientFCParameters(),
                                         column_id="signal_id", column_sort="time")
 features_data = pd.concat([lab_ver_tsf_features, lab_hor_tsf_features,pd.DataFrame(lab_ver_features), pd.DataFrame(lab_hor_features)], axis=1)
@@ -84,7 +84,7 @@ Prepare the data for the classification process:
 task_names = tags_df.Task.as_matrix()
 task_clusters = tags_df.TaskClusterId.as_matrix()
 relevant_task_names = []
-relevant_task_clusters = [0, 1, 2] # 1=resting, 4=periodic hand movement, 5=walking
+relevant_task_clusters = [0, 4] # 1=resting, 4=periodic hand movement, 5=walking
 cond = np.asarray(lmap(lambda x: x in relevant_task_clusters, task_clusters))
 
 #Create features and labels data frames, according to the condition indicator:
@@ -105,9 +105,8 @@ features = features_data[cond==True]
 #tags_df_after_cond = tags_df[cond==True]
 subject_ids = np.asarray((tags_df.SubjectId[cond==True]))
 task_ids = tags_df.TaskID[cond==True]
-features = np.column_stack((feature_deep2[:,1:], features))
-patients = task_ids%3
-
+#features = np.column_stack((features, feature_deep2[:,1:]  ))
+patients =subject_ids.copy()
 '''
 Optimize the hyper-parameters of the classification model, using a leave-one-patient-out approach:
 '''
@@ -139,9 +138,9 @@ agg_features = agg_segments_df[[x for x in agg_segments_df.columns if x not in [
 
 
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
-                                                   model_name='random_forest',
-                                                   hyper_params=None, scoring_measure=None,eval_iterations = 30)
-final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments)
+                                                   model_name='logistic_regression',
+                                                   hyper_params=None, scoring_measure=None,eval_iterations = 50)
+final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments,  binary_class_thresh=0.19)
 
 
 '''

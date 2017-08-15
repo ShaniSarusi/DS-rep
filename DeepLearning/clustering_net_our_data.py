@@ -109,10 +109,10 @@ for train, test in cv:
 
     symp_cluster.fit([xtrain, home_or_not[train]], [augment_dys[train],xtrain,MyCenters[train]],epochs=1 , batch_size = 128, shuffle=True,verbose=2)#
     cluster_features = symp_cluster.predict([xtrain, home_or_not[train]])[2]
-    cluster_labels = KMeans(n_clusters=5).fit(cluster_features)
+    cluster_labels = KMeans(n_clusters=10).fit(cluster_features)
     MyCenters = [cluster_labels.cluster_centers_[j] for j in cluster_labels.labels_]
     MyCenters = np.vstack(MyCenters)
-    symp_cluster.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse','mse'],
+    symp_cluster.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mae','mse'],
                                                     metrics=['accuracy'], loss_weights=[1.,1.,1.])
     
     best_score = 0
@@ -127,7 +127,7 @@ for train, test in cv:
                          home_or_not[test][augment_or_not[test] == 1]], [augment_dys[test][augment_or_not[test] == 1],
                          xtest[augment_or_not[test] == 1],MyCenters[range(len(test))][augment_or_not[test] == 1]]))
         cluster_features =  symp_cluster.predict([xtrain, home_or_not[train]])
-        cluster_labels = KMeans(n_clusters=5, random_state = 1234).fit(cluster_features[2])
+        cluster_labels = KMeans(n_clusters=10, random_state = 1234).fit(cluster_features[2])
         MyCenters = [cluster_labels.cluster_centers_[j] for j in cluster_labels.labels_]
         MyCenters = np.vstack(MyCenters)
     temp_res = symp_cluster.predict([xtest[augment_or_not[test] == 1], np.ones(len(test))])
@@ -137,7 +137,9 @@ for train, test in cv:
     features_from_deep.append(feature_extract.predict(xtest[augment_or_not[test] == 1]))
     print(confusion_matrix(symp_cor_res[len(symp_cor_res)-1],np.where(temp_res[0]>0.5,1,0)))
     
-print(confusion_matrix(np.vstack(symp_cor_res),np.where(np.vstack(res)>0.5,1,0)))
+feature_deep1 = np.vstack(features_from_deep)
+feature_deep1 = np.column_stack((np.hstack(order_final), feature_deep1))
+feature_deep2 = feature_deep1[feature_deep1[:,0].argsort()]
 
 all_pred['prediction_probability'] = np.vstack(res)
 all_pred['true_label'] = np.vstack(symp_cor_res)

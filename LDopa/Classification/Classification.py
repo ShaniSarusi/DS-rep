@@ -14,7 +14,7 @@ from xgboost.sklearn import XGBClassifier
 from Utils.Hyperopt.hyperopt_ATM import BayesianHyperOpt
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-
+from sklearn.neighbors import KNeighborsClassifier
 
 def optimize_hyper_params(features_df, labels, patients, model_name, hyper_params=None, scoring_measure=None,
                           eval_iterations=20):
@@ -68,6 +68,10 @@ def optimize_hyper_params(features_df, labels, patients, model_name, hyper_param
         hyper_params = {'penalty': hp.choice('penalty', ['l1', 'l2']),
                         'C': hp.uniform('C', 0, 5),
                         'class_weight': hp.choice('class_weight', ['balanced', None])}
+    elif model_name == 'knn':
+        model = KNeighborsClassifier()
+        hyper_params = {'n_neighbors': hp.choice('n_neighbors', range(1,30)),
+                        'p': hp.choice('p', range(1,4))}
     if hyper_params is None:
         print('Cannot train model  - hyper parameters are not defined!')
         return

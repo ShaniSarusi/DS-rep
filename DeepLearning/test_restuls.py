@@ -25,10 +25,10 @@ for i in np.unique(pat_agg):
     print(confusion_matrix(final_pred.true_label[pat_agg == i], final_pred.binary_prediction[pat_agg == i]))
     
     
-MyMen = 141
+MyMen = 134
 for i in np.unique(pat_task_clusters[pat_agg == MyMen]):
     print(i)
-    print(accuracy_score(np.asarray(final_pred.true_label[pat_agg == MyMen])[pat_task_clusters[pat_agg == MyMen] == i], 
-                np.asarray(final_pred.binary_prediction[pat_agg == MyMen])[pat_task_clusters[pat_agg == MyMen] == i]))
-    print(confusion_matrix(np.asarray(final_pred.true_label[pat_agg == MyMen])[pat_task_clusters[pat_agg == MyMen] == i], 
-                np.asarray(final_pred.binary_prediction[pat_agg == MyMen])[pat_task_clusters[pat_agg == MyMen] == i]))
+    print(accuracy_score(np.asarray(final_pred.true_label[np.where(pat_agg)[0] == MyMen])[pat_task_clusters[np.where(pat_agg)[0] == MyMen] == i], 
+                np.asarray(final_pred.binary_prediction[pat_agg == MyMen])[pat_task_clusters[np.where(pat_agg)[0] == MyMen] == i]))
+    print(confusion_matrix(np.asarray(final_pred.true_label[np.where(pat_agg)[0] == MyMen])[pat_task_clusters[pat_agg == MyMen] == i], 
+                np.asarray(final_pred.binary_prediction[np.where(pat_agg)[0] == MyMen])[pat_task_clusters[np.where(pat_agg)[0] == MyMen] == i]))

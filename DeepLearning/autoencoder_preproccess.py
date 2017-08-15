@@ -28,11 +28,13 @@ augment_task_ids = np.concatenate([augment_task_ids, np.random.randint(0,1,len(u
 augment_or_not = np.concatenate([augment_or_not, np.zeros(len(unlabeld))])                                 
 
 
+
 symp_class, feature_extract = BuildCNNClassWithAutoencoder(TagLow.shape[1], 'mse')  
 
 home_or_not = np.concatenate([np.ones(len(XYZ_denoise)),np.zeros(len(unlabeld))])
 
-                                 
+home_or_not = home_or_not.reshape((len(home_or_not),1))
+                             
  
 def scheduler(epoch):
     if(epoch == 1):
@@ -43,10 +45,12 @@ def scheduler(epoch):
         K.set_value(symp_class.optimizer.lr,0.0001)
     if(epoch == 4):
         K.set_value(symp_class.optimizer.lr,0.00005)
+    if(epoch == 5):
+        K.set_value(symp_class.optimizer.lr,0.00001)
     return K.get_value(symp_class.optimizer.lr)
 
 
-deep_params = {'epochs': 5,
+deep_params = {'epochs': 8,
                'class_weight': {0 : 1,  1: 1},
                'change_lr': LearningRateScheduler(scheduler),
                'batch_size': 128}
@@ -60,5 +64,5 @@ res1, order1, feature_deep, symp_res = make_cross_val_with_auto(TagLow, home_or_
                             symp_class,  feature_extract, augment_or_not, deep_params)
 
 feature_deep1 = np.vstack(feature_deep)
-feature_deep1 = np.column_stack((task_ids1, feature_deep1))
+feature_deep1 = np.column_stack((order1, feature_deep1))
 feature_deep2 = feature_deep1[feature_deep1[:,0].argsort()]

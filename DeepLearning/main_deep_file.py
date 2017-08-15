@@ -30,7 +30,7 @@ task_clusters_for_deep = task_clusters[cond==True]
 
 augment_XYZ, augment_dys, augment_Task, augment_SubjectId, augment_task_ids, augment_or_not = augment_data(XYZ, 
                                             labels, np.asarray(task_clusters_for_deep), np.asarray(tags_df.SubjectId[cond==True]), np.asarray(task_ids),
-                                                              num_iter=15, num_iter_symp = 30)
+                                                              num_iter=20, num_iter_symp = 20)
 
 x_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 0])
 y_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 1])
@@ -66,7 +66,7 @@ def scheduler(epoch=10):
     return K.get_value(symp_class.optimizer.lr)
 
 
-deep_params = {'epochs': 10,
+deep_params = {'epochs': 5,
                'class_weight': {0 : 1,  1: 1},
                'change_lr': LearningRateScheduler(scheduler),
                'batch_size': 128}
@@ -80,8 +80,8 @@ res1, order1, symp_res, feature_deep = make_cross_val(TagLow, symp, Task_andSymp
                             symp_class,  feature_extract, augment_or_not, deep_params)
 
 feature_deep1 = np.vstack(feature_deep)
-feature_deep1 = np.column_stack((task_ids1, feature_deep1))
-feature_deep2 = feature_deep1[feature_deep1[:,0].argsort()]
+feature_deep1 = np.column_stack((np.hstack(order1), feature_deep1))
+feature_deep4 = feature_deep1[feature_deep1[:,0].argsort()]
 
 plt.boxplot([res1[symp[test] == 1], res1[symp[test] == 0]])
 confusion_matrix(np.vstack(symp_res), np.where(np.vstack(res1) > 0.75,1,0))
@@ -90,10 +90,10 @@ import gc
 secret = None
 gc.collect()
 
-all_pred['prediction_probability'] = np.vstack(res1)
-all_pred['true_label'] = np.vstack(symp_res).flatten()
-all_pred['task'] = np.hstack(order1)
-all_pred['patient'] = all_pred['task']%3
+all_pred['prediction_probability'] = np.vstack(res1[:,1])
+all_pred['true_label'] = np.vstack(symp_cor_res1[:,1]).flatten()
+all_pred['task'] = np.hstack(task_ids1)
+all_pred['patient'] = all_pred['task']%4
         
 feature_deep2 = []
 for i in order:
