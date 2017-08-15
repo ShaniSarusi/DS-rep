@@ -12,9 +12,8 @@ import numpy as np
 from future.utils import lmap
 import pandas as pd
 from tsfresh import extract_features
-from tsfresh.feature_extraction.settings import ComprehensiveFCParameters,\
-                                                MinimalFCParameters,\
-                                                EfficientFCParameters
+from tsfresh.feature_extraction.settings import ComprehensiveFCParameters, MinimalFCParameters, EfficientFCParameters
+
 
 '''
 Avishai's settings:
@@ -243,8 +242,6 @@ patients_without_updrs = [131, 132]
 per_visit_having_updrs = per_visit[~per_visit.patient.isin(patients_without_updrs)]
 per_visit_plus_updrs = pd.concat([updrs_data_no_na.reset_index(),
                                   per_visit_having_updrs.reset_index()],
-                                 axis=1)
+                                  axis=1)
 
-evaluation.create_box_plot(per_visit_plus_updrs,
-                           updrs_measure='Rest_tremor',
-                           score_aggregated='mean')
+evaluation.create_box_plot(per_visit_plus_updrs, updrs_measure='Rest_tremor', score_aggregated='mean')
