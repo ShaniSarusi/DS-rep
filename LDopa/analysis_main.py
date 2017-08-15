@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun  8 12:57:44 2017
+This module is the 'main' code for running the L-Dopa analysis.
+The code is run from this module, which calls various functions throughout.
 
-@author: awagner
+@author: awagner + imazeh
 """
 
 import os
 from os.path import join, sep
 import numpy as np
 from future.utils import lmap
-# import datetime as dt
 import pandas as pd
 from tsfresh import extract_features
-from tsfresh.feature_extraction.settings import ComprehensiveFCParameters,\
-                                                MinimalFCParameters,\
-                                                EfficientFCParameters
+from tsfresh.feature_extraction.settings import ComprehensiveFCParameters, MinimalFCParameters, EfficientFCParameters
+
 
 '''
 Avishai's settings:
@@ -82,7 +81,7 @@ cond = np.asarray(lmap(lambda x: x in relevant_task_clusters, task_clusters))
 
 
 '''
-Perform transformation on the data:
+Perform transformations on the data:
 '''
 # Project data from 3 to 2 dimensions:
 lab_ver_proj, lab_hor_proj = projections.project_from_3_to_2_dims(lab_x, lab_y,
@@ -243,8 +242,6 @@ patients_without_updrs = [131, 132]
 per_visit_having_updrs = per_visit[~per_visit.patient.isin(patients_without_updrs)]
 per_visit_plus_updrs = pd.concat([updrs_data_no_na.reset_index(),
                                   per_visit_having_updrs.reset_index()],
-                                 axis=1)
+                                  axis=1)
 
-evaluation.create_box_plot(per_visit_plus_updrs,
-                           updrs_measure='Rest_tremor',
-                           score_aggregated='mean')
+evaluation.create_box_plot(per_visit_plus_updrs, updrs_measure='Rest_tremor', score_aggregated='mean')

@@ -157,6 +157,8 @@ for i in range(len(objective_function_all)):
             # pool = Pool(processes=cpu_count())
             pool = Pool(processes=n_folds)
             results = pool.map(par_fmin, range(n_folds))
+            pool.close()
+            pool.join()
         else:
             for k in range(n_folds):
                 print('************************************************************************')
