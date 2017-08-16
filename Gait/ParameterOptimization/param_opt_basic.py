@@ -17,9 +17,9 @@ from multiprocessing import Pool, cpu_count
 # Set search spaces
 if c.search_space == 'fast':
     import Gait.Resources.param_search_space_fast as param_search_space
-elif c.search_space == 'small':
+if c.search_space == 'small':
     import Gait.Resources.param_search_space_small as param_search_space
-elif c.search_space == 'full':
+if c.search_space == 'full':
     import Gait.Resources.param_search_space_full as param_search_space
 if c.search_space == 'fast2':
     import Gait.Resources.param_search_space_fast2 as param_search_space

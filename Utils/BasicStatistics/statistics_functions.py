@@ -38,20 +38,27 @@ def cv(values, round_by=3):
     return str(round(coefficient_of_var, round_by))
 
 
-def mean_absolute_percentage_error(y_true, y_pred, handle_zeros=False):
+def mean_absolute_percentage_error(y_true, y_pred, handle_zeros=False, return_std=False):
     """
     Take input and return the mean absolute percentage error
 
     Input:
-    y_true (list or numpy array): list of true values
-    y_pred (list or numpy array): list of predicted values
-    handle_zeros (boolean): If true (default False), convert all zeros in y_pred to 0.0001 to enable division
+        y_true (list or numpy array): list of true values
+        y_pred (list or numpy array): list of predicted values
+        handle_zeros (boolean): If true (default False), convert all zeros in y_pred to 0.0001 to enable division
 
     Output:
-    out1 (float): Returns the mean absolute percentage error of the input
+        mean_val (float): Returns the mean absolute percentage error of the input
+        std_val (float): Returns the standard deviation of the absolute percentage error of the input
+
     """
     y_true = pd_to_np(y_true)
     y_pred = pd_to_np(y_pred)
     if handle_zeros:
         y_true = [0.0001 if y_true[i] == 0 else y_true[i] for i in range(len(y_true))]
-    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100.0
+    mean_val = np.mean(np.abs((y_true - y_pred) / y_true)) * 100.0
+    std_val = np.std(np.abs((y_true - y_pred) / y_true)) * 100.0
+    if return_std:
+        return mean_val, std_val
+    else:
+        return mean_val
