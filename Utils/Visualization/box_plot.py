@@ -10,6 +10,7 @@ Created on Thu Aug 10 09:05:23 2017
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def create_box_plot(df, x_discrete_variable, y_cont_variable, all_possible_x_vals=None, plt_title=None):
     """
     Plot a box-plot of a continuous variable for each value of a discrete variable.
@@ -39,4 +40,11 @@ def create_box_plot(df, x_discrete_variable, y_cont_variable, all_possible_x_val
     if plt_title:
         plt.title(plt_title)
     plt.show()
-    return
+
+
+# Example
+# if __name__ == '__main__':
+#     df = placeholder
+#     x_discrete_variable = placeholder
+#     y_cont_variable = placeholder
+#     create_box_plot(df, x_discrete_variable, y_cont_variable)

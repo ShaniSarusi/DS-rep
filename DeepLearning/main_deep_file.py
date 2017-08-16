@@ -29,7 +29,8 @@ XYZ = XYZ[cond==True]
 task_clusters_for_deep = task_clusters[cond==True]
 
 augment_XYZ, augment_dys, augment_Task, augment_SubjectId, augment_task_ids, augment_or_not = augment_data(XYZ, 
-                                            labels, np.asarray(task_clusters_for_deep), np.asarray(tags_df.SubjectId[cond==True]), np.asarray(task_ids),
+                                            labels, np.asarray(task_clusters_for_deep),
+                                            np.asarray(tags_df.SubjectId[cond==True]), np.asarray(task_ids),
                                                               num_iter=20, num_iter_symp = 20)
 
 x_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 0])

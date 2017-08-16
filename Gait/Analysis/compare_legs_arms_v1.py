@@ -121,7 +121,7 @@ if __name__ == '__main__':
     do_and_save_everything = False
     do_all_plots = False
     id = 134  #20, 204, 214
-    id =200
+    id =56
 
     if do_and_save_everything:
         do_everything(start_time=8, time_range=5)
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         plot_channels_all_options(id, start_time=8, time_range=5)
     else:
         #plot_type = 'left_leg_events'
-        plot_type = 'initial_contacts'
-        #plot_type = 'toes_off'
+        # plot_type = 'initial_contacts'
+        plot_type = 'toes_off'
         #plot_type = 'all_events'
-        plot_channels_and_events(id, start_time=0, time_range=130, plot_type=plot_type, save=False, show_plot=True)
+        plot_channels_and_events(id, start_time=10, time_range=100, plot_type=plot_type, save=False, show_plot=True)

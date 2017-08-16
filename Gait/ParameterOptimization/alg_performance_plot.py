@@ -9,7 +9,7 @@ from sklearn.metrics import mean_squared_error
 
 
 def create_alg_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False,
-                                set_y_lim=True, y_min=0, y_max=30, analysis_type='folds'):
+                                set_y_lim=True, y_min=0, y_max=30):
 
     # Set tasks
     with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
@@ -29,6 +29,13 @@ def create_alg_performance_plot(data_file, metric, save_name='alg_performance.pn
     stds = []
     algs = None
     data = pd.read_csv(data_file)
+    if 'Algorithm' in data.columns:
+        analysis_type = 'folds'
+    elif 'sc_manual' in data.columns:
+        analysis_type = 'all'
+    else:
+        analysis_type = 'unknown'
+
     if analysis_type == 'folds':
         algs = data['Algorithm'].unique().tolist()
         algs.sort()
@@ -127,13 +134,15 @@ if __name__ == '__main__':
     input_file = join('C:\\Users\\zwaks\\Desktop\\apdm-june2017\\param_fast3_1000evals',
                 'gait_measures_all.csv')
 
-    input_file = join('C:\\Users\\zwaks\\Desktop\\apdm-june2017\\param_fast3_1000evals',
-                'Summary_search_fast3_alg_tpe_evals_1000_folds_5.csv')
+    input_file = join('C:\\Users\\zwaks\\Desktop\\apdm-june2017\\param6_2000ev_tpe',
+                'gait_measures_split.csv')
 
+    # input_file = join('C:\\Users\\zwaks\\Desktop\\apdm-june2017\\param6_2000ev_tpe',
+    #             'Summary_search_param6_alg_tpe_evals_2000_folds_5.csv')
 
     rotate = True
     metric = 'MAPE'  # 'MAPE' or 'RMSE'
     show_plot = True
-    save_name = 'alg_performance.png'
-    # create_alg_performance_plot(input_file, metric, save_name, rotate, show_plot, analysis_type='all')
+    save_name = 'alg_performance_split_mean_std.png'
     create_alg_performance_plot(input_file, metric, save_name, rotate, show_plot)
+    # create_alg_performance_plot(input_file, metric, save_name, rotate, show_plot)
