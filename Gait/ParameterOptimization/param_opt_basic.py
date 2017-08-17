@@ -8,7 +8,7 @@ import Gait.Resources.config as c
 from Gait.ParameterOptimization.evaluate_test_set import evaluate_on_test_set
 from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Gait.ParameterOptimization.sum_results import sum_results
-from Gait.ParameterOptimization.alg_performance_plot import create_alg_performance_plot
+from Gait.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
 from Gait.Pipeline.gait_utils import gait_measure_analysis
 from Utils.Preprocessing.other_utils import split_data
 from multiprocessing import Pool, cpu_count
@@ -244,8 +244,8 @@ file_name = sum_results(save_dir, return_file_path=True)
 
 # Create performance metric plots
 data_file = join(save_dir, file_name)
-create_alg_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True, show_plot=False)
-create_alg_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
+create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True, show_plot=False)
+create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
 
 # Summarize and save gait measure results
 metrics = ['cadence', 'step_time_asymmetry', 'step_time_asymmetry2_median', 'stride_time_var']

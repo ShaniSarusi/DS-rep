@@ -8,8 +8,8 @@ from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_
 from sklearn.metrics import mean_squared_error
 
 
-def create_alg_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False,
-                                set_y_lim=True, y_min=0, y_max=30):
+def create_regression_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False,
+                                       set_y_lim=True, y_min=0, y_max=30):
 
     # Set tasks
     with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
@@ -71,7 +71,11 @@ def create_alg_performance_plot(data_file, metric, save_name='alg_performance.pn
                 alg_vals = data.loc[data['SampleId'].isin(sample_ids)][algs[i]].as_matrix()
                 true_vals = data.loc[data['SampleId'].isin(sample_ids)][true_label].as_matrix()
 
-                if metric == 'MAPE':
+                if metric == 'PE':  # percent error
+                    vals = 100 * (alg_vals - true_vals) / true_vals
+                    mean_val = vals.mean()
+                    std_val = vals.std()
+                elif metric == 'MAPE':
                     mean_val, std_val = mean_absolute_percentage_error(true_vals, alg_vals, handle_zeros=True,
                                                                        return_std=True)
                 else:  # default is 'RMSE'
@@ -142,7 +146,8 @@ if __name__ == '__main__':
 
     rotate = True
     metric = 'MAPE'  # 'MAPE' or 'RMSE'
+    metric = 'PE'  # 'MAPE' or 'RMSE'
     show_plot = True
     save_name = 'alg_performance_split_mean_std.png'
-    create_alg_performance_plot(input_file, metric, save_name, rotate, show_plot)
-    # create_alg_performance_plot(input_file, metric, save_name, rotate, show_plot)
+    create_regression_performance_plot(input_file, metric, save_name, rotate, show_plot, y_min=-30)
+    # create_regression_performance_plot(input_file, metric, save_name, rotate, show_plot)
