@@ -5,19 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import ks_2samp
-
-
-def string_to_int_list(str, replace_dot_zero=True):
-    z = str.replace('\n', '')
-    z = z.replace('[', '')
-    z = z.replace(']', '')
-    z = z.replace(' ', ',')
-    if replace_dot_zero:
-        z = z.replace('.0', '')
-    z = z.split(sep=',')
-    z = list(filter(None, z))
-    z = [int(i) for i in z]
-    return z
+from Utils.DataHandling.data_processing import string_to_int_list
 
 
 # APDM events TODO need to sort

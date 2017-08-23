@@ -24,6 +24,34 @@ def pd_to_np(arr):
         return arr
 
 
+def string_to_int_list(input_string, replace_dot_zero=True):
+    """
+    Convert the input (a string) into a list.
+
+    Input:
+        str (String): The string input. It should generally be a list in string format, such as '[0, 33, 22, 8]'
+
+    Output:
+        z (list): The input string converted into a list, with newlines, '.0', and brackets handled
+    """
+
+    # Check if input is string. If not return the input
+    if not isinstance(input_string, str):
+        return input_string
+
+    # Convert string to list
+    z = input_string.replace('\n', '')
+    z = z.replace('[', '')
+    z = z.replace(']', '')
+    z = z.replace(' ', ',')
+    if replace_dot_zero:
+        z = z.replace('.0', '')
+    z = z.split(sep=',')
+    z = list(filter(None, z))
+    z = [int(i) for i in z]
+    return z
+
+
 def multi_intersect(input_tuple):
     """
     Return the intersection of the all the content within the input tuple

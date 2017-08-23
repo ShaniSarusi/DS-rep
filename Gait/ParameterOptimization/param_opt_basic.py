@@ -8,6 +8,7 @@ import Gait.Resources.config as c
 from Gait.ParameterOptimization.evaluate_test_set import evaluate_on_test_set
 from Gait.ParameterOptimization.objective_functions import all_algorithms
 from Gait.ParameterOptimization.sum_results import sum_results
+from Gait.ParameterOptimization.sum_results_for_plotting_parameters import sum_results_for_plotting_parameters
 from Gait.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
 from Gait.Pipeline.gait_utils import gait_measure_analysis
 from Utils.Preprocessing.other_utils import split_data
@@ -63,32 +64,49 @@ save_dir = join(c.results_path, 'param_opt')
 do_verbose = c.do_verbose
 
 ##########################################################################################################
-# Set data splits
+# Select samples for training
 path_sample = join(c.pickle_path, 'metadata_sample')
 with open(path_sample, 'rb') as fp:
     sample = pickle.load(fp)
 
-ids = sample[sample['StepCount'].notnull()].index.tolist()  # use only samples with step count
-filt = dict()
-filt['notnull'] = sample[sample['StepCount'].notnull()].index.tolist()
+# Only samples with step count
+ids_notnull = np.array(sample[sample['StepCount'].notnull()].index, dtype=int)
 
+# Remove People: JeremyAtia, EfratWasserman, and AvishaiWeingarten first trial with sternum sensor on back
+ids_jeremy_atia = np.array(sample[sample['Person'] == 'JeremyAtia'].index, dtype=int)
+ids_efrat_wasserman = np.array(sample[sample['Person'] == 'EfratWasserman'].index, dtype=int)
+ids_avishai_weingarten = np.array(sample[sample['Person'] == 'AvishaiWeingarten'].index, dtype=int)
+ids_sternum_sensor_incorrect = np.array(sample[sample['Comments'] == 'Sternum was on back'].index, dtype=int)
+ids_avishai_sternum = np.intersect1d(ids_avishai_weingarten, ids_sternum_sensor_incorrect)
+ids_people_to_remove = np.sort(np.hstack((ids_jeremy_atia, ids_efrat_wasserman, ids_avishai_sternum)))
+
+# Remove outlier step counts as compared to APDM cadence
+ids = np.setdiff1d(ids_notnull, ids_people_to_remove)
+if c.outlier_percent_to_remove > 0:
+    z = sample['CadenceDifference']
+    ids = np.array(z[z < z.iloc[ids].quantile(1 - c.outlier_percent_to_remove/100.0)].index, dtype=int)
+
+# Can also remove other samples labeled as ‘bad’ (n=~20), but excluding Chen Adamati sternum/back which was in fact good
+
+##########################################################################################################
+# Set data splits
 task_ids = []
 if c.data_type == 'split':
     walk_tasks = [1, 2, 3, 4, 5, 6, 7, 10]
     for k in walk_tasks:
-        task_i = np.intersect1d(filt['notnull'], sample[sample['TaskId'] == k]['SampleId'].as_matrix())
+        task_i = np.intersect1d(ids, sample[sample['TaskId'] == k]['SampleId'].as_matrix())
         task_ids.append(task_i)
 elif c.data_type == 'all':
     walk_tasks = ['all']
-    task_i = filt['notnull']
+    task_i = ids
     task_ids.append(task_i)
 elif c.data_type == 'both':
     walk_tasks = [1, 2, 3, 4, 5, 6, 7, 10, 'all']
     for k in walk_tasks:
         if k == 'all':
-            task_i = filt['notnull']
+            task_i = ids
         else:
-            task_i = np.intersect1d(filt['notnull'], sample[sample['TaskId'] == k]['SampleId'].as_matrix())
+            task_i = np.intersect1d(ids, sample[sample['TaskId'] == k]['SampleId'].as_matrix())
         task_ids.append(task_i)
 
 train_all = []
@@ -241,6 +259,7 @@ for i in range(len(objective_function_all)):
 # Summarize and save all optimization results
 print('***Summarizing and saving results***')
 file_name = sum_results(save_dir, return_file_path=True)
+sum_results_for_plotting_parameters(file_name, save_dir)
 
 # Create performance metric plots
 data_file = join(save_dir, file_name)
