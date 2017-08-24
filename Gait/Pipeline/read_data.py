@@ -58,8 +58,10 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
 
     # Set measures DataFrame
     cols_measures = ['cadence', 'step_time_asymmetry', 'stride_time_var_lhs', 'stride_time_var_rhs',
-                     'step_time_var_lhs', 'step_time_var_rhs', 'step_time_asymmetry2_values', 'step_time_asymmetry2_median']
+                     'step_time_var_lhs', 'step_time_var_rhs', 'step_time_asymmetry2_values',
+                     'step_time_asymmetry2_median', 'toe_off_asymmetry_median']
     measures = pd.DataFrame(index=range(num_files), columns=cols_measures)
+    first_event_idx = 5
     for i in range(num_files):
         if "_TUG_" in p_apdm_files[i]:
             continue
@@ -86,15 +88,28 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
         step_time_var_rhs = round(step_r_std / step_r_m, 3)
 
         asym2_vals = []
-        for j in range(5, measures_i.shape[1]):
+        for j in range(first_event_idx, measures_i.shape[1]):
             side1 = measures_i.loc['Gait - Lower Limb - Step Duration L (s)'][str(j-4)]
             side2 = measures_i.loc['Gait - Lower Limb - Step Duration R (s)'][str(j-4)]
             val = np.abs(side1-side2)/np.mean([side1, side2])
             asym2_vals.append(val)
-        asym2_mean = np.median(asym2_vals)
+        asym2_median = np.median(asym2_vals)
+
+        asym_toe_vals = []
+        events_i = pd.read_csv(p_apdm_files[i], skiprows=np.arange(66), header=None)
+        idx_off_left = 2
+        idx_off_right = 3
+        for j in range(first_event_idx, measures_i.shape[1]-1):
+            side1 = events_i.iloc[idx_off_right, j] - events_i.iloc[idx_off_left, j]
+            side2 = events_i.iloc[idx_off_left, j + 1] - events_i.iloc[idx_off_right, j]
+            val = np.abs(side1 - side2) / np.mean([side1, side2])
+            asym_toe_vals.append(val)
+        asym_toes = np.median(asym_toe_vals)
+
+
 
         row = [cadence, step_time_asymmetry, stride_time_var_lhs, stride_time_var_rhs, step_time_var_lhs,
-               step_time_var_rhs, 0, asym2_mean]
+               step_time_var_rhs, 0, asym2_median, asym_toes]
         measures.iloc[i] = row
         measures.set_value(i, 'step_time_asymmetry2_values', asym2_vals)
 
@@ -115,7 +130,6 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
     f_events = f_events.drop(f_events.index[len(f_events) - 1])  # drop last column
     cols_events = f_events.iloc[:, 0]
     events = pd.DataFrame(index=range(num_files), columns=cols_events)
-    first_event_idx = 5
     for i in range(num_files):
         if "_TUG_" in p_apdm_files[i]:
             continue

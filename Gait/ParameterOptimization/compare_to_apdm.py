@@ -1,5 +1,5 @@
 import pickle
-from os.path import join, dirname
+from os.path import join, dirname, sep
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.stats import pearsonr
@@ -39,15 +39,18 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             apdm_vals = apdm_measures[metric]
         idx_keep = pd.notnull(apdm_vals)
         apdm_vals = apdm_vals[idx_keep]
+        metric_for_algs = metric
+        if metric == 'toe_off_asymmetry_median':
+            metric_for_algs = 'step_time_asymmetry2_median'
         if 'time_var' in metric:
             alg_vals = []
             for j in range(len(algs)):
-                side1 = alg_res[metric + '_side1_' + algs[j]][idx_keep]
-                side2 = alg_res[metric + '_side2_' + algs[j]][idx_keep]
+                side1 = alg_res[metric_for_algs + '_side1_' + algs[j]][idx_keep]
+                side2 = alg_res[metric_for_algs + '_side2_' + algs[j]][idx_keep]
                 avg = (side1 + side2)/2.0
                 alg_vals.append(avg)
         else:
-            alg_vals = [alg_res[metric + '_' + algs[j]][idx_keep] for j in range(len(algs))]
+            alg_vals = [alg_res[metric_for_algs + '_' + algs[j]][idx_keep] for j in range(len(algs))]
 
         # Scatter plots
         if len(algs) > 4:
@@ -67,7 +70,6 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             axarr[a, b].scatter(alg_vals_j, apdm_vals_j)
             axarr[a, b].set_xlabel('APDM', fontsize=12)
             axarr[a, b].set_ylabel(algs[j] + ' algorithm', fontsize=12)
-
             val_max = max(max(alg_vals_j), max(apdm_vals_j))
             val_min = min(min(alg_vals_j), min(apdm_vals_j))
             val_range = val_max - val_min
@@ -91,9 +93,16 @@ if __name__ == '__main__':
     alg_file_name = 'gait_measures.csv'
     alg_file_name = 'gait_measures_all.csv'
     alg_data_path = join(c.results_path, 'param_opt', alg_file_name)
+
+    save_path = 'C:\\Users\\zwaks\\Desktop\\apdm-june2017\\param7_machine1'
+    alg_data_path = join(save_path, 'gait_measures_all.csv')
+    alg_data_path = join(save_path, 'gait_measures_all.csv')
+
+
     algorithms = ['lhs', 'rhs', 'overlap', 'combined']
     algorithms = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
     metrics = ['cadence', 'step_time_asymmetry', 'step_time_var', 'stride_time_var']
     metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var', 'step_time_asymmetry2_median']
+    metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var', 'step_time_asymmetry2_median', 'toe_off_asymmetry_median']
 
     compare_to_apdm(alg_data_path, algorithms, metrics, show_plot=True)

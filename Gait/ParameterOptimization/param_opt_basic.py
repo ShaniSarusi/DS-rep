@@ -34,6 +34,8 @@ if c.search_space == 'param6':
     import Gait.Resources.param_space_6 as param_search_space
 if c.search_space == 'param7':
     import Gait.Resources.param_space_7 as param_search_space
+if c.search_space == 'param8':
+    import Gait.Resources.param_space_8 as param_search_space
 
 # Set algorithms
 algs = c.algs
@@ -265,14 +267,40 @@ sum_results_for_plotting_parameters(file_name, save_dir)
 data_file = join(save_dir, file_name)
 create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True, show_plot=False)
 create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
+create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
 
 # Summarize and save gait measure results
-metrics = ['cadence', 'step_time_asymmetry', 'step_time_asymmetry2_median', 'stride_time_var']
+metrics = ['cadence', 'step_time_asymmetry', 'step_time_asymmetry2_median', 'stride_time_var',
+           'toe_off_asymmetry_median']
 if c.data_type == 'both':
-    save_name = 'gait_measures_split.csv'
-    gait_measure_analysis(df_gait_measures_by_alg_split, save_dir, save_name, algs, metrics, prefix='split')
-    save_name = 'gait_measures_all.csv'
-    gait_measure_analysis(df_gait_measures_by_alg_all, save_dir, save_name, algs, metrics, prefix='all')
+    save_name1 = 'gait_measures_split.csv'
+    gait_measure_analysis(df_gait_measures_by_alg_split, save_dir, save_name1, algs, metrics, prefix='split')
+    save_name2 = 'gait_measures_all.csv'
+    gait_measure_analysis(df_gait_measures_by_alg_all, save_dir, save_name2, algs, metrics, prefix='all')
+
+    data_file = join(save_dir, save_name1)
+    create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape_split.png', rotate=True,
+                                       show_plot=False)
+    create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse_split.png', rotate=True,
+                                       show_plot=False)
+    create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse_split.png', rotate=True,
+                                       show_plot=False)
+
+    data_file = join(save_dir, save_name2)
+    create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape_all.png', rotate=True,
+                                       show_plot=False)
+    create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse_all.png', rotate=True,
+                                       show_plot=False)
+    create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse_all.png', rotate=True,
+                                       show_plot=False)
+
 else:
     save_name = 'gait_measures.csv'
     gait_measure_analysis(df_gait_measures_by_alg, save_dir, save_name, algs, metrics)
+    data_file = join(save_dir, save_name)
+    create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape2.png', rotate=True,
+                                       show_plot=False)
+    create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse2.png', rotate=True,
+                                       show_plot=False)
+    create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse2.png', rotate=True,
+                                       show_plot=False)

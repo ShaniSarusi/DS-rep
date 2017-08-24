@@ -14,7 +14,7 @@ do_multi_core = True
 
 outlier_percent_to_remove = 5
 data_type = 'both'
-search_space = 'param7'
+search_space = 'param8'
 
 #################################################################################
 exp = 2  # can be either exp 1 or 2 for now
