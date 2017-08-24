@@ -397,8 +397,8 @@ class StepDetection:
                     step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
                                  / np.timedelta64(1, 's')
                     if max_dist_from_apdm != 1234.5:
-                        apdm_i = np.sort(np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[0] +
-                                                  self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[0]))
+                        apdm_i = np.sort(np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[i] +
+                                                  self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[i]))
                         step_times = np.array([step_time for step_time in step_times if
                                                np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
                     step_durations_i = np.diff(step_times)
@@ -679,18 +679,18 @@ if __name__ == "__main__":
                                   butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
     # sd.step_detection_single_side(side='lhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
     #                               butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
-    sd.step_detection_single_side(side='rhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
-                                  butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
-    sd.step_detection_two_sides_overlap(signal_to_use='norm', smoothing='mva', mva_win=15,
-                                     vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
-                                     win_size_merge=30, win_size_remove_adjacent_peaks=40, verbose=True)
-    sd.step_detection_two_sides_overlap_opt_strong(signal_to_use='norm', smoothing='mva', mva_win=15,
-                                     vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
-                                     win_size_merge=30, win_size_remove_adjacent_peaks=40, z=0.3, verbose=True)
-
-    sd.step_detection_two_sides_combined_signal(signal_to_use='norm', smoothing='mva', mva_win=15, vert_win=None,
-                                             butter_freq=12, mva_win_combined=40, min_hz=0.3, max_hz=2.0,
-                                             factor=1.1, peak_type='peak_utils', peak_param1=0.5, peak_param2=30)
+    # sd.step_detection_single_side(side='rhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
+    #                               butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
+    # sd.step_detection_two_sides_overlap(signal_to_use='norm', smoothing='mva', mva_win=15,
+    #                                  vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
+    #                                  win_size_merge=30, win_size_remove_adjacent_peaks=40, verbose=True)
+    # sd.step_detection_two_sides_overlap_opt_strong(signal_to_use='norm', smoothing='mva', mva_win=15,
+    #                                  vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
+    #                                  win_size_merge=30, win_size_remove_adjacent_peaks=40, z=0.3, verbose=True)
+    #
+    # sd.step_detection_two_sides_combined_signal(signal_to_use='norm', smoothing='mva', mva_win=15, vert_win=None,
+    #                                          butter_freq=12, mva_win_combined=40, min_hz=0.3, max_hz=2.0,
+    #                                          factor=1.1, peak_type='peak_utils', peak_param1=0.5, peak_param2=30)
 
     # Integrate the 4 algorithms (lhs, rhs, both-merge, and combined signal)
     sd.ensemble_result_v1(win_size_merge_lhs_rhs=30, win_merge_lr_both=22)
