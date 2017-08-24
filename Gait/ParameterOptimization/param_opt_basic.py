@@ -283,7 +283,7 @@ if c.data_type == 'both':
     create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse_split.png', rotate=True,
                                        show_plot=False)
     create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse_split.png', rotate=True,
-                                       show_plot=False)
+                                       show_plot=False, y_min=-20)
 
     data_file = join(save_dir, save_name2)
     create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape_all.png', rotate=True,
@@ -291,7 +291,7 @@ if c.data_type == 'both':
     create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse_all.png', rotate=True,
                                        show_plot=False)
     create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse_all.png', rotate=True,
-                                       show_plot=False)
+                                       show_plot=False, y_min=-20)
 
 else:
     save_name = 'gait_measures.csv'
@@ -302,4 +302,4 @@ else:
     create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse2.png', rotate=True,
                                        show_plot=False)
     create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse2.png', rotate=True,
-                                       show_plot=False)
+                                       show_plot=False, y_min=-20)
