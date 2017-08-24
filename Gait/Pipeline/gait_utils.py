@@ -1,12 +1,11 @@
 import copy
 import pickle
 from os.path import join
-
 import numpy as np
 import pandas as pd
-
 import Gait.Resources.config as c
 from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
+
 
 def split_by_person():
     with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:

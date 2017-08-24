@@ -56,13 +56,15 @@ def objective_step_detection_single_side(p):
     else:
         verbose = p['verbose']
 
+    max_dist_from_apdm = p['max_dist_from_apdm']
+
     s.step_detection_single_side(side=side, signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                          vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
                                          peak_param1=peak_param1, peak_param2=peak_param2,
                                          weak_signal_thresh=weak_signal_thresh, verbose=verbose)
 
     # ********** Calculate RMSE and/or MAPE
-    s.add_gait_metrics(verbose=False)
+    s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
     if metric == 'both':
@@ -122,6 +124,7 @@ def objective_step_detection_two_sides_overlap(p):
         verbose = True
     else:
         verbose = p['verbose']
+    max_dist_from_apdm = p['max_dist_from_apdm']
 
     s.step_detection_two_sides_overlap(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                        vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
@@ -129,7 +132,7 @@ def objective_step_detection_two_sides_overlap(p):
                                        win_size_remove_adjacent_peaks=win_size_remove_adjacent_peaks, verbose=verbose)
 
     # ********** Calculate RMSE and/or MAPE
-    s.add_gait_metrics(verbose=False)
+    s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
     if metric == 'both':
@@ -190,6 +193,7 @@ def objective_step_detection_two_sides_overlap_strong(p):
         verbose = True
     else:
         verbose = p['verbose']
+    max_dist_from_apdm = p['max_dist_from_apdm']
 
     s.step_detection_two_sides_overlap_opt_strong(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                        vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
@@ -198,7 +202,7 @@ def objective_step_detection_two_sides_overlap_strong(p):
                                        verbose=verbose)
 
     # ********** Calculate RMSE and/or MAPE
-    s.add_gait_metrics(verbose=False)
+    s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap_strong']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap_strong'], handle_zeros=True)
     if metric == 'both':
@@ -260,6 +264,7 @@ def objective_step_detection_two_sides_combined_signal(p):
         verbose = True
     else:
         verbose = p['verbose']
+    max_dist_from_apdm = p['max_dist_from_apdm']
 
     s.step_detection_two_sides_combined_signal(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                                vert_win=vert_win, butter_freq=butter_freq,
@@ -268,7 +273,7 @@ def objective_step_detection_two_sides_combined_signal(p):
                                                peak_param2=peak_param2, verbose=verbose)
 
     # ********** Calculate RMSE and/or MAPE
-    s.add_gait_metrics(verbose=False)
+    s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_combined']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
     if metric == 'both':

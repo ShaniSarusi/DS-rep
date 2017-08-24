@@ -267,7 +267,6 @@ sum_results_for_plotting_parameters(file_name, save_dir)
 data_file = join(save_dir, file_name)
 create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True, show_plot=False)
 create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
-create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
 
 # Summarize and save gait measure results
 metrics = ['cadence', 'step_time_asymmetry', 'step_time_asymmetry2_median', 'stride_time_var',

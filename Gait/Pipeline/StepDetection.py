@@ -364,14 +364,14 @@ class StepDetection:
             ratio = self.lhs[i][idx] / self.rhs[i][idx]
             self.res.set_value(self.res.index[i], 'idx_lhs2rhs_ratio', ratio.as_matrix())
 
-    def add_gait_metrics(self, verbose=True):
+    def add_gait_metrics(self, verbose=True, max_dist_from_apdm=1234.5):
         if verbose: print("\rRunning: Adding gait metrics")
         # Find 'idx_' columns
         cols = [col for col in self.res.columns if 'idx_' in col]
         n_samples = self.res.shape[0]
 
         self.add_total_step_count_and_cadence(cols, n_samples)
-        self.add_step_and_stride_durations(cols, n_samples)
+        self.add_step_and_stride_durations(cols, n_samples, max_dist_from_apdm)
         self.add_step_and_stride_time_variability(cols, n_samples)
         self.add_step_time_asymmetry(cols, n_samples)
         self.add_step_time_asymmetry2(cols, n_samples)
@@ -387,16 +387,21 @@ class StepDetection:
             res_cadence = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'cadence_'))
             self.res = pd.concat([self.res, res_steps, res_cadence], axis=1)
 
-    def add_step_and_stride_durations(self, cols, n_samples):
+    def add_step_and_stride_durations(self, cols, n_samples, max_dist_from_apdm=1234.5):
         for col in cols:
             step_durations = []
             for i in range(n_samples):
                 step_idx = self.res[col].iloc[i]
+                step_durations_i = []
                 if len(step_idx) > 0:
-                    step_timestamps = self.acc[i]['lhs']['ts'].iloc[step_idx]
-                    step_durations_i = np.diff(step_timestamps) / np.timedelta64(1, 's')
-                else:
-                    step_durations_i = []
+                    step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
+                                 / np.timedelta64(1, 's')
+                    if max_dist_from_apdm != 1234.5:
+                        apdm_i = np.sort(np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[0] +
+                                                  self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[0]))
+                        step_times = np.array([step_time for step_time in step_times if
+                                               np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
+                    step_durations_i = np.diff(step_times)
                 step_durations.append(step_durations_i)
 
             stride_durations = []
@@ -695,6 +700,6 @@ if __name__ == "__main__":
     sd.remove_weak_signals()
 
     # Create results output
-    sd.add_gait_metrics()
+    sd.add_gait_metrics(max_dist_from_apdm=0.8)
     # sd.create_results_table(id_nums)
     sd.save(path=join(c.pickle_path, 'sc_alg'))

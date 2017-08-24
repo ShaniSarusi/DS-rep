@@ -3,7 +3,7 @@ from os import getcwd
 
 machine = 0  # 1, 2, 3, 4, 5, 6
 n_folds = 5
-max_evals = 200
+max_evals = 5000
 algs = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
 # algs = ['lhs', 'rhs', 'overlap', 'overlap_strong']
 #algs = ['lhs', 'overlap', 'overlap_strong']
