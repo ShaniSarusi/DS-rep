@@ -91,15 +91,19 @@ def objective_step_detection_two_sides_overlap(p):
     # Load input data to algorithms
     path_sample = join(c.pickle_path, 'metadata_sample')
     path_acc = join(c.pickle_path, 'acc')
+    path_apdm_events = join(c.pickle_path, 'apdm_events')
     if c.run_on_cloud:
         sample = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_sample)
         acc = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_acc)
+        apdm_events = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_apdm_events)
     else:
         with open(path_sample, 'rb') as fp:
             sample = pickle.load(fp)
         with open(path_acc, 'rb') as fp:
             acc = pickle.load(fp)
-    s = StepDetection(acc, sample)
+        with open(path_apdm_events, 'rb') as fp:
+            apdm_events = pickle.load(fp)
+    s = StepDetection(acc, sample, p_apdm_events=apdm_events)
 
     # Set sample ids for dataset
     s.select_specific_samples(p['sample_ids'])
@@ -159,15 +163,19 @@ def objective_step_detection_two_sides_overlap_strong(p):
     # Load input data to algorithms
     path_sample = join(c.pickle_path, 'metadata_sample')
     path_acc = join(c.pickle_path, 'acc')
+    path_apdm_events = join(c.pickle_path, 'apdm_events')
     if c.run_on_cloud:
         sample = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_sample)
         acc = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_acc)
+        apdm_events = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_apdm_events)
     else:
         with open(path_sample, 'rb') as fp:
             sample = pickle.load(fp)
         with open(path_acc, 'rb') as fp:
             acc = pickle.load(fp)
-    s = StepDetection(acc, sample)
+        with open(path_apdm_events, 'rb') as fp:
+            apdm_events = pickle.load(fp)
+    s = StepDetection(acc, sample, p_apdm_events=apdm_events)
 
     # Set sample ids for dataset
     s.select_specific_samples(p['sample_ids'])
@@ -229,15 +237,19 @@ def objective_step_detection_two_sides_combined_signal(p):
     # Load input data to algorithms
     path_sample = join(c.pickle_path, 'metadata_sample')
     path_acc = join(c.pickle_path, 'acc')
+    path_apdm_events = join(c.pickle_path, 'apdm_events')
     if c.run_on_cloud:
         sample = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_sample)
         acc = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_acc)
+        apdm_events = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_apdm_events)
     else:
         with open(path_sample, 'rb') as fp:
             sample = pickle.load(fp)
         with open(path_acc, 'rb') as fp:
             acc = pickle.load(fp)
-    s = StepDetection(acc, sample)
+        with open(path_apdm_events, 'rb') as fp:
+            apdm_events = pickle.load(fp)
+    s = StepDetection(acc, sample, p_apdm_events=apdm_events)
 
     # Set sample ids for dataset
     s.select_specific_samples(p['sample_ids'])
