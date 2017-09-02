@@ -269,20 +269,23 @@ def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1,0.1
     End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
     
     
+    input_features = Input((54,))
     #sympLayer=Dropout(0.5)(ActiveLayer)
     sympLayer = Dense(19, activation='relu')(ActiveLayer)
     sympLayer = BatchNormalization()(sympLayer)
     
-    close_to_output2 = Dense(19, activation='relu')(sympLayer)
+    close_to_output2 = layers.concatenate([sympLayer, input_features])
+    close_to_output2 = Dense(19, activation='relu')(close_to_output2)
     close_to_output2 = Dense(16, activation='tanh')(close_to_output2)
+    
     close_to_output2 = Dense(16, activation='tanh')(close_to_output2)
     End_point = Dense(1, activation='sigmoid')(close_to_output2)
     
-    symp_class = Model([input_signal], [End_point,End_point_Active])
+    symp_class = Model([input_signal, input_features], [End_point,End_point_Active])
     #active_class = Model(input_signal, End_point_Active)
     
     optimizer = optimizers.adam(lr = lr)
-    feature_extract = Model([input_signal],close_to_output2)
+    feature_extract = Model([input_signal, input_features],close_to_output2)
     
     symp_class.compile(optimizer=optimizer, loss=[lost,  'categorical_crossentropy'],metrics=['accuracy'], loss_weights=loss_weights)
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
@@ -364,10 +367,10 @@ def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.00001, loss_weights=[1
     input_signal = Input((input_size,3))
     #
     #x = ZeroPadding1D(3)(input_signal) 
-    x = Conv1D(32, 32, activation='relu')(input_signal) 
+    x = Conv1D(16, 16, activation='relu')(input_signal) 
     x = MaxPooling1D(2)(x)
     #x = Dropout(0.25)(x)
-    x = Conv1D(16, 16, activation='relu')(x)
+    x = Conv1D(8, 8, activation='relu')(x)
     x = MaxPooling1D(2)(x)
     x = Conv1D(20, 4, activation='relu', padding='same')(x)
     #BatchNormalization()(x)
@@ -382,11 +385,11 @@ def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.00001, loss_weights=[1
     #OneForActandSymp = BatchNormalization()(OneForActandSymp)
     
     ##Here is activity
-    #ActiveLayer = Dropout(0.2)(OneForActandSymp)
+    ActiveLayer = Dropout(0.2)(OneForActandSymp)
     ActiveLayer= Dense(32, activation='relu')(OneForActandSymp)
     ActiveLayer = BatchNormalization()(ActiveLayer)
     sympLayer = Dense(32, activation='tanh')(ActiveLayer)
-    
+    #input_features = Input((54,))
     ##Here is autoencoer
     autoencoder_layer = Dense(32, activation='relu')(sympLayer)
     autoencoder_layer = Reshape((16,2))(autoencoder_layer)
@@ -401,7 +404,10 @@ def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.00001, loss_weights=[1
     ##Here is the final symtpoms
     
     #sympLayer = BatchNormalization()(sympLayer)
-    close_to_output = Dense(16, activation='tanh')(sympLayer)
+    #close_to_output = layers.concatenate([sympLayer, input_features])
+    close_to_output = Dropout(0.5)(sympLayer)
+    close_to_output = Dense(19, activation='relu')(close_to_output )
+    close_to_output = Dense(16, activation='relu')(close_to_output )
     close_to_output = Dense(8, activation='tanh')(close_to_output)
     input_home_or_not = Input((1,))
     #attention_probs = Dense(16, activation='softmax', name='attention_vec')(close_to_output)
@@ -412,11 +418,11 @@ def BuildCNNClassWithAutoencoder(input_size, lost, lr = 0.00001, loss_weights=[1
     #active_class = Model(input_signal, End_point_Active)
     
     optimizer = optimizers.adam(lr = lr)
-    feature_extract = Model(input_signal,close_to_output)
+    feature_extract = Model([input_signal],close_to_output)
     
     def penalized_loss(fake_or_not):
         def loss(y_pred, y_true):
-            return K.mean(K.square(y_pred - y_true)*fake_or_not,axis = -1)
+            return K.mean(K.binary_crossentropy(y_pred, y_true)*fake_or_not,axis = -1)
         return loss
 
     symp_class.compile(optimizer=optimizer, loss=[penalized_loss(fake_or_not = input_home_or_not),'mse'],metrics=['accuracy'], loss_weights = loss_weights)

@@ -20,6 +20,20 @@ z_unlabeld = lmap(lambda x: (Denoiseing_func.denoise(x)), unlabeld[2])
 
 unlabeld = np.stack([x_unlabeld,y_unlabeld ,z_unlabeld ],axis=2)
 
+WavFeatures = WavTransform.WavTransform()
+lab_x_features = WavFeatures.createWavFeatures(x_denoise)
+lab_y_features = WavFeatures.createWavFeatures(y_denoise)
+lab_z_features = WavFeatures.createWavFeatures(z_denoise)
+
+features_deep_data = np.column_stack((lab_x_features, lab_y_features, lab_z_features))
+
+home_x_features = WavFeatures.createWavFeatures(x_unlabeld )
+home_y_features = WavFeatures.createWavFeatures(y_unlabeld )
+home_z_features = WavFeatures.createWavFeatures(z_unlabeld )
+
+features_unlabeld_data = np.column_stack((home_x_features, home_y_features, home_z_features))
+
+features_autoencoder = np.concatenate([features_deep_data, features_unlabeld_data])
 
 TagLow = np.vstack([XYZ_denoise, unlabeld])
 augment_dys = np.concatenate([augment_dys.flatten(), np.ones(len(unlabeld))])
@@ -38,19 +52,21 @@ home_or_not = home_or_not.reshape((len(home_or_not),1))
  
 def scheduler(epoch):
     if(epoch == 1):
-        K.set_value(symp_class.optimizer.lr,0.0005)
+        K.set_value(symp_class.optimizer.lr,0.01)
     if(epoch == 2):
-        K.set_value(symp_class.optimizer.lr,0.0001)
+        K.set_value(symp_class.optimizer.lr,0.01)
     if(epoch == 3):
-        K.set_value(symp_class.optimizer.lr,0.0001)
+        K.set_value(symp_class.optimizer.lr,0.01)
     if(epoch == 4):
-        K.set_value(symp_class.optimizer.lr,0.00005)
+        K.set_value(symp_class.optimizer.lr,0.005)
     if(epoch == 5):
-        K.set_value(symp_class.optimizer.lr,0.00001)
+        K.set_value(symp_class.optimizer.lr,0.005)
+    if(epoch == 15):
+        K.set_value(symp_class.optimizer.lr, 0.005)
     return K.get_value(symp_class.optimizer.lr)
 
 
-deep_params = {'epochs': 8,
+deep_params = {'epochs': 40,
                'class_weight': {0 : 1,  1: 1},
                'change_lr': LearningRateScheduler(scheduler),
                'batch_size': 128}

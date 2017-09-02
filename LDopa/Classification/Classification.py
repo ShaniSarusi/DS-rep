@@ -62,7 +62,8 @@ def optimize_hyper_params(features_df, labels, patients, model_name, hyper_param
                         'max_depth': hp.choice('max_depth', range(4, 20)),
                         'min_child_weight': hp.choice('min_child_weight', range(3)),
                         'gamma': hp.uniform('gamma', 0, 1),
-                        'subsample': hp.uniform('subsample', 0, 1)}
+                        'subsample': hp.uniform('subsample', 0, 1),
+                        'scale_pos_weight': hp.uniform('scale_pos_weight', 0, 5)}
     elif model_name == 'logistic_regression':
         model = LogisticRegression(n_jobs=-1)
         hyper_params = {'penalty': hp.choice('penalty', ['l1', 'l2']),

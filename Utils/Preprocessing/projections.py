@@ -91,7 +91,7 @@ def project_gravity_core(xyz):
     
     # mean for each axis
     G = [np.mean(xyz[:, 0]), np.mean(xyz[:, 1]), np.mean(xyz[:, 2])]
-    G_norm = G/np.sqrt(sum(np.power(G, 2)))
+    G_norm = G/np.sqrt(sum(np.power(G, 2)) + 0.0000001)
     
     # The projection is here
     for i in range(len(xyz[:, 0])):

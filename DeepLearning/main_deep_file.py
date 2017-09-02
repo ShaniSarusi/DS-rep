@@ -16,7 +16,7 @@ from sklearn.metrics import confusion_matrix
 from LDopa.AugmentedData.augmented_data import augment_data
 
 import Utils.Preprocessing.denoising as Denoiseing_func
-from DeepLearning.build_network import BuildCNNClassWithActivity
+#from DeepLearning.build_network import BuildCNNClassWithActivity
 from LDopa.AugmentedData.augmented_data import augment_data
 from Utils.Preprocessing.frequency_method import spectogram_and_normalize
 from Utils.Preprocessing.other_utils import normalize_signal
@@ -33,12 +33,7 @@ augment_XYZ, augment_dys, augment_Task, augment_SubjectId, augment_task_ids, aug
                                             np.asarray(tags_df.SubjectId[cond==True]), np.asarray(task_ids),
                                                               num_iter=20, num_iter_symp = 20)
 
-x_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 0])
-y_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 1])
-z_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:, :, 2])
-
-XYZ_denoise = np.stack((x_denoise, y_denoise, z_denoise), axis=2)
-
+12345678
 TagLow = XYZ_denoise.copy()
 augment_dys = augment_dys.reshape((len(augment_dys),1)); #augment_dys = utils.to_categorical(augment_dys, num_classes=2)
 #augment_brady = augment_brady.reshape((len(augment_brady),1)); augment_brady = utils.to_categorical(augment_brady, num_classes=2)
@@ -55,19 +50,19 @@ SubjectId_cat = utils.to_categorical(np.reshape(augment_SubjectId - 131, [len(au
 symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary_crossentropy')  
 
 
-def scheduler(epoch=10):
+def scheduler(epoch=20):
     if epoch == 1:
+        K.set_value(symp_class.optimizer.lr, 0.0005)
+    if epoch == 2:
         K.set_value(symp_class.optimizer.lr, 0.0001)
-    if epoch == 4:
+    if epoch == 3:
         K.set_value(symp_class.optimizer.lr, 0.00005)
-    if epoch == 9:
-        K.set_value(symp_class.optimizer.lr, 0.00001)
-    if epoch == 15:
+    if epoch == 5:
         K.set_value(symp_class.optimizer.lr, 0.00001)
     return K.get_value(symp_class.optimizer.lr)
 
 
-deep_params = {'epochs': 5,
+deep_params = {'epochs': 10,
                'class_weight': {0 : 1,  1: 1},
                'change_lr': LearningRateScheduler(scheduler),
                'batch_size': 128}
@@ -77,7 +72,7 @@ labels_for_deep = augment_task_ids%3;
 
 symp = augment_dys.copy()#{'Dys': augment_dys, 'brady': augment_brady, 'trem': augment_tremor}
 
-res1, order1, symp_res, feature_deep = make_cross_val(TagLow, symp, Task_andSymp, labels_for_deep, augment_task_ids,
+res1, order1, symp_res, feature_deep = make_cross_val(TagLow, features_deep_data, symp, Task_andSymp, labels_for_deep, augment_task_ids,
                             symp_class,  feature_extract, augment_or_not, deep_params)
 
 feature_deep1 = np.vstack(feature_deep)
@@ -91,10 +86,10 @@ import gc
 secret = None
 gc.collect()
 
-all_pred['prediction_probability'] = np.vstack(res1[:,1])
-all_pred['true_label'] = np.vstack(symp_cor_res1[:,1]).flatten()
-all_pred['task'] = np.hstack(task_ids1)
-all_pred['patient'] = all_pred['task']%4
+all_pred['prediction_probability'] = np.vstack(res1)
+all_pred['true_label'] = np.vstack(symp_res).flatten()
+all_pred['task'] = np.hstack(order1)
+all_pred['patient'] = all_pred['task']%3
         
 feature_deep2 = []
 for i in order:
