@@ -36,6 +36,8 @@ if c.search_space == 'param7':
     import Gait.Resources.param_space_7 as param_search_space
 if c.search_space == 'param8':
     import Gait.Resources.param_space_8 as param_search_space
+if c.search_space == 'param9':
+    import Gait.Resources.param_space_9 as param_search_space
 
 # Set algorithms
 algs = c.algs

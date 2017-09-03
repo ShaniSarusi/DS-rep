@@ -54,7 +54,7 @@ d['vert_win'] = 5
 
 # choose which smoothing to perform (or none at all if mva_win is equal to ~1
 d['smoothing'] = 'mva'
-d['mva_win'] = 2 + hp.randint('mva_win', 60)
+d['mva_win'] = 25 + hp.randint('mva_win', 60)
 d['butter_freq'] = 1
 
 # Peak detection algorithm and parameters
