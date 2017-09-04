@@ -1,28 +1,33 @@
 from os.path import join, sep
 from os import getcwd
 
-machine = 0  # 1, 2, 3, 4, 5, 6
 n_folds = 5
-max_evals = 5000
-algs = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
-# algs = ['lhs', 'rhs', 'overlap', 'overlap_strong']
-#algs = ['lhs', 'overlap', 'overlap_strong']
-opt_alg = 'tpe'  # Can be 'tpe' or 'random'
-metric_to_optimize = 'rmse'  # 'rmse' or 'mape'
+max_evals = 4
+opt_alg = 'random'  # Can be 'tpe' or 'random'
 do_verbose = False
-do_multi_core = True
+tasks_to_optimize = 'both_split_and_all'
 
-outlier_percent_to_remove = 5
-data_type = 'both'
-search_space = 'param9'
+algs = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
+#algs = ['overlap_strong']
+
+# metric_to_optimize = 'sc_rmse'
+# search_space = 'param9'
+# outlier_percent_to_remove = 5
+
+metric_to_optimize = 'asym_rmse'
+search_space = 'param_asym_1'
+outlier_percent_to_remove = 1
+
 
 #################################################################################
 exp = 2  # can be either exp 1 or 2 for now
 run_on_cloud = False
 if 'hadoop' in getcwd():
     run_on_cloud2 = True
+    do_multi_core = True
 else:
     run_on_cloud2 = False
+    do_multi_core = False
 ###################################################################################
 # Paths
 local_windows_path = join('C:', sep, 'Users', 'zwaks', 'Documents', 'Data')
