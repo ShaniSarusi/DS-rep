@@ -52,7 +52,7 @@ def objective_step_detection_single_side(p):
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
     asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
-                                        s.res['step_time_asymmetry2_median_overlap_strong']))
+                                        s.res['step_time_asymmetry2_median_' + side]))
 
     if metric == 'both':
         if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
@@ -116,7 +116,7 @@ def objective_step_detection_two_sides_overlap(p):
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
     asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
-                                        s.res['step_time_asymmetry2_median_overlap_strong']))
+                                        s.res['step_time_asymmetry2_median_overlap']))
 
     if metric == 'both':
         if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
@@ -249,7 +249,7 @@ def objective_step_detection_two_sides_combined_signal(p):
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_combined']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
     asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
-                                        s.res['step_time_asymmetry2_median_overlap_strong']))
+                                        s.res['step_time_asymmetry2_median_combined']))
 
     if metric == 'both':
         if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
