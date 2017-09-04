@@ -10,13 +10,13 @@ tasks_to_optimize = 'both_split_and_all'
 algs = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
 #algs = ['overlap_strong']
 
-# metric_to_optimize = 'sc_rmse'
-# search_space = 'param9'
-# outlier_percent_to_remove = 5
+metric_to_optimize = 'sc_rmse'
+search_space = 'param9'
+outlier_percent_to_remove = 5
 
-metric_to_optimize = 'asym_rmse'
-search_space = 'param_asym_1'
-outlier_percent_to_remove = 1
+# metric_to_optimize = 'asym_rmse'
+# search_space = 'param_asym_1'
+# outlier_percent_to_remove = 1
 
 
 #################################################################################

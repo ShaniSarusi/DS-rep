@@ -51,8 +51,10 @@ def objective_step_detection_single_side(p):
     s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + side]))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + side], handle_zeros=True)
+
+    nanval = 0.5
     asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
-                                        s.res['step_time_asymmetry2_median_' + side]))
+                                        s.res['step_time_asymmetry2_median_' + side].fillna(nanval)))
 
     if metric == 'both':
         if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
@@ -115,8 +117,10 @@ def objective_step_detection_two_sides_overlap(p):
     s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap'], handle_zeros=True)
+
+    nanval = 0.5
     asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
-                                        s.res['step_time_asymmetry2_median_overlap']))
+                                        s.res['step_time_asymmetry2_median_overlap'].fillna(nanval)))
 
     if metric == 'both':
         if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
@@ -181,8 +185,10 @@ def objective_step_detection_two_sides_overlap_strong(p):
     s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_overlap_strong']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_overlap_strong'], handle_zeros=True)
+
+    nanval = 0.5
     asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
-                                        s.res['step_time_asymmetry2_median_overlap_strong']))
+                                        s.res['step_time_asymmetry2_median_overlap_strong'].fillna(nanval)))
 
     if metric == 'both':
         if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
@@ -248,8 +254,10 @@ def objective_step_detection_two_sides_combined_signal(p):
     s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
     rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_combined']))
     mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_combined'], handle_zeros=True)
+
+    nanval = 0.5
     asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
-                                        s.res['step_time_asymmetry2_median_combined']))
+                                        s.res['step_time_asymmetry2_median_combined'].fillna(nanval)))
 
     if metric == 'both':
         if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
