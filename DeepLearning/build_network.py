@@ -269,13 +269,20 @@ def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1,0.1
     End_point_Active = Dense(4, activation='softmax')(ActiveLayer)
     
     
-    input_features = Input((54,))
+    def penalized_loss(group):
+        def loss(y_pred, y_true):
+            y_pred_mean = K.sum(K.transpose(y_pred * group)/K.sum((group) + 0.00000001, axis = 1), axis = 1)
+            y_true_mean = K.sum(K.transpose(y_true * group)/K.sum((group) + 0.00000001, axis = 1), axis = 1)
+            #fake_or_not_mean = K.sum(K.transpose(fake_or_not * group)/K.sum(K.variable(group) + 0.00000001, axis = 1), axis = 1)
+            return K.mean(K.square(y_pred_mean - y_true_mean),axis = -1)
+        return loss
+    
+    input_features = Input((4416,))
     #sympLayer=Dropout(0.5)(ActiveLayer)
     sympLayer = Dense(19, activation='relu')(ActiveLayer)
     sympLayer = BatchNormalization()(sympLayer)
     
-    close_to_output2 = layers.concatenate([sympLayer, input_features])
-    close_to_output2 = Dense(19, activation='relu')(close_to_output2)
+    close_to_output2 = Dense(19, activation='relu')(sympLayer)
     close_to_output2 = Dense(16, activation='tanh')(close_to_output2)
     
     close_to_output2 = Dense(16, activation='tanh')(close_to_output2)
@@ -287,7 +294,7 @@ def BuildCNNClassWithActivity(input_size, lost, lr = 0.0001, loss_weights=[1,0.1
     optimizer = optimizers.adam(lr = lr)
     feature_extract = Model([input_signal, input_features],close_to_output2)
     
-    symp_class.compile(optimizer=optimizer, loss=[lost,  'categorical_crossentropy'],metrics=['accuracy'], loss_weights=loss_weights)
+    symp_class.compile(optimizer=optimizer, loss=[penalized_loss(group = input_features),  'categorical_crossentropy'],metrics=['accuracy'], loss_weights=loss_weights)
     feature_extract.compile(optimizer=optimizer, loss=lost,metrics=['accuracy'])
     #
     return symp_class, feature_extract

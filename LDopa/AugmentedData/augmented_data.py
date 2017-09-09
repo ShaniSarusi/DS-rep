@@ -18,18 +18,18 @@ def augment_data(XYZ, temp_labels, task_clusters, task_subjectID, task_ids,num_i
     Input:
         XYZ (numpy): origin data
         temp_labels (1D numpy): labels per segment
-        task_clasters (1D numpy): clusters per segment
+        task_clusters (1D numpy): clusters per segment
         task_subjectID (1D numpy)- User ID per segment
         task_ids (1D numpy) - task_ids per segment
         num_iter (integer) - numpy of random transformation per segment
-        group (list of ineger) - group clusters
+        group (list of integers) - group clusters
     
     Output:
         augment_XYZ (numpy): augmented XYZ
-        augment_symp (numpy): aegmented symptom per segment
-        augment_task (numpy): aegmented task per segment
-        augment_subject_id (numpy): aegmented user name per segment
-        augment_task_ids (numpy): aegmented task_ids per segment
+        augment_symp (numpy): augmented  symptom per segment
+        augment_task (numpy): augmented  task per segment
+        augment_subject_id (numpy): augmented user name per segment
+        augment_task_ids (numpy): augmented  task_ids per segment
         augment_or_not (numpy): The data is augmented or from original data XYZ
     """
     

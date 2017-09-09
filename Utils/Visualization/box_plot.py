@@ -42,7 +42,6 @@ def create_box_plot(df, x_discrete_variable, y_cont_variable, all_possible_x_val
     plt.show()
 
 
-# Example
 # if __name__ == '__main__':
 #     df = placeholder
 #     x_discrete_variable = placeholder

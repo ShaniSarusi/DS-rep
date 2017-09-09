@@ -211,6 +211,20 @@ def make_interval_from_all_data(res, window_size, slide_by, trim_start, trim_end
 
 
 def read_unlabeled_data(sec, freq, session_ids, dsn):
+    """
+    Read unlabeld data from sql
+    
+    Input:
+        sec (Integer)- seconds of intevals
+        freq (Integer) - frequency of data
+        session_ids (list of integers) - list of session you want to read
+        dsn (String) - your dsn for SQL
+    
+    Output:
+        X_table (2d numpy array) - Intevals are rows for X 
+        Y_table (2d numpy array) - Intevals are rows for Y 
+        Z_table (2d numpy array) - Intevals are rows for Z 
+    """
     X_table_ses = []
     Y_table_ses = []
     Z_table_ses = []
@@ -245,9 +259,3 @@ def read_unlabeled_data(sec, freq, session_ids, dsn):
     return X_table, Y_table, Z_table
 
 
-# save
-# meta.to_csv('metadata.csv')
-# raw_x.to_csv('C:/Users/awagner/Box Sync/Large_data/rawX.csv')
-# raw_y.to_csv('C:/Users/awagner/Box Sync/Large_data/rawY.csv')
-# raw_z.to_csv('C:/Users/awagner/Box Sync/Large_data/rawZ.csv')
-# raw_n.to_csv('C:/Users/awagner/Box Sync/Large_data/rawN.csv')

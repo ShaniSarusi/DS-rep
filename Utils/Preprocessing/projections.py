@@ -78,7 +78,7 @@ def project_gravity_core(xyz):
     Projection of data set to 2 dim
     
     Input:
-        xyz (3d numy array) - 0 dimension is number os samples, 1 dimension is length of signals
+        xyz (3d numpy array) - 0 dimension is number os samples, 1 dimension is length of signals
                     and 2 dim is number of axis
                     
     Output:

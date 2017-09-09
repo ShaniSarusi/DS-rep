@@ -10,7 +10,7 @@ from sklearn.model_selection import LeaveOneGroupOut
 import numpy as np
 from sklearn.metrics import accuracy_score
 
-def make_cross_val(data, data_features, Task_params, Task_andSymp, meta_data, deep_task_ids, main_network,  second_network, augment_or_not, deep_params):
+def make_cross_val(data, task_feature, Task_params, Task_andSymp, meta_data, deep_task_ids, main_network,  second_network, augment_or_not, deep_params):
 
     weights_start_symp = main_network.get_weights()
 
@@ -26,11 +26,11 @@ def make_cross_val(data, data_features, Task_params, Task_andSymp, meta_data, de
     for train, test in cv:
         print(test)
         main_network.set_weights(weights_start_symp)
-        xtest = data[test]; xtest_features = data_features[test]
-        xtrain = data[train]; xtrain_features = data_features[train]; 
+        xtest = data[test]; xtest_features = task_feature[test]
+        xtrain = data[train]; xtrain_features = task_feature[train]; 
         #weight_sample = np.abs(1 - Task_for_pred[train])
         main_network.fit([xtrain, xtrain_features], [Task_params[train], Task_andSymp[train]],
-                         epochs=deep_params['epochs'] , batch_size=deep_params['batch_size'], shuffle=True, 
+                         epochs=deep_params['epochs'] , batch_size=deep_params['batch_size'], shuffle=False, 
                          validation_data=([data[test], xtest_features], [Task_params[test], Task_andSymp[test]]),
                          callbacks=[deep_params['change_lr']], verbose=2)#
         

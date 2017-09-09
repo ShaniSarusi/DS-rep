@@ -33,7 +33,12 @@ augment_XYZ, augment_dys, augment_Task, augment_SubjectId, augment_task_ids, aug
                                             np.asarray(tags_df.SubjectId[cond==True]), np.asarray(task_ids),
                                                               num_iter=20, num_iter_symp = 20)
 
-12345678
+x_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:,:,0])
+y_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:,:,1])
+z_denoise = lmap(lambda x: (Denoiseing_func.denoise(x)), augment_XYZ[:,:,2])
+
+XYZ_denoise = np.stack((x_denoise, y_denoise, z_denoise), axis = 2)
+
 TagLow = XYZ_denoise.copy()
 augment_dys = augment_dys.reshape((len(augment_dys),1)); #augment_dys = utils.to_categorical(augment_dys, num_classes=2)
 #augment_brady = augment_brady.reshape((len(augment_brady),1)); augment_brady = utils.to_categorical(augment_brady, num_classes=2)
@@ -52,13 +57,13 @@ symp_class, feature_extract = BuildCNNClassWithActivity(TagLow.shape[1], 'binary
 
 def scheduler(epoch=20):
     if epoch == 1:
-        K.set_value(symp_class.optimizer.lr, 0.0005)
+        K.set_value(symp_class.optimizer.lr, 0.0001)
     if epoch == 2:
         K.set_value(symp_class.optimizer.lr, 0.0001)
     if epoch == 3:
-        K.set_value(symp_class.optimizer.lr, 0.00005)
+        K.set_value(symp_class.optimizer.lr, 0.00008)
     if epoch == 5:
-        K.set_value(symp_class.optimizer.lr, 0.00001)
+        K.set_value(symp_class.optimizer.lr, 0.00005)
     return K.get_value(symp_class.optimizer.lr)
 
 
@@ -72,7 +77,7 @@ labels_for_deep = augment_task_ids%3;
 
 symp = augment_dys.copy()#{'Dys': augment_dys, 'brady': augment_brady, 'trem': augment_tremor}
 
-res1, order1, symp_res, feature_deep = make_cross_val(TagLow, features_deep_data, symp, Task_andSymp, labels_for_deep, augment_task_ids,
+res1, order1, symp_res, feature_deep = make_cross_val(TagLow, augment_task_ids_bucket, symp, Task_andSymp, labels_for_deep, augment_task_ids,
                             symp_class,  feature_extract, augment_or_not, deep_params)
 
 feature_deep1 = np.vstack(feature_deep)

@@ -12,11 +12,12 @@ import numpy as np
 
 
 def spectogram_and_normalize(data,normlisedata = False):
-    fdata = np.abs(welch(data-np.mean(data), 50, nperseg=len(data))[1])  # periodogram is a function in spectro something.   data-mean makes the average zero.
-    #fdata[range(3)] = 0 
+    # periodogram is a function in spectro something.  
+    #data-mean makes the average zero.
+    fdata = np.abs(welch(data-np.mean(data), 50, nperseg=len(data))[1])  
+    
     if(normlisedata ==True):
         fdata = (fdata - np.min(fdata))/(np.max(fdata)-np.min(fdata))
-    #p = probVec(fdata)   #probvec is likes softmax. makes everything sum to one. HOwerver, fourier trans is both sided, thus since we take one side, we need to multiply by two.
     return fdata
 
 
