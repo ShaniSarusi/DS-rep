@@ -5,6 +5,32 @@ import numpy as np
 import pandas as pd
 import Gait.Resources.config as c
 from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
+from Gait.Pipeline.StepDetection import StepDetection
+from Utils.Connections.connections import load_pickle_file_from_s3
+
+
+def create_sd_class_for_obj_functions():
+    # Load input data to algorithms
+    path_sample = join(c.pickle_path, 'metadata_sample')
+    path_acc = join(c.pickle_path, 'acc')
+    path_apdm_events = join(c.pickle_path, 'apdm_events')
+    path_apdm_measures = join(c.pickle_path, 'apdm_measures')
+    if c.run_on_cloud:
+        sample = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_sample)
+        acc = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_acc)
+        apdm_measures = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_apdm_measures)
+        apdm_events = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_apdm_events)
+    else:
+        with open(path_sample, 'rb') as fp:
+            sample = pickle.load(fp)
+        with open(path_acc, 'rb') as fp:
+            acc = pickle.load(fp)
+        with open(path_apdm_measures, 'rb') as fp:
+            apdm_measures = pickle.load(fp)
+        with open(path_apdm_events, 'rb') as fp:
+            apdm_events = pickle.load(fp)
+    sd = StepDetection(acc, sample, apdm_measures, apdm_events)
+    return sd
 
 
 def split_by_person():

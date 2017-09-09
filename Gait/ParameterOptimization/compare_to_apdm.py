@@ -67,7 +67,7 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
 
             a = int(j/2)
             b = j % 2
-            axarr[a, b].scatter(alg_vals_j, apdm_vals_j)
+            axarr[a, b].scatter(apdm_vals_j, alg_vals_j)
             axarr[a, b].set_xlabel('APDM', fontsize=12)
             axarr[a, b].set_ylabel(algs[j] + ' algorithm', fontsize=12)
             val_max = max(max(alg_vals_j), max(apdm_vals_j))
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     alg_file_name = 'gait_measures_all.csv'
     alg_data_path = join(c.results_path, 'param_opt', alg_file_name)
 
-    save_path = 'C:\\Users\\zwaks\\Desktop\\apdm-june2017\\param7_machine1'
+    save_path = 'C:\\Users\\zwaks\\Desktop\\apdm-june2017\\param7_machine1_5percent'
     alg_data_path = join(save_path, 'gait_measures_all.csv')
     alg_data_path = join(save_path, 'gait_measures_all.csv')
 

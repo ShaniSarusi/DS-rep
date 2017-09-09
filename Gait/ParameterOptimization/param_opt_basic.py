@@ -16,26 +16,16 @@ from multiprocessing import Pool, cpu_count
 
 
 # Set search spaces
-if c.search_space == 'fast':
-    import Gait.Resources.param_search_space_fast as param_search_space
-if c.search_space == 'small':
-    import Gait.Resources.param_search_space_small as param_search_space
-if c.search_space == 'full':
-    import Gait.Resources.param_search_space_full as param_search_space
-if c.search_space == 'fast2':
-    import Gait.Resources.param_search_space_fast2 as param_search_space
-if c.search_space == 'fast3':
-    import Gait.Resources.param_search_space_fast3 as param_search_space
-if c.search_space == 'fast4':
-    import Gait.Resources.param_search_space_fast4 as param_search_space
-if c.search_space == 'fast5':
-    import Gait.Resources.param_search_space_fast5 as param_search_space
 if c.search_space == 'param6':
     import Gait.Resources.param_space_6 as param_search_space
 if c.search_space == 'param7':
     import Gait.Resources.param_space_7 as param_search_space
 if c.search_space == 'param8':
     import Gait.Resources.param_space_8 as param_search_space
+if c.search_space == 'param9':
+    import Gait.Resources.param_space_9 as param_search_space
+if c.search_space == 'param_asym_1':
+    import Gait.Resources.param_asym_1 as param_search_space
 
 # Set algorithms
 algs = c.algs
@@ -93,16 +83,16 @@ if c.outlier_percent_to_remove > 0:
 ##########################################################################################################
 # Set data splits
 task_ids = []
-if c.data_type == 'split':
+if c.tasks_to_optimize == 'split':
     walk_tasks = [1, 2, 3, 4, 5, 6, 7, 10]
     for k in walk_tasks:
         task_i = np.intersect1d(ids, sample[sample['TaskId'] == k]['SampleId'].as_matrix())
         task_ids.append(task_i)
-elif c.data_type == 'all':
+elif c.tasks_to_optimize == 'all':
     walk_tasks = ['all']
     task_i = ids
     task_ids.append(task_i)
-elif c.data_type == 'both':
+elif c.tasks_to_optimize == 'both_split_and_all':
     walk_tasks = [1, 2, 3, 4, 5, 6, 7, 10, 'all']
     for k in walk_tasks:
         if k == 'all':
@@ -122,7 +112,6 @@ for k in range(len(task_ids)):
 ##########################################################################################################
 # The parameter optimization code
 df_gait_measures_by_alg = []
-# The two lists below are relevant only for c.data_type == 'both':
 df_gait_measures_by_alg_split = []
 df_gait_measures_by_alg_all = []
 
@@ -248,7 +237,7 @@ for i in range(len(objective_function_all)):
         print('RMSE results for all folds are:')
         print(root_mean_squared_error)
 
-    if c.data_type == 'both':
+    if c.tasks_to_optimize == 'both_split_and_all':
         df_for_alg_i_split = pd.concat(df_gait_measures_by_task[0:-1])
         df_for_alg_i_all = pd.concat([df_gait_measures_by_task[-1]])
         df_gait_measures_by_alg_split.append(df_for_alg_i_split)
@@ -271,7 +260,7 @@ create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance
 # Summarize and save gait measure results
 metrics = ['cadence', 'step_time_asymmetry', 'step_time_asymmetry2_median', 'stride_time_var',
            'toe_off_asymmetry_median']
-if c.data_type == 'both':
+if c.tasks_to_optimize == 'both_split_and_all':
     save_name1 = 'gait_measures_split.csv'
     gait_measure_analysis(df_gait_measures_by_alg_split, save_dir, save_name1, algs, metrics, prefix='split')
     save_name2 = 'gait_measures_all.csv'
