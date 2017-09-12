@@ -4,6 +4,7 @@ This module provides various functions to handle connections.
 import pickle
 import boto3.session
 import time
+import pandas as pd
 
 
 def close_connection(co):
@@ -55,3 +56,22 @@ def save_pickle_file_to_s3(p_region_name, p_bucket, p_local_file):
     time_string = time.strftime("%Y%m%d-%H%M%S")
     s3client.upload_file(p_local_file, p_bucket, 'param_opt_results-' + time_string)
 
+
+def read_from_s3(bucket_name, key, aws_access_key_id, aws_secret_access_key ):
+    """
+    Download file from s3 to pandas
+    
+    Input:
+        bucket_name (string) -  The AWS bucket where the file resides
+        key (string) - Tthe AWS key where the file resides
+    """
+    
+    session = boto3.session.Session(region_name= 'us-west-2')
+    s3client = session.client('s3', config= boto3.session.Config(signature_version='s3v4'),
+                              aws_access_key_id = aws_access_key_id,
+                              aws_secret_access_key = aws_secret_access_key )
+    obj = s3client.get_object(Bucket = bucket_name, 
+                              Key = key)
+    df = pd.read_csv(obj['Body'])
+
+    return df
