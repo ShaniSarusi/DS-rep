@@ -1,10 +1,11 @@
 import pickle
 from os.path import join
 
-import Gait.Pipeline.extract_features as p2
-import Gait.Pipeline.read_data as p1
-# import Gait.Pipeline.step_fts as p3
-import Gait.Resources.config as c
+import Gait_old.Pipeline.extract_features as p2
+# import Gait_old.Pipeline.step_fts as p3
+import Gait_old.Resources.config as c
+
+import Sandbox.Zeev.Gait_old.Pipeline.read_data as p1
 
 # Store metadata
 p1.pickle_metadata()

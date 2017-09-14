@@ -1,10 +1,12 @@
 import pickle
+from os.path import join
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from os.path import join
-import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
-import Gait.Resources.config as c
+
+from Sandbox.Zeev import Gait_old as c
 from Utils.DataHandling.data_processing import string_to_float_list
 
 do_algorithm = True

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 
-import Gait.Resources.config as c
+from Sandbox.Zeev import Gait_old as c
 
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)

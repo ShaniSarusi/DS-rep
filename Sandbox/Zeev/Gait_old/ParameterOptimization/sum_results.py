@@ -5,7 +5,7 @@ from os.path import join
 
 import pandas as pd
 
-import Gait.Resources.config as c
+from Sandbox.Zeev import Gait_old as c
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory
 
 

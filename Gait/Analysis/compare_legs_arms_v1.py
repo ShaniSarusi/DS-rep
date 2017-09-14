@@ -1,9 +1,11 @@
-from os.path import join, exists
-from os import makedirs
 import pickle
-import Gait.Resources.config as c
+from os import makedirs
+from os.path import join, exists
+
 import matplotlib.pyplot as plt
 import numpy as np
+
+from Sandbox.Zeev import Gait_old as c
 
 
 def do_everything(start_time=8, time_range=5, save_dir=join(c.results_path, 'channel_plots')):
@@ -41,11 +43,11 @@ def plot_channels_and_events(id, start_time=8, time_range=5, plot_type='all_even
     with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
         apdm_events = pickle.load(fp)
     apdm = apdm_events.loc[id]
-    l_on = np.array(apdm.loc['Gait - Lower Limb - Initial Contact L (s)'])
-    r_on = np.array(apdm.loc['Gait - Lower Limb - Initial Contact R (s)'])
+    l_on = np.array(apdm.loc['Gait_old - Lower Limb - Initial Contact L (s)'])
+    r_on = np.array(apdm.loc['Gait_old - Lower Limb - Initial Contact R (s)'])
 
-    l_off = np.array(apdm.loc['Gait - Lower Limb - Toe Off L (s)'])
-    r_off = np.array(apdm.loc['Gait - Lower Limb - Toe Off R (s)'])
+    l_off = np.array(apdm.loc['Gait_old - Lower Limb - Toe Off L (s)'])
+    r_off = np.array(apdm.loc['Gait_old - Lower Limb - Toe Off R (s)'])
 
     # No APDM events (or not enough)
     if np.any([np.isnan(l_on), np.isnan(r_on), np.isnan(l_off), np.isnan(r_off)]):

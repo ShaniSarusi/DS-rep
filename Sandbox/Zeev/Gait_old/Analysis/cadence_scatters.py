@@ -1,11 +1,12 @@
 import pickle
+from os.path import join
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from os.path import join
-import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
-import Gait.Resources.config as c
 
+from Sandbox.Zeev import Gait_old as c
 
 do_algorithm = True
 input_file = join('C:\\Users\\zwaks\\Desktop\\GaitPaper\\param_per5', 'gait_measures_all.csv')

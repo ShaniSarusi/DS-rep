@@ -1,8 +1,9 @@
 # functions (i.e. algorithms) to optimize
 from math import sqrt
+
 from sklearn.metrics import mean_squared_error
-from Gait.Pipeline.StepDetection import StepDetection
-from Gait.Pipeline.gait_utils import create_sd_class_for_obj_functions
+
+from Sandbox.Zeev.Gait_old.Pipeline.gait_utils import create_sd_class_for_obj_functions
 from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
 
 
@@ -175,7 +176,7 @@ def objective_step_detection_two_sides_overlap_strong(p):
         verbose = p['verbose']
     max_dist_from_apdm = p['max_dist_from_apdm']
 
-    s.step_detection_two_sides_overlap_opt_strong(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
+    s.step_detection_fusion_high_level(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
                                        vert_win=vert_win, butter_freq=butter_freq, peak_type=peak_type,
                                        peak_param1=peak_param1, peak_param2=peak_param2, win_size_merge=win_size_merge,
                                        win_size_remove_adjacent_peaks=win_size_remove_adjacent_peaks, z=z,
@@ -244,11 +245,11 @@ def objective_step_detection_two_sides_combined_signal(p):
         verbose = p['verbose']
     max_dist_from_apdm = p['max_dist_from_apdm']
 
-    s.step_detection_two_sides_combined_signal(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
-                                               vert_win=vert_win, butter_freq=butter_freq,
-                                               mva_win_combined=mva_win_combined, min_hz=min_hz, max_hz=max_hz,
-                                               factor=factor, peak_type=peak_type, peak_param1=peak_param1,
-                                               peak_param2=peak_param2, verbose=verbose)
+    s.step_detection_fusion_low_level(signal_to_use=signal_to_use, smoothing=smoothing, mva_win=mva_win,
+                                      vert_win=vert_win, butter_freq=butter_freq,
+                                      mva_win_combined=mva_win_combined, min_hz=min_hz, max_hz=max_hz,
+                                      factor=factor, peak_type=peak_type, peak_param1=peak_param1,
+                                      peak_param2=peak_param2, verbose=verbose)
 
     # ********** Calculate RMSE and/or MAPE
     s.add_gait_metrics(verbose=False, max_dist_from_apdm=max_dist_from_apdm)
@@ -285,4 +286,4 @@ all_algorithms['step_detection_single_side_lhs'] = objective_step_detection_sing
 all_algorithms['step_detection_single_side_rhs'] = objective_step_detection_single_side
 all_algorithms['step_detection_two_sides_overlap'] = objective_step_detection_two_sides_overlap
 all_algorithms['step_detection_two_sides_overlap_strong'] = objective_step_detection_two_sides_overlap_strong
-all_algorithms['step_detection_two_sides_combined_signal'] = objective_step_detection_two_sides_combined_signal
+all_algorithms['step_detection_fusion_low_level'] = objective_step_detection_two_sides_combined_signal

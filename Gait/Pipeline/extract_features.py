@@ -1,13 +1,13 @@
 import pickle
 from os.path import join
 
+import Gait_old.Resources.config as c
 import numpy as np
 import pandas as pd
 from scipy.integrate import trapz
 from scipy.stats import pearsonr
 
-import Gait.Resources.config as c
-from Gait.Pipeline.gait_utils import truncate
+from Sandbox.Zeev.Gait_old.Pipeline.gait_utils import truncate
 from Utils.Preprocessing.denoising import butter_lowpass_filter
 
 

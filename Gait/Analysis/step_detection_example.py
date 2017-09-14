@@ -1,8 +1,9 @@
 import pickle
 from os.path import join
 
-import Gait.Resources.config as c
-from Gait.Pipeline.StepDetection import StepDetection
+import Gait_old.Resources.config as c
+
+from Sandbox.Zeev.Gait_old.Pipeline import StepDetection
 
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
@@ -43,9 +44,9 @@ sc.ensemble_result_v1(win_size_merge_lhs_rhs=30, win_merge_lr_both=22)
 sc.ensemble_result_v2(win_size=10, thresh=1.5, w1=1, w2=0.8, w3=1, w4=1)
 
 # Plot APDM
-apdm_idx_initial_left = sc.apdm_events.iloc[id]['Gait - Lower Limb - Initial Contact L (s)']
-apdm_idx_toe_off_left = sc.apdm_events.iloc[id]['Gait - Lower Limb - Toe Off L (s)']
-apdm_idx_midswing_left = sc.apdm_events.iloc[id]['Gait - Lower Limb - Midswing L (s)']
+apdm_idx_initial_left = sc.apdm_events.iloc[id]['Gait_old - Lower Limb - Initial Contact L (s)']
+apdm_idx_toe_off_left = sc.apdm_events.iloc[id]['Gait_old - Lower Limb - Toe Off L (s)']
+apdm_idx_midswing_left = sc.apdm_events.iloc[id]['Gait_old - Lower Limb - Midswing L (s)']
 sc.plot_step_idx(apdm_idx_initial_left)
 sc.plot_step_idx(apdm_idx_toe_off_left, p_color='r')
 sc.plot_step_idx(apdm_idx_midswing_left, p_color='g')

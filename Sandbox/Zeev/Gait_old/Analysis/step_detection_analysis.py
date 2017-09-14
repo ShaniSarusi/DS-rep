@@ -1,10 +1,10 @@
 import pickle
 from os.path import join
 
+import Gait_old.Resources.config as c
 import numpy as np
 
-import Gait.Resources.config as c
-from Gait.Pipeline.gait_utils import set_filters, split_by_person
+from Sandbox.Zeev.Gait_old.Pipeline.gait_utils import set_filters, split_by_person
 from Utils.DataHandling.data_processing import multi_intersect
 
 # Load algorithm results

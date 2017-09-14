@@ -1,6 +1,6 @@
-import Gait.Pipeline.read_data as p1
+import Sandbox.Zeev.Gait_old.Pipeline.read_data as p1
 
-# import Gait.Pipeline.step_fts as p3
+# import Gait_old.Pipeline.step_fts as p3
 
 # Store metadata
 p1.pickle_metadata()

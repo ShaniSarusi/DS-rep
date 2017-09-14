@@ -1,11 +1,13 @@
 import pickle
+from math import sqrt
 from os.path import join, dirname
+
 import matplotlib.pyplot as plt
 import pandas as pd
-import Gait.Resources.config as c
-from math import sqrt
-from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
+
+from Sandbox.Zeev import Gait_old as c
+from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
 
 
 def create_regression_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False,

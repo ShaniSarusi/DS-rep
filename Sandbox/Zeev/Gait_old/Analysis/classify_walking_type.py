@@ -7,7 +7,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from sklearn.metrics import roc_auc_score
 
-import Gait.Resources.config as c
+from Sandbox.Zeev import Gait_old as c
 
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)

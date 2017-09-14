@@ -1,11 +1,13 @@
 import copy
 import pickle
 from os.path import join
+
+import Gait_old.Resources.config as c
 import numpy as np
 import pandas as pd
-import Gait.Resources.config as c
-from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
-from Gait.Pipeline.StepDetection import StepDetection
+from Gait_old.ParameterOptimization.compare_to_apdm import compare_to_apdm
+
+from Sandbox.Zeev.Gait_old.Pipeline import StepDetection
 from Utils.Connections.connections import load_pickle_file_from_s3
 
 

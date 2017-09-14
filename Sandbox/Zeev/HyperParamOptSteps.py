@@ -4,12 +4,12 @@ import random
 from math import sqrt
 from os.path import join
 
+import Gait_old.Resources.config as c
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 
-import Gait.Resources.config as c
-from Gait.Pipeline.StepDetection import StepDetection
+from Sandbox.Zeev.Gait_old.Pipeline import StepDetection
 
 
 class HyperParamOptSteps:

@@ -8,6 +8,17 @@ def normalize_signal(sig):
     return y
 
 
+def normalize_max_min(signals, use_all_samples_for_max_min=False):
+    if use_all_samples_for_max_min:
+        sig_min = np.min([x.min() for x in signals])
+        sig_max = np.max([x.max() for x in signals])
+        sig_range = sig_max - sig_min
+        signals = [(x - sig_min) / sig_range for x in signals]
+    else:
+        signals = [normalize_signal(x) for x in signals]
+    return signals
+
+
 def split_data(samples, n_folds):
     idx_folds = chunk_it(samples, n_folds, shuffle=True)
     train = []

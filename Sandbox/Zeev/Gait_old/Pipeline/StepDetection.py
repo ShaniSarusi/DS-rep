@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 
-import Gait.Resources.config as c
+from Sandbox.Zeev import Gait_old as c
 from Utils.BasicStatistics.statistics_functions import cv, mean_and_std
 from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter
 from Utils.Preprocessing.projections import project_gravity
@@ -245,7 +245,7 @@ class StepDetection:
                                                  factor=1.1, peak_type='peak_utils', peak_param1=0.5, peak_param2=30,
                                                  verbose=True):
 
-        if verbose: print("Running: step_detection_two_sides_combined_signal on side")
+        if verbose: print("Running: step_detection_fusion_low_level on side")
 
         # Set data
         lhs = [self.acc[i]['lhs'] for i in range(len(self.acc))]
@@ -397,8 +397,8 @@ class StepDetection:
                     step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
                                  / np.timedelta64(1, 's')
                     if max_dist_from_apdm != 1234.5:
-                        apdm_i = np.sort(np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[i] +
-                                                  self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[i]))
+                        apdm_i = np.sort(np.array(self.apdm_events['Gait_old - Lower Limb - Toe Off L (s)'].iloc[i] +
+                                                  self.apdm_events['Gait_old - Lower Limb - Toe Off R (s)'].iloc[i]))
                         step_times = np.array([step_time for step_time in step_times if
                                                np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
                     step_durations_i = np.diff(step_times)
@@ -684,11 +684,11 @@ if __name__ == "__main__":
     # sd.step_detection_two_sides_overlap(signal_to_use='norm', smoothing='mva', mva_win=15,
     #                                  vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
     #                                  win_size_merge=30, win_size_remove_adjacent_peaks=40, verbose=True)
-    # sd.step_detection_two_sides_overlap_opt_strong(signal_to_use='norm', smoothing='mva', mva_win=15,
+    # sd.step_detection_fusion_high_level(signal_to_use='norm', smoothing='mva', mva_win=15,
     #                                  vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
     #                                  win_size_merge=30, win_size_remove_adjacent_peaks=40, z=0.3, verbose=True)
     #
-    # sd.step_detection_two_sides_combined_signal(signal_to_use='norm', smoothing='mva', mva_win=15, vert_win=None,
+    # sd.step_detection_fusion_low_level(signal_to_use='norm', smoothing='mva', mva_win=15, vert_win=None,
     #                                          butter_freq=12, mva_win_combined=40, min_hz=0.3, max_hz=2.0,
     #                                          factor=1.1, peak_type='peak_utils', peak_param1=0.5, peak_param2=30)
 

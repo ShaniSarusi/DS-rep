@@ -1,7 +1,8 @@
 from os.path import join
-import pandas as pd
+
 import numpy as np
-import Gait.Resources.config as c
+import pandas as pd
+
 from Utils.DataHandling.data_processing import string_to_int_list
 
 

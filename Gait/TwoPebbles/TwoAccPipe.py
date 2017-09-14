@@ -1,8 +1,8 @@
 # Two accelerometer pipeline
 from os.path import join
 
-import Gait.Resources.config as c
-from Gait.TwoPebbles import TwoAcc
+from Sandbox.Zeev import Gait_old as c
+from Sandbox.Zeev.Gait_old import TwoAcc
 from Utils.DataHandling.reading_and_writing_files import read_export_tool_csv
 
 # Read data

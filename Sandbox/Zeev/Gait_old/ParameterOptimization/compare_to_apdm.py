@@ -1,10 +1,12 @@
 import pickle
-from os.path import join, dirname, sep
+from os.path import join, dirname
+
+import Gait_old.Resources.config as c
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.stats import pearsonr
-import Gait.Resources.config as c
-from Gait.Pipeline.StepDetection import StepDetection
+
+from Sandbox.Zeev.Gait_old.Pipeline import StepDetection
 
 
 def _read_apdm_measures(idx):

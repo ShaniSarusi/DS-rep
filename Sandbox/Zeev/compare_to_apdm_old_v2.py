@@ -1,11 +1,11 @@
 import pickle
 from os.path import join, dirname
-import matplotlib.pyplot as plt
+
+import Gait_old.Resources.config as c
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.stats import pearsonr
-import Gait.Resources.config as c
-from Gait.Pipeline.StepDetection import StepDetection
 
 
 def compare_to_apdm(data_file, algs, apdm_metrics, show_plot=False):

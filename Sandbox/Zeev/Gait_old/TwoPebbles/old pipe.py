@@ -7,7 +7,7 @@ from scipy import signal
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 
-import Gait.Resources.config as c
+from Sandbox.Zeev import Gait_old as c
 from Utils.DataHandling.reading_and_writing_files import read_export_tool_csv
 
 # Read data***************************
@@ -47,9 +47,9 @@ plt.plot(b[range(st + shift_by, en + shift_by)])
 
 # Segment data into samples *****************************************
 plt.plot(lhs.loc[range(0, 50000), 'n'].as_matrix())
-# metadata_path = common_path + '\Gait\Exp2\Metadata.xlsx'
+# metadata_path = common_path + '\Gait_old\Exp2\Metadata.xlsx'
 
-metadata_path = join(common_path, 'Gait\Exp2\Metadata_short.xlsx')
+metadata_path = join(common_path, 'Gait_old\Exp2\Metadata_short.xlsx')
 metadata = pd.read_excel(metadata_path)
 
 for i in range(metadata.shape[0]):

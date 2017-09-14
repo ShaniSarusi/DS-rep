@@ -6,7 +6,7 @@ import h5py
 import numpy as np
 import pandas as pd
 
-import Gait.Resources.config as c
+from Sandbox.Zeev import Gait_old as c
 from Utils.DataHandling.data_processing import make_df_from_hdf5_dataset
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory, pickle_excel_file
 
@@ -69,18 +69,18 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
         measures_i = pd.read_csv(p_apdm_files[i], skiprows=np.arange(9))
         measures_i = measures_i.set_index(measures_i['Measure'])
 
-        cadence = float(measures_i.loc['Gait - Lower Limb - Cadence L (steps/min)']['Mean'] +
-                        measures_i.loc['Gait - Lower Limb - Cadence R (steps/min)']['Mean']) / 2.0
+        cadence = float(measures_i.loc['Gait_old - Lower Limb - Cadence L (steps/min)']['Mean'] +
+                        measures_i.loc['Gait_old - Lower Limb - Cadence R (steps/min)']['Mean']) / 2.0
 
-        step_l_m = measures_i.loc['Gait - Lower Limb - Step Duration L (s)']['Mean']
-        step_l_std = measures_i.loc['Gait - Lower Limb - Step Duration L (s)']['StDev']
-        step_r_m = measures_i.loc['Gait - Lower Limb - Step Duration R (s)']['Mean']
-        step_r_std = measures_i.loc['Gait - Lower Limb - Step Duration R (s)']['StDev']
+        step_l_m = measures_i.loc['Gait_old - Lower Limb - Step Duration L (s)']['Mean']
+        step_l_std = measures_i.loc['Gait_old - Lower Limb - Step Duration L (s)']['StDev']
+        step_r_m = measures_i.loc['Gait_old - Lower Limb - Step Duration R (s)']['Mean']
+        step_r_std = measures_i.loc['Gait_old - Lower Limb - Step Duration R (s)']['StDev']
 
-        stride_l_m = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration L (s)']['Mean']
-        stride_l_std = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration L (s)']['StDev']
-        stride_r_m = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['Mean']
-        stride_r_std = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['StDev']
+        stride_l_m = measures_i.loc['Gait_old - Lower Limb - Gait_old Cycle Duration L (s)']['Mean']
+        stride_l_std = measures_i.loc['Gait_old - Lower Limb - Gait_old Cycle Duration L (s)']['StDev']
+        stride_r_m = measures_i.loc['Gait_old - Lower Limb - Gait_old Cycle Duration R (s)']['Mean']
+        stride_r_std = measures_i.loc['Gait_old - Lower Limb - Gait_old Cycle Duration R (s)']['StDev']
 
         step_time_asymmetry = 100.0*(np.abs(step_l_m - step_r_m) / np.mean([step_l_m, step_r_m]))
         stride_time_var_lhs = round(stride_l_std / stride_l_m, 4)
@@ -90,8 +90,8 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
 
         asym2_vals = []
         for j in range(first_event_idx, measures_i.shape[1]):
-            side1 = measures_i.loc['Gait - Lower Limb - Step Duration L (s)'][str(j-4)]
-            side2 = measures_i.loc['Gait - Lower Limb - Step Duration R (s)'][str(j-4)]
+            side1 = measures_i.loc['Gait_old - Lower Limb - Step Duration L (s)'][str(j-4)]
+            side2 = measures_i.loc['Gait_old - Lower Limb - Step Duration R (s)'][str(j-4)]
             val = np.abs(side1-side2)/np.mean([side1, side2])
             asym2_vals.append(val)
         asym2_median = np.median(asym2_vals)

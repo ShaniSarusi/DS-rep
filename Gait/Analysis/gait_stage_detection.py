@@ -1,22 +1,22 @@
-from os.path import join
 import pickle
-import Gait.Resources.config as c
+from os.path import join
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import ks_2samp
-from Utils.DataHandling.data_processing import string_to_int_list
 
+from Sandbox.Zeev import Gait_old as c
+from Utils.DataHandling.data_processing import string_to_int_list
 
 # APDM events TODO need to sort
 with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
     apdm_events = pickle.load(fp)
-apdm_events['initial'] = apdm_events['Gait - Lower Limb - Initial Contact L (s)'] + apdm_events['Gait - Lower Limb - Initial Contact R (s)']
-apdm_events['initial_lhs'] = apdm_events['Gait - Lower Limb - Initial Contact L (s)']
-apdm_events['initial_rhs'] = apdm_events['Gait - Lower Limb - Initial Contact R (s)']
-apdm_events['off'] = apdm_events['Gait - Lower Limb - Toe Off L (s)'] + apdm_events['Gait - Lower Limb - Toe Off R (s)']
-apdm_events['off_lhs'] = apdm_events['Gait - Lower Limb - Toe Off L (s)']
-apdm_events['off_rhs'] = apdm_events['Gait - Lower Limb - Toe Off R (s)']
+apdm_events['initial'] = apdm_events['Gait_old - Lower Limb - Initial Contact L (s)'] + apdm_events['Gait_old - Lower Limb - Initial Contact R (s)']
+apdm_events['initial_lhs'] = apdm_events['Gait_old - Lower Limb - Initial Contact L (s)']
+apdm_events['initial_rhs'] = apdm_events['Gait_old - Lower Limb - Initial Contact R (s)']
+apdm_events['off'] = apdm_events['Gait_old - Lower Limb - Toe Off L (s)'] + apdm_events['Gait_old - Lower Limb - Toe Off R (s)']
+apdm_events['off_lhs'] = apdm_events['Gait_old - Lower Limb - Toe Off L (s)']
+apdm_events['off_rhs'] = apdm_events['Gait_old - Lower Limb - Toe Off R (s)']
 df = pd.concat([apdm_events['initial'], apdm_events['initial_lhs'], apdm_events['initial_rhs'], apdm_events['off'],
                 apdm_events['off_lhs'], apdm_events['off_rhs']], axis=1)
 

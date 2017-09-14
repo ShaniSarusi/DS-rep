@@ -1,31 +1,32 @@
 import pickle
+from multiprocessing import Pool
 from os.path import join
+
+import Gait_old.Resources.config as c
 import hyperopt as hp
 import numpy as np
 import pandas as pd
+from Gait_old.ParameterOptimization.evaluate_test_set import evaluate_on_test_set
+from Gait_old.ParameterOptimization.objective_functions import all_algorithms
+from Gait_old.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
+from Gait_old.ParameterOptimization.sum_results_for_plotting_parameters import sum_results_for_plotting_parameters
+from Gait_old.Pipeline.gait_utils import gait_measure_analysis
 from hyperopt import fmin, Trials, tpe, space_eval
-import Gait.Resources.config as c
-from Gait.ParameterOptimization.evaluate_test_set import evaluate_on_test_set
-from Gait.ParameterOptimization.objective_functions import all_algorithms
-from Gait.ParameterOptimization.sum_results import sum_results
-from Gait.ParameterOptimization.sum_results_for_plotting_parameters import sum_results_for_plotting_parameters
-from Gait.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
-from Gait.Pipeline.gait_utils import gait_measure_analysis
-from Utils.Preprocessing.other_utils import split_data
-from multiprocessing import Pool, cpu_count
 
+from Sandbox.Zeev.Gait_old.ParameterOptimization.sum_results import sum_results
+from Utils.Preprocessing.other_utils import split_data
 
 # Set search spaces
 if c.search_space == 'param6':
-    import Gait.Resources.param_space_6 as param_search_space
+    import Gait_old.Resources.param_space_6 as param_search_space
 if c.search_space == 'param7':
-    import Gait.Resources.param_space_7 as param_search_space
+    import Gait_old.Resources.param_space_7 as param_search_space
 if c.search_space == 'param8':
-    import Gait.Resources.param_space_8 as param_search_space
+    import Gait_old.Resources.param_space_8 as param_search_space
 if c.search_space == 'param9':
-    import Gait.Resources.param_space_9 as param_search_space
+    import Gait_old.Resources.param_space_9 as param_search_space
 if c.search_space == 'param_asym_1':
-    import Gait.Resources.param_asym_1 as param_search_space
+    import Gait_old.Resources.param_asym_1 as param_search_space
 
 # Set algorithms
 algs = c.algs
@@ -41,7 +42,7 @@ if 'overlap_strong' in algs:
     objective_function_all.append('step_detection_two_sides_overlap_strong')
     space_all.append(param_search_space.space_overlap_strong)
 if 'combined' in algs:
-    objective_function_all.append('step_detection_two_sides_combined_signal')
+    objective_function_all.append('step_detection_fusion_low_level')
     space_all.append(param_search_space.space_combined)
 if 'rhs' in algs:
     objective_function_all.append('step_detection_single_side_rhs')
