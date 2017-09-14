@@ -52,6 +52,32 @@ def string_to_int_list(input_string, replace_dot_zero=True):
     return z
 
 
+def string_to_float_list(input_string):
+    """
+    Convert the input (a string) into a float list.
+
+    Input:
+        str (String): The string input. It should generally be a list in string format, such as '[0.2, 33.1, 22, 8.55]'
+
+    Output:
+        z (list): The input string converted into a list, with newlines and brackets handled
+    """
+
+    # Check if input is string. If not return the input
+    if not isinstance(input_string, str):
+        return input_string
+
+    # Convert string to list
+    z = input_string.replace('\n', '')
+    z = z.replace('[', '')
+    z = z.replace(']', '')
+    z = z.replace(' ', ',')
+    z = z.split(sep=',')
+    z = list(filter(None, z))
+    z = [float(i) for i in z]
+    return z
+
+
 def multi_intersect(input_tuple):
     """
     Return the intersection of the all the content within the input tuple
