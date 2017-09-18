@@ -17,9 +17,9 @@ from Utils.Preprocessing.other_utils import split_data
 
 # Set search spaces
 if c.search_space == 'param1':
-    import Gait.Resources.param_space_1 as param_search_space
+    import Gait.ParameterOptimization.ParamSearchSpace.param_space_1 as param_search_space
 if c.search_space == 'param_asym_1':
-    import Gait.Resources.param_asym_1 as param_search_space
+    import Gait.ParameterOptimization.ParamSearchSpace.param_asym_1 as param_search_space
 
 # Set algorithms
 algs = c.algs
@@ -28,16 +28,16 @@ objective_functions = list()
 if 'lhs' in algs:
     search_spaces.append(param_search_space.space_single_side)
     objective_functions.append(o.objective_step_detection_single_side_lhs)
-if 'intersection' in algs:
-    search_spaces.append(param_search_space.space_fusion_high_level)
-    objective_functions.append(o.step_detection_fusion_high_level_intersection)
-if 'union' in algs:
-    search_spaces.append(param_search_space.space_fusion_high_level)
+if 'fusion_high_level_intersect' in algs:
+    search_spaces.append(param_search_space.space_fusion_high_level_intersect)
+    objective_functions.append(o.step_detection_fusion_high_level_intersect)
+if 'fusion_high_level_union' in algs:
+    search_spaces.append(param_search_space.space_fusion_high_level_union)
     objective_functions.append(o.step_detection_fusion_high_level_union)
-if 'sum' in algs:
+if 'fusion_low_level_sum' in algs:
     search_spaces.append(param_search_space.space_fusion_low_level)
     objective_functions.append(o.step_detection_fusion_low_level_sum)
-if 'diff' in algs:
+if 'fusion_low_level_diff' in algs:
     search_spaces.append(param_search_space.space_fusion_low_level)
     objective_functions.append(o.step_detection_fusion_low_level_diff)
 if 'rhs' in algs:
@@ -117,6 +117,7 @@ df_gait_measures_by_alg_all = []
 for i in range(len(objective_functions)):
     space = search_spaces[i]
     objective = objective_functions[i]
+    obj_func_name = objective_functions[i].__name__.replace('objective_','')
     if alg == 'tpe':
         opt_algorithm = tpe.suggest
     elif alg == 'random':
@@ -137,12 +138,13 @@ for i in range(len(objective_functions)):
         # Optimize each fold
         space['metric'] = metric
         space['verbose'] = do_verbose
+        space['max_dist_from_apdm'] = c.max_dist_from_apdm_for_comparing_events
         if c.do_multi_core:
             # The parallel function. It is defined each time so that it uses various parameters from the outer
             # scope: objective, space, opt_algorithm, and max_evals
             def par_fmin(k_iter):
                 print('************************************************************************')
-                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + objective_functions[i] +
+                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
                       '.   Using ' + alg + " search.   Running fold " + str(k_iter + 1) + ' of ' + str(n_folds) +
                       '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
@@ -159,7 +161,7 @@ for i in range(len(objective_functions)):
         else:
             for k in range(n_folds):
                 print('************************************************************************')
-                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + objective_functions[i] +
+                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
                       '.   Using ' + alg + " search.   Running fold " + str(k + 1) + ' of ' + str(n_folds) +
                       '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
@@ -171,7 +173,7 @@ for i in range(len(objective_functions)):
                 results.append(res)
 
                 # show progress
-                with open(join(save_dir, objective_functions[i] + '_walk_task' + str(walk_tasks[j]) + '_fold_' +
+                with open(join(save_dir, obj_func_name + '_walk_task' + str(walk_tasks[j]) + '_fold_' +
                           str(k+1)), 'wb') as fp:
                     results2 = [results, train_all, test_all]
                     pickle.dump(results2, fp)
@@ -212,9 +214,9 @@ for i in range(len(objective_functions)):
         save_results['train'] = train
         save_results['test'] = test
         r = pd.DataFrame(save_results)
-        r.to_csv(join(save_dir, objective_functions[i] + '_walk_task' + str(walk_tasks[j]) + '_all.csv'))
+        r.to_csv(join(save_dir, obj_func_name + '_walk_task' + str(walk_tasks[j]) + '_all.csv'))
 
-        with open(join(save_dir, objective_functions[i] + '_walk_task' + str(walk_tasks[j]) + '_all'), 'wb') as fp:
+        with open(join(save_dir, obj_func_name + '_walk_task' + str(walk_tasks[j]) + '_all'), 'wb') as fp:
             to_save = [save_results, train_all, test_all]
             pickle.dump(to_save, fp)
 
@@ -240,43 +242,15 @@ print('***Summarizing and saving results***')
 file_name = sum_results(save_dir, return_file_path=True)
 sum_results_for_plotting_parameters(file_name, save_dir)
 
-# Create performance metric plots
-data_file = join(save_dir, file_name)
-create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True, show_plot=False)
-create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True, show_plot=False)
-
 # Summarize and save gait measure results
 metrics = ['cadence', 'step_time_asymmetry', 'step_time_asymmetry2_median', 'stride_time_var',
            'toe_off_asymmetry_median']
-if c.tasks_to_optimize == 'both_split_and_all':
-    save_name1 = 'gait_measures_split.csv'
-    gait_measure_analysis(df_gait_measures_by_alg_split, save_dir, save_name1, algs, metrics, prefix='split')
-    save_name2 = 'gait_measures_all.csv'
-    gait_measure_analysis(df_gait_measures_by_alg_all, save_dir, save_name2, algs, metrics, prefix='all')
-
-    data_file = join(save_dir, save_name1)
-    create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape_split.png', rotate=True,
-                                       show_plot=False)
-    create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse_split.png', rotate=True,
-                                       show_plot=False)
-    create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse_split.png', rotate=True,
-                                       show_plot=False, y_min=-20)
-
-    data_file = join(save_dir, save_name2)
-    create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape_all.png', rotate=True,
-                                       show_plot=False)
-    create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse_all.png', rotate=True,
-                                       show_plot=False)
-    create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse_all.png', rotate=True,
-                                       show_plot=False, y_min=-20)
-
-else:
-    save_name = 'gait_measures.csv'
-    gait_measure_analysis(df_gait_measures_by_alg, save_dir, save_name, algs, metrics)
-    data_file = join(save_dir, save_name)
-    create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape2.png', rotate=True,
-                                       show_plot=False)
-    create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse2.png', rotate=True,
-                                       show_plot=False)
-    create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse2.png', rotate=True,
-                                       show_plot=False, y_min=-20)
+save_name = 'gait_measures.csv'
+gait_measure_analysis(df_gait_measures_by_alg, save_dir, save_name, algs, metrics)
+data_file = join(save_dir, save_name)
+create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape2.png', rotate=True,
+                                   show_plot=False)
+create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse2.png', rotate=True,
+                                   show_plot=False)
+create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse2.png', rotate=True,
+                                   show_plot=False, y_min=-20)

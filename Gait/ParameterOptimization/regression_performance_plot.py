@@ -52,7 +52,10 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
         true_label = 'sc_manual'
         if true_label in algs: algs.remove(true_label)
         # Set order
-        algs.insert(0, algs.pop(algs.index('sc_combined')))
+        algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_union')))
+        algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_intersect')))
+        algs.insert(0, algs.pop(algs.index('sc_fusion_low_level_diff')))
+        algs.insert(0, algs.pop(algs.index('sc_fusion_low_level_sum')))
         algs.insert(0, algs.pop(algs.index('sc_rhs')))
         algs.insert(0, algs.pop(algs.index('sc_lhs')))
 
@@ -104,7 +107,7 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
 
     groups = means
     errors = stds
-    colors = ['r', 'g', 'b', 'm', 'k']
+    colors = ['r', 'm', 'b', 'c', 'g', 'k']
 
     x = range(len(groups[0]))
     list_dots = list()

@@ -22,7 +22,7 @@ def objective_step_detection_single_side_rhs(p):
     return get_obj_function_results(s, 'rhs', p['metric'], verbose=p['verbose'])
 
 
-def step_detection_fusion_high_level_intersection(p):
+def step_detection_fusion_high_level_intersect(p):
     s = create_sd_class_for_obj_functions()
     s.select_specific_samples(p['sample_ids'])
     s.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None, use_single_max_min_for_all_samples=True,

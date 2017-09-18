@@ -3,7 +3,7 @@ import Gait.Resources.config as c
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.stats import pearsonr
-from Gait.Resources.gait_utils import read_apdm_measures
+import pickle
 from Gait.Pipeline.StepDetection import StepDetection
 
 
@@ -11,7 +11,9 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
     # Read data
     alg_res = pd.read_csv(alg_data_file, index_col='SampleId')
     idx = alg_res.index.tolist()
-    apdm_measures = read_apdm_measures(idx)
+    with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
+        apdm_measures_tmp = pickle.load(fp)
+        apdm_measures = apdm_measures_tmp.iloc[[i for i in idx]]
 
     # Loop of plots for different metrics
     for metric in apdm_metrics:

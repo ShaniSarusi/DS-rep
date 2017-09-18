@@ -2,12 +2,13 @@ from os.path import join, sep
 from os import getcwd
 
 n_folds = 5
-max_evals = 4
+max_evals = 50
 opt_alg = 'random'  # Can be 'tpe' or 'random'
 do_verbose = False
 tasks_to_optimize = 'all'
+max_dist_from_apdm_for_comparing_events = 0.9
 
-algs = ['lhs', 'rhs', 'intersection', 'union', 'sum', 'diff']
+algs = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union', 'fusion_low_level_sum', 'fusion_low_level_diff']
 
 metric_to_optimize = 'sc_rmse'
 search_space = 'param1'

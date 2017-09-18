@@ -162,23 +162,6 @@ def evaluate_on_test_set(p_space, p_res, test_set, objective, fold_i=None, folds
     return root_mean_squared_error, mape, params
 
 
-def read_apdm_measures(idx):
-    # Read APDM measures
-    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
-        sample = pickle.load(fp)
-    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
-        acc = pickle.load(fp)
-    with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
-        apdm_measures = pickle.load(fp)
-    with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
-        apdm_events = pickle.load(fp)
-    sd = StepDetection(acc, sample, apdm_measures, apdm_events)
-    sd.select_specific_samples(idx)
-    apdm_measures = sd.apdm_measures
-    del sd
-    return apdm_measures
-
-
 def get_obj_function_results(s, alg_name, metric, verbose=True):
     if metric == 'get_res':
         return s.res
