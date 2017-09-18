@@ -1,22 +1,21 @@
 import pickle
 from os.path import join
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-from Sandbox.Zeev import Gait_old as c
+import Gait.Resources.config as c
 from Utils.DataHandling.data_processing import string_to_int_list
+
 
 # APDM events TODO need to sort
 with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
     apdm_events = pickle.load(fp)
-apdm_events['initial'] = apdm_events['Gait_old - Lower Limb - Initial Contact L (s)'] + apdm_events['Gait_old - Lower Limb - Initial Contact R (s)']
-apdm_events['initial_lhs'] = apdm_events['Gait_old - Lower Limb - Initial Contact L (s)']
-apdm_events['initial_rhs'] = apdm_events['Gait_old - Lower Limb - Initial Contact R (s)']
-apdm_events['off'] = apdm_events['Gait_old - Lower Limb - Toe Off L (s)'] + apdm_events['Gait_old - Lower Limb - Toe Off R (s)']
-apdm_events['off_lhs'] = apdm_events['Gait_old - Lower Limb - Toe Off L (s)']
-apdm_events['off_rhs'] = apdm_events['Gait_old - Lower Limb - Toe Off R (s)']
+apdm_events['initial'] = apdm_events['Gait - Lower Limb - Initial Contact L (s)'] + apdm_events['Gait - Lower Limb - Initial Contact R (s)']
+apdm_events['initial_lhs'] = apdm_events['Gait - Lower Limb - Initial Contact L (s)']
+apdm_events['initial_rhs'] = apdm_events['Gait - Lower Limb - Initial Contact R (s)']
+apdm_events['off'] = apdm_events['Gait - Lower Limb - Toe Off L (s)'] + apdm_events['Gait - Lower Limb - Toe Off R (s)']
+apdm_events['off_lhs'] = apdm_events['Gait - Lower Limb - Toe Off L (s)']
+apdm_events['off_rhs'] = apdm_events['Gait - Lower Limb - Toe Off R (s)']
 df = pd.concat([apdm_events['initial'], apdm_events['initial_lhs'], apdm_events['initial_rhs'], apdm_events['off'],
                 apdm_events['off_lhs'], apdm_events['off_rhs']], axis=1)
 
@@ -94,7 +93,7 @@ for apdm_gait_stage in apdm_gait_stages:
 
 # alg to plot
 alg_to_plot = 'lhs'
-alg_to_plot = 'overlap_strong'
+alg_to_plot = 'fusion_high_level_union'
 
 on_lhs_bp = [item for sublist in initial_lhs['idx_' + alg_to_plot].tolist() for item in sublist]
 on_rhs_bp = [item for sublist in initial_rhs['idx_' + alg_to_plot].tolist() for item in sublist]
@@ -114,7 +113,7 @@ plt.savefig('gait_stage_' + alg_to_plot + '.png')
 
 
 alg1 = 'lhs'
-alg2 = 'overlap_strong'
+alg2 = 'fusion_high_level_union'
 off_lhs_alg1 = [item for sublist in off_lhs['idx_' + alg1].tolist() for item in sublist]
 off_rhs_alg1 = [item for sublist in off_rhs['idx_' + alg1].tolist() for item in sublist]
 off_lhs_alg2 = [item for sublist in off_lhs['idx_' + alg2].tolist() for item in sublist]

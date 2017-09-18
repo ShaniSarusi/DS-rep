@@ -1,22 +1,13 @@
-# External imports
 import pickle
-from math import sqrt, ceil
 from os.path import join
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error
-
-from Sandbox.Zeev import Gait_old as c
-from Utils.BasicStatistics.statistics_functions import cv, mean_and_std
-from Utils.Preprocessing.denoising import moving_average_no_nans, butter_lowpass_filter
-from Utils.Preprocessing.other_utils import normalize_max_min
-from Utils.Preprocessing.projections import project_gravity
-# Imports from Utils
+import Gait.Resources.config as c
+from Utils.BasicStatistics.statistics_functions import cv
+from Utils.Preprocessing.denoising import moving_average_no_nans
+from Utils.Preprocessing.other_utils import normalize_max_min, reduce_dim_3_to_1
 from Utils.SignalProcessing.peak_detection_and_handling import run_peak_utils_peak_detection, \
-    merge_adjacent_peaks_from_single_signal, \
-    score_max_peak_within_fft_frequency_range, merge_adjacent_peaks_from_two_signals_opt2
+    merge_peaks_from_two_signals
 
 
 class StepDetection:
@@ -30,7 +21,6 @@ class StepDetection:
         self.lhs = []
         self.rhs = []
         self.combined_signal = []
-        self.combined_signal_abs = []
         self.res = pd.DataFrame()
         self._set_manual_count_result()
 
@@ -62,183 +52,131 @@ class StepDetection:
                 if self.apdm_events is not None:
                     self.apdm_events = self.apdm_events.iloc[[i for i in sample_ids]]
 
-    def step_detection_single_side(self, side='lhs', signal_to_use='norm', smoothing=None, mva_win=20,
-                                   vert_win=None, butter_freq=10, use_all_samples_for_max_min=True,
-                                   peak_param1=10, peak_param2=20,
-                                   weak_signal_thresh=None, verbose=True):
+    def step_detection_single_side(self, side='lhs', signal_to_use='norm', vert_win=None,
+                                   use_single_max_min_for_all_samples=True, smoothing=None, mva_win=20,
+                                   peak_min_thr=0.2, peak_min_dist=20, verbose=True):
         if verbose: print("Running: step_detection_single_side on side: " + side)
 
         # Choose side
         data = [self.acc[i][side] for i in range(len(self.acc))]
 
         # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
-        if verbose: print("\tStep: Selecting " + signal_to_use + " signal")
-        if signal_to_use == 'norm':
-            data = [data[i]['n'] for i in range(len(data))]
-        if signal_to_use == 'vertical':
-            if verbose and vert_win is not None: print("\tStep: Vertical projection window size is: " + str(vert_win))
-            data = [project_gravity(data[i]['x'], data[i]['y'], data[i]['z'], num_samples_per_interval=vert_win,
-                                    return_only_vertical=True) for i in range(len(data))]
+        data = reduce_dim_3_to_1(data, signal_to_use, vert_win, verbose)
 
         # Normalize between 0 and 1 using min and max signal of all samples
-        data = normalize_max_min(data, use_all_samples_for_max_min=use_all_samples_for_max_min)
+        data = normalize_max_min(data, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
 
         # Smoothing
         if smoothing == 'mva':
             data = [moving_average_no_nans(data[i], mva_win) for i in range(len(data))]
             if verbose: print("\tStep: Smoothing, using " + smoothing + " with window size " + str(mva_win))
-        if smoothing == 'butter':
-            if verbose: print("\tStep: Smoothing, using " + smoothing + "filter with frequency " + str(butter_freq))
-            data = [butter_lowpass_filter(data[i], butter_freq, self.sampling_rate, order=5) for i in range(len(data))]
-        # TODO add option for lowpass and highpass bf. maybe just do in single one, with low zero being highpass.
-
-
 
         # Peak detection
-        idx = None
-        if verbose: print("\tStep: Peak detection, using " + peak_type + " with params: " + str(peak_param1) + " and " +
-                          str(peak_param2))
-        idx = [run_peak_utils_peak_detection(data[i], peak_param1, peak_param2) for i in range(len(data))]
+        if verbose: print("\tStep: Peak detection-1st order with min peak height [0-1]: " + str(peak_min_thr) +
+                          " and min distance between peaks: " + str(peak_min_dist))
+        idx = [run_peak_utils_peak_detection(data[i], peak_min_thr, peak_min_dist) for i in range(len(data))]
 
         # Save results
         if verbose: print("\tStep: Saving results")
-        res = pd.Series(idx, index=self.res.index, name='idx_' + side)
+        alg_name = side
+        res = pd.Series(idx, index=self.res.index, name='idx_' + alg_name)
         self.res = pd.concat([self.res, res], axis=1)
 
-    def step_detection_fusion_high_level(self, signal_to_use='norm', smoothing=None, mva_win=15,
-                                         vert_win=None, butter_freq=12, use_all_samples_for_max_min=True,
-                                         peak_param1=2,
-                                         peak_param2=15, win_size_merge=25, win_size_remove_adjacent_peaks=20, z=0.5,
+    def step_detection_fusion_high_level(self, signal_to_use='norm', vert_win=None,
+                                         use_single_max_min_for_all_samples=True, smoothing=None, mva_win=15,
+                                         peak_min_thr=0.2, peak_min_dist=20, fusion_type='intersect',
+                                         intersect_win=25, union_min_dist=20, union_min_thresh=0.5,
                                          verbose=True):
 
-        if verbose: print("Running: step_detection_two_sides_overlap on side with single side strong option")
+        if verbose: print("Running: step_detection_fusion_high_level - " + str(fusion_type))
 
         # Set data
         lhs = [self.acc[i]['lhs'] for i in range(len(self.acc))]
         rhs = [self.acc[i]['rhs'] for i in range(len(self.acc))]
 
         # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
-        if verbose: print("\tStep: Selecting " + signal_to_use + " signal")
-        if signal_to_use == 'norm':
-            lhs = [lhs[i]['n'] for i in range(len(lhs))]
-            rhs = [rhs[i]['n'] for i in range(len(rhs))]
-        if signal_to_use == 'vertical':
-            if verbose and vert_win is not None: print("\tStep: Vertical projection window size is: " + str(vert_win))
-            lhs = [project_gravity(lhs[i]['x'], lhs[i]['y'], lhs[i]['z'], num_samples_per_interval=vert_win,
-                                   return_only_vertical=True) for i in range(len(lhs))]
-            rhs = [project_gravity(rhs[i]['x'], rhs[i]['y'], rhs[i]['z'], num_samples_per_interval=vert_win,
-                                   return_only_vertical=True) for i in range(len(rhs))]
+        lhs = reduce_dim_3_to_1(lhs, signal_to_use, vert_win, verbose)
+        rhs = reduce_dim_3_to_1(rhs, signal_to_use, vert_win, verbose)
+
+        # Normalize between 0 and 1 using min and max signal of all samples
+        lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+        rhs = normalize_max_min(rhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
 
         # Smoothing
         if smoothing == 'mva':
             if verbose: print("\tStep: Smoothing, using " + smoothing + " with window size " + str(mva_win))
             lhs = [moving_average_no_nans(lhs[i], mva_win) for i in range(len(lhs))]
             rhs = [moving_average_no_nans(rhs[i], mva_win) for i in range(len(rhs))]
-        if smoothing == 'butter':
-            if verbose: print("\tStep: Smoothing, using " + smoothing + "filter with frequency " + str(butter_freq))
-            lhs = [butter_lowpass_filter(lhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(lhs))]
-            rhs = [butter_lowpass_filter(rhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(rhs))]
-        # TODO add option for lowpass and highpass bf. maybe just do in single one, with low zero being highpass.
-
-        # Normalize between 0 and 1 using min and max signal of all samples
-        lhs = normalize_max_min(lhs, use_all_samples_for_max_min=use_all_samples_for_max_min)
-        rhs = normalize_max_min(rhs, use_all_samples_for_max_min=use_all_samples_for_max_min)
 
         # Peak detection
-        if verbose: print("\tStep: Peak detection, using " + peak_type + " with params: " + str(peak_param1) + " and " +
-                          str(peak_param2))
-        idx_lhs = [run_peak_utils_peak_detection(lhs[i], peak_param1, peak_param2) for i in range(len(lhs))]
-        idx_rhs = [run_peak_utils_peak_detection(rhs[i], peak_param1, peak_param2) for i in range(len(rhs))]
+        if verbose: print("\tStep: Peak detection-1st order with min peak height [0-1]: " + str(peak_min_thr) +
+                          " and min distance between peaks: " + str(peak_min_dist))
+        idx_lhs = [run_peak_utils_peak_detection(lhs[i], peak_min_thr, peak_min_dist) for i in range(len(lhs))]
+        idx_rhs = [run_peak_utils_peak_detection(rhs[i], peak_min_thr, peak_min_dist) for i in range(len(rhs))]
 
         # Merge adjacent peaks from both sides into single peaks
-        if verbose: print("\tStep: Merge adjacent peaks from both sides into single peaks with window: " +
-                          str(win_size_merge))
-        merged_peaks = [merge_adjacent_peaks_from_two_signals_opt2(idx_lhs[i], idx_rhs[i], lhs[i][idx_lhs[i]],
-                                                                   rhs[i][idx_rhs[i]], win_size_merge, z=z) for i in
-                        range(len(lhs))]
-
-        # Merge adjacent peaks from the merged peaks before
-        if verbose: print("\tStep: Merge adjacent peaks from the merged peaks before with window: " +
-                          str(win_size_remove_adjacent_peaks))
-        idx = [merge_adjacent_peaks_from_single_signal(merged_peaks[i], win_size_remove_adjacent_peaks) for i in
-               range(len(merged_peaks))]
+        if verbose:
+            if fusion_type == 'intersect':
+                print("\tStep: Merging peaks from both sides. Max distance for intersect: " + str(intersect_win))
+            else:
+                print("\tStep: Merging peaks from both sides. Max distance for intersect: " + str(intersect_win) +
+                      ". Min dist for union: " + str(union_min_dist) + ". Min peak thresh-union: " +
+                      str(union_min_thresh))
+        idx = [merge_peaks_from_two_signals(idx_lhs[i], idx_rhs[i], lhs[i][idx_lhs[i]], rhs[i][idx_rhs[i]],
+                                            merge_type=fusion_type, intersect_win_size=intersect_win,
+                                            union_min_dist=union_min_dist, union_min_thresh=union_min_thresh) for i
+                                            in range(len(lhs))]
 
         # Save results
         if verbose: print("\tStep: Saving results")
-        res = pd.Series(idx, index=self.res.index, name='idx_' + 'overlap_strong')
+        alg_name = 'fusion_high_level_' + str(fusion_type)
+        res = pd.Series(idx, index=self.res.index, name='idx_' + alg_name)
         self.res = pd.concat([self.res, res], axis=1)
 
-    def step_detection_fusion_low_level(self, signal_to_use='norm', smoothing=None, mva_win=15, vert_win=None,
-                                        butter_freq=12, mva_win_combined=40, use_all_samples_for_max_min=True,
-                                        peak_param1=0.5, peak_param2=30,
-                                        verbose=True):
+    def step_detection_fusion_low_level(self, signal_to_use='norm', vert_win=None, smoothing=None, mva_win=15,
+                                        use_single_max_min_for_all_samples=True, fusion_type='sum', mva_win_combined=40,
+                                        peak_min_thr=0.2, peak_min_dist=30, verbose=True):
 
-        if verbose: print("Running: step_detection_fusion_low_level on side")
+        if verbose: print("Running: step_detection_fusion_low_level with fusion type: " + str(fusion_type))
 
         # Set data
         lhs = [self.acc[i]['lhs'] for i in range(len(self.acc))]
         rhs = [self.acc[i]['rhs'] for i in range(len(self.acc))]
 
         # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
-        if verbose: print("\tRunning: Selecting " + signal_to_use + " signal")
-        if signal_to_use == 'norm':
-            lhs = [lhs[i]['n'] for i in range(len(lhs))]
-            rhs = [rhs[i]['n'] for i in range(len(rhs))]
-        if signal_to_use == 'vertical':
-            if verbose and vert_win is not None: print("\tStep: Vertical projection window size is: " + str(vert_win))
-            lhs = [project_gravity(lhs[i]['x'], lhs[i]['y'], lhs[i]['z'], num_samples_per_interval=vert_win,
-                                   return_only_vertical=True) for i in range(len(lhs))]
-            rhs = [project_gravity(rhs[i]['x'], rhs[i]['y'], rhs[i]['z'], num_samples_per_interval=vert_win,
-                                   return_only_vertical=True) for i in range(len(rhs))]
+        lhs = reduce_dim_3_to_1(lhs, signal_to_use, vert_win, verbose)
+        rhs = reduce_dim_3_to_1(rhs, signal_to_use, vert_win, verbose)
+
+        # Normalize between 0 and 1 using min and max signal of all samples
+        lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+        rhs = normalize_max_min(rhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
 
         # Smoothing
         if smoothing == 'mva':
             if verbose: print("\tStep: Smoothing, using " + smoothing + " with window size " + str(mva_win))
             lhs = [moving_average_no_nans(lhs[i], mva_win) for i in range(len(lhs))]
             rhs = [moving_average_no_nans(rhs[i], mva_win) for i in range(len(rhs))]
-        if smoothing == 'butter':
-            if verbose: print("\tStep: Smoothing, using " + smoothing + "filter with frequency " + str(butter_freq))
-            lhs = [butter_lowpass_filter(lhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(lhs))]
-            rhs = [butter_lowpass_filter(rhs[i], butter_freq, self.sampling_rate, order=5) for i in range(len(rhs))]
-        # TODO add option for lowpass and highpass bf. maybe just do in single one, with low zero being highpass.
-
-        # Normalize between 0 and 1 using min and max signal of all samples
-        lhs = normalize_max_min(lhs, use_all_samples_for_max_min=use_all_samples_for_max_min)
-        rhs = normalize_max_min(rhs, use_all_samples_for_max_min=use_all_samples_for_max_min)
 
         # Combine signals
-        if verbose: print("\tStep: Combining signals")
-        combined_signal = [lhs[i] + rhs[i] for i in range(len(lhs))]
-        combined_signal_abs = [np.abs(lhs[i]) + np.abs(rhs[i]) for i in range(len(lhs))]
-
-        # Save the combined signal to enable plotting
-        self.combined_signal = combined_signal
-        self.combined_signal_abs = combined_signal_abs
+        if verbose: print("\tStep: Combining signals- " + str(fusion_type))
+        if fusion_type == 'sum':
+            self.combined_signal = [lhs[i] + rhs[i] for i in range(len(lhs))]
+        if fusion_type == 'diff':
+            self.combined_signal = [np.abs(lhs[i] - rhs[i]) for i in range(len(lhs))]
 
         # Smooth the combined signal
         if verbose: print("\tStep: Smoothing the combined signals using mva with window " + str(mva_win_combined))
-        combined_signal = [moving_average_no_nans(combined_signal[i], mva_win_combined) for i in range(len(lhs))]
-        combined_signal_abs = [moving_average_no_nans(combined_signal_abs[i], mva_win_combined) for i in
-                               range(len(lhs))]
-
-        # Select which combined signal to use by choosing the more oscillatory signal (sine-like). Do this using fft.
-        if verbose: print("\tStep: Select which combined signal to use by choosing the more sine-like signal")
-        score_combined = [score_max_peak_within_fft_frequency_range(combined_signal[i], self.sampling_rate, min_hz,
-                                                                    max_hz, show=False) for i in range(len(lhs))]
-        score_combined = [factor * score_combined[i] for i in range(len(lhs))]
-        score_combined_abs = [score_max_peak_within_fft_frequency_range(combined_signal_abs[i], self.sampling_rate,
-                              min_hz, max_hz, show=False) for i in range(len(lhs))]
-        signal = [combined_signal[i].as_matrix() if (score_combined > score_combined_abs) else
-                  combined_signal_abs[i].as_matrix() for i in range(len(lhs))]
+        signal = [moving_average_no_nans(x, mva_win_combined) for x in self.combined_signal]
 
         # Run peak detection
-        if verbose: print("\tStep: Peak detection, using " + peak_type + " with params: " + str(peak_param1) + " and " +
-                          str(peak_param2))
-        idx = [run_peak_utils_peak_detection(signal[i], peak_param1, peak_param2) for i in range(len(signal))]
+        if verbose: print("\tStep: Peak detection-1st order with min peak height [0-1]: " + str(peak_min_thr) +
+                          " and min distance between peaks: " + str(peak_min_dist))
+        idx = [run_peak_utils_peak_detection(x, peak_min_thr, peak_min_dist) for x in signal]
 
         # Save results
         if verbose: print("\tStep: Saving results")
-        res = pd.Series(idx, index=self.res.index, name='idx_' + 'combined')
+        alg_name = 'fusion_low_level_' + str(fusion_type)
+        res = pd.Series(idx, index=self.res.index, name='idx_' + alg_name)
         self.res = pd.concat([self.res, res], axis=1)
 
     def add_gait_metrics(self, verbose=True, max_dist_from_apdm=1234.5):
@@ -252,7 +190,6 @@ class StepDetection:
         self.add_step_and_stride_time_variability(cols, n_samples)
         self.add_step_time_asymmetry(cols, n_samples)
         self.add_step_time_asymmetry2(cols, n_samples)
-        # self.add_gait_pci_asymmetry()
 
     def add_total_step_count_and_cadence(self, cols, n_samples):
         for col in cols:
@@ -274,11 +211,12 @@ class StepDetection:
                     step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
                                  / np.timedelta64(1, 's')
                     if max_dist_from_apdm != 1234.5:
-                        apdm_i = np.sort(np.array(self.apdm_events['Gait_old - Lower Limb - Toe Off L (s)'].iloc[i] +
-                                                  self.apdm_events['Gait_old - Lower Limb - Toe Off R (s)'].iloc[i]))
-                        step_times = np.array([step_time for step_time in step_times if
-                                               np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
-                    step_durations_i = np.diff(step_times)
+                        apdm_i = np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[i] +
+                                                  self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[i])
+                        if not np.any(np.isnan(apdm_i)):
+                            step_times = np.array([step_time for step_time in step_times if
+                                                   np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
+                            step_durations_i = np.diff(step_times)
                 step_durations.append(step_durations_i)
 
             stride_durations = []
@@ -366,172 +304,10 @@ class StepDetection:
             res = pd.Series(asym_mean, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry2_median_'))
             self.res = pd.concat([self.res, res], axis=1)
 
-    def create_results_table(self, ids, algo='lhs', save_name=None):
-        # Define data frame
-        idx = ['Step count', 'Cadence', 'Step time asymmetry (%)',
-               'Stride time variability side1 (CV)', 'Stride time variability side2 (CV)',
-               'Step time variability side1 (CV)', 'Step time variability side2 (CV)']
-        df = pd.DataFrame(index=idx, columns=['manual', 'alg', 'mean error', 'rmse', 'rmse_combined', 'rmse_overlap',
-                                              'rmse_lhs', 'rmse_rhs'])
-        df.index.name = 'metric'
-
-        # Step count
-        df.set_value('Step count', 'manual', mean_and_std(self.res.loc[ids]['sc_manual']))
-        df.set_value('Step count', 'alg', mean_and_std(self.res.loc[ids]['sc_' + algo]))
-        err = (self.res.loc[ids]['sc_' + algo].mean() - self.res.loc[ids]['sc_manual'].mean()) / \
-            self.res.loc[ids]['sc_manual'].mean()
-        rmse = sqrt(mean_squared_error(self.res.loc[ids]['sc_manual'], self.res.loc[ids]['sc_' + algo]))
-        normalized_rmse = rmse / self.res.loc[ids]['sc_manual'].mean()
-        df.set_value('Step count', 'mean error', str(round(100.0*err, 2)) + "%")
-        df.set_value('Step count', 'rmse', str(round(100.0*normalized_rmse, 2)) + "%")
-
-        algorithms = ['lhs', 'rhs', 'overlap', 'combined']
-        for algorithm in algorithms:
-            normalized_rmse = sqrt(
-                mean_squared_error(self.res.loc[ids]['sc_manual'], self.res.loc[ids]['sc_' + algorithm])) / \
-                              self.res.loc[ids]['sc_manual'].mean()
-            df.set_value('Step count', 'rmse_' + algorithm, str(round(100.0 * normalized_rmse, 2)) + "%")
-
-        # Cadence
-        df.set_value('Cadence', 'manual', mean_and_std(self.res.loc[ids]['cadence_manual']))
-        df.set_value('Cadence', 'alg', mean_and_std(self.res.loc[ids]['cadence_' + algo]))
-        err = (self.res.loc[ids]['cadence_' + algo].mean() - self.res.loc[ids]['cadence_manual'].mean()) / \
-            self.res.loc[ids]['cadence_manual'].mean()
-        rmse = sqrt(mean_squared_error(self.res.loc[ids]['cadence_manual'], self.res.loc[ids]['cadence_' + algo]))
-        normalized_rmse = rmse / self.res.loc[ids]['cadence_manual'].mean()
-        df.set_value('Cadence', 'mean error', str(round(100.0*err, 2)) + "%")
-        df.set_value('Cadence', 'rmse', str(round(100.0*normalized_rmse, 2)) + "%")
-
-        # Asymmetry - stride and step time
-        # df.set_value('Stride time asymmetry (%)', 'alg',
-        # GaitUtils.mean_and_std(self.res.loc[ids]['stride_time_asymmetry']))
-        df.set_value('Step time asymmetry (%)', 'alg', mean_and_std(self.res.loc[ids]['step_time_asymmetry_' + algo]))
-
-        # Variability - stride and step time
-        df.set_value('Stride time variability side1 (CV)', 'alg', cv(self.res.loc[ids]['stride_time_var_side1_' +
-                     algo]))
-        df.set_value('Stride time variability side2 (CV)', 'alg', cv(self.res.loc[ids]['stride_time_var_side2_' + algo]))
-        df.set_value('Step time variability side1 (CV)', 'alg', cv(self.res.loc[ids]['step_time_var_side1_' + algo]))
-        df.set_value('Step time variability side2 (CV)', 'alg', cv(self.res.loc[ids]['step_time_var_side2_' + algo]))
-
-        # Store and save
-        self.summary_table = df
-        if save_name is not None:
-            self.summary_table.to_csv(save_name)
-
     def save(self, path):
         print("\rRunning: Saving data")
         with open(path, 'wb') as f:
             pickle.dump(self, f)
-
-    def plot_step_count_comparison_scatter(self, sc_algo_column_name='sc_lhs', ptype=1, idx=None, save_name=None,
-                                           show=True, p_rmse=False):
-        if idx is None:
-            sc_alg = self.res[sc_algo_column_name]
-            sc_manual = self.res['sc_manual']
-        else:
-            sc_alg = self.res.loc[idx][sc_algo_column_name]
-            sc_manual = self.res.loc[idx]['sc_manual']
-
-        if ptype == 1:
-            plt.scatter(sc_alg, sc_manual, color='b')
-            plt.ylabel('Visual step count', fontsize=22)
-            plt.xlabel('Algorithm step count', fontsize=22)
-            highest = max(max(sc_alg), max(sc_manual))
-            ax_max = int(ceil(highest / 10.0)) * 10
-            plt.ylim(0, ax_max)
-            plt.xlim(0, ax_max)
-            x = np.arange(0, ax_max)
-            plt.plot(x, x)
-        else:
-            diff = sc_alg-sc_manual
-            n_max = max(abs(diff))
-            plt.scatter(sc_manual, diff, color='b')
-            plt.ylabel('Algorithm steps - visual steps', fontsize=22)
-            plt.ylim(-n_max - 2, n_max + 2)
-            plt.xlim(min(sc_manual) - 5, max(sc_manual) + 5)
-            plt.xlabel('Visual step count', fontsize=22)
-            plt.axhline(0, color='r')
-            highest = max(max(sc_alg), max(sc_manual))
-            ax_max = int(ceil(highest / 10.0)) * 10
-
-        plt.tick_params(axis='both', which='major', labelsize=18)
-
-        # calculate rms
-        rmse = sqrt(mean_squared_error(sc_manual, sc_alg))
-        manual_mean = (sum(sc_manual) / len(sc_manual))
-        nrmse = rmse / manual_mean
-        plt.text(0.05 * ax_max, 0.9 * ax_max, 'RMS = ' + str(round(rmse, 2)), fontsize=20)
-        plt.text(0.05 * ax_max, 0.8 * ax_max, 'NRMS = ' + str(round(nrmse, 2)), fontsize=20)
-        plt.tight_layout()
-        if save_name is not None:
-            plt.savefig(save_name)
-            plt.close()
-        if show:
-            plt.show()
-        if p_rmse:
-            return round(rmse, 2)
-
-    def plot_signal_trace(self, id_num, side='both', add_val=0, show=True, font_small=True):
-        t = self.res.index == id_num
-        i = [j for j, x in enumerate(t) if x][0]
-
-        if side == 'lhs':
-            x = np.array(range(len(self.lhs[i])))/float(self.sampling_rate)
-            plt.plot(x, self.lhs[i] + add_val, label='Left')
-        if side == 'rhs':
-            x = np.array(range(len(self.rhs[i]))) / float(self.sampling_rate)
-            plt.plot(x, self.rhs[i] + add_val, label='Right')
-        if side == 'both':
-            x = np.array(range(len(self.lhs[i]))) / float(self.sampling_rate)
-            plt.plot(x, self.lhs[i] + add_val, label='Left')
-            plt.plot(x, self.rhs[i] + add_val, label='Right')
-        if side == 'combined':
-            x = np.array(range(len(self.combined_signal[i]))) / float(self.sampling_rate)
-            plt.plot(x, self.combined_signal[i] + add_val, label='Combined')
-        if side == 'combined_abs':
-            x = np.array(range(len(self.combined_signal_abs[i]))) / float(self.sampling_rate)
-            plt.plot(x, self.combined_signal_abs[i] + add_val, label='Combined_abs')
-        if side == 'lhs2rhs_ratio':
-            x = np.array(range(len(self.lhs[i]))) / float(self.sampling_rate)
-            ratio = self.lhs[i]/self.rhs[i]
-            plt.plot(x, ratio, label='Lhs2rhs_ratio')
-        if side == 'lhs_minus_rhs':
-            x = np.array(range(len(self.lhs[i]))) / float(self.sampling_rate)
-            diff = self.lhs[i] - self.rhs[i]
-            plt.plot(x, diff, label='Lhs_minus_rhs')
-        if font_small:
-            big = 18
-            med = 14
-            small = 12
-        else:
-            big = 28
-            med = 24
-            small = 18
-        # plt.xlabel('Time (128Hz)', fontsize=big)
-        plt.xlabel('Time (seconds)', fontsize=big)
-        plt.ylabel('Acceleration (m/s2)', fontsize=big)
-        plt.xticks(fontsize=med)
-        plt.yticks(fontsize=med)
-        plt.legend(fontsize=small)
-        plt.tight_layout()
-        if show:
-            plt.show()
-
-    def plot_step_idx(self, id_num, column_name='idx_lhs', p_color='k', show=True):
-        # id_num is list of indices or a sample id
-        if type(id_num) is list:
-            idx = [int(128*i) for i in id_num]
-        else:
-            t = self.res.index == id_num
-            i = [j for j, x in enumerate(t) if x][0]
-            idx = self.res.iloc[i][column_name]
-        # p_color examples:  'b', 'g', 'k'
-        for i in range(len(idx)):
-            plt.axvline(idx[i]/float(self.sampling_rate), color=p_color, ls='-.', lw=2)
-        plt.tight_layout()
-        if show:
-            plt.show()
 
 
 if __name__ == "__main__":
@@ -552,17 +328,21 @@ if __name__ == "__main__":
     sd.select_specific_samples(id_nums)
 
     # Run the step detection algorithms
-    sd.step_detection_single_side(side='lhs', signal_to_use='norm', smoothing='mva', mva_win=20, vert_win=None,
-                                  butter_freq=10, peak_type='scipy', peak_param1=10, peak_param2=20)
-    sd.step_detection_fusion_high_level(signal_to_use='norm', smoothing='mva', mva_win=15,
-                                     vert_win=None, butter_freq=12, peak_type='scipy', peak_param1=2, peak_param2=15,
-                                     win_size_merge=30, win_size_remove_adjacent_peaks=40, z=0.3, verbose=True)
+    sd.step_detection_single_side(side='lhs', signal_to_use='norm', vert_win=None,
+                               use_single_max_min_for_all_samples=True, smoothing=None, mva_win=20,
+                               peak_min_thr=0.2, peak_min_dist=20, verbose=True)
 
-    sd.step_detection_fusion_low_level(signal_to_use='norm', smoothing='mva', mva_win=15, vert_win=None,
-                                             butter_freq=12, mva_win_combined=40, min_hz=0.3, max_hz=2.0,
-                                             factor=1.1, peak_type='peak_utils', peak_param1=0.5, peak_param2=30)
+    sd.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None,
+                                         use_single_max_min_for_all_samples=True, smoothing=None, mva_win=15,
+                                         peak_min_thr=0.2, peak_min_dist=20, fusion_type='intersect',
+                                         intersect_win=25, union_min_dist=20, union_min_thresh=0.5,
+                                         verbose=True)
+
+    sd.step_detection_fusion_low_level(signal_to_use='norm', vert_win=None, smoothing=None, mva_win=15,
+                                        use_single_max_min_for_all_samples=True, fusion_type='sum', mva_win_combined=40,
+                                        peak_min_thr=0.2, peak_min_dist=30, verbose=True)
+
 
     # Create results output
     sd.add_gait_metrics(max_dist_from_apdm=0.8)
-    # sd.create_results_table(id_nums)
     sd.save(path=join(c.pickle_path, 'sc_alg'))

@@ -1,18 +1,15 @@
 import pickle
 from math import sqrt
 from os.path import join, dirname
-
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import mean_squared_error
-
-from Sandbox.Zeev import Gait_old as c
+import Gait.Resources.config as c
 from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
 
 
 def create_regression_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False,
                                        set_y_lim=True, y_min=0, y_max=30):
-
     # Set tasks
     with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
         task_filters = pickle.load(fp)
@@ -62,7 +59,7 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
         with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
             sample = pickle.load(fp)
         sample['TaskName'] = sample['TaskName'].replace('Walk - Imagine you have a cane in the right hand',
-                                   'Asymmetry - Imagine you have a cane in the right hand')
+                                                        'Asymmetry - Imagine you have a cane in the right hand')
         sample['TaskName'] = sample['TaskName'].replace('Walk - Without right shoe', 'Asymmetry - No right shoe')
 
         for i in range(len(algs)):
@@ -99,11 +96,11 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     algs = [alg.replace('sc_', '') for alg in algs]
     algs = ['Left side only' if alg == 'lhs' else alg for alg in algs]
     algs = ['Right side only' if alg == 'rhs' else alg for alg in algs]
-    algs = ['Combined raw signal' if alg == 'combined' else alg for alg in algs]
-    algs = ['Merged output - Intersection' if alg == 'overlap' else alg for alg in algs]
-    algs = ['Merged output - Union' if alg == 'overlap_strong' else alg for alg in algs]
+    algs = ['Fusion - Sum raw signal' if 'sum' in alg else alg for alg in algs]
+    algs = ['Fusion - Diff raw signal' if 'diff' in alg else alg for alg in algs]
+    algs = ['Fusion - Intersection of steps' if 'intersect' in alg else alg for alg in algs]
+    algs = ['Fusion - Union of steps' if 'union' in alg else alg for alg in algs]
     legends = algs
-
 
     groups = means
     errors = stds
@@ -113,7 +110,7 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     list_dots = list()
     gap = 1.5
     for idx, group in enumerate(groups):
-        left = [0.2 + i*gap +idx*0.15 for i in x]
+        left = [0.2 + i * gap + idx * 0.15 for i in x]
         dots = ax.errorbar(left, group, color=colors[idx], yerr=errors[idx], ecolor='k', capsize=5, fmt='o')
         list_dots.append(dots)
 
@@ -153,7 +150,7 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     plt.axhline(0, color='black', linestyle='--')
 
     plt.subplots_adjust(top=0.9, right=0.9, bottom=0.2)
-    #plt.tight_layout()
+    # plt.tight_layout()
     save_path = join(dirname(data_file), save_name)
     fig = plt.gcf()
     fig.set_size_inches(8, 5)
@@ -175,12 +172,11 @@ if __name__ == '__main__':
     # input_file = join('C:\\Users\\zwaks\\Desktop\\GaitPaper\\param_per5',
     #               'gait_measures_split.csv')
 
-
     rotate = False
     metric = 'MAPE'  # 'MAPE' or 'RMSE'
     metric = 'PE'  # 'MAPE' or 'RMSE'
     show_plot = True
     save_name = 'pe_all2.png'
-    #create_regression_performance_plot(input_file, metric, save_name, rotate, show_plot, y_min=-30)
+    # create_regression_performance_plot(input_file, metric, save_name, rotate, show_plot, y_min=-30)
     create_regression_performance_plot(input_file, metric, save_name, rotate, show_plot, y_min=-30, y_max=30)
 

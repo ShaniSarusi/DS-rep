@@ -1,36 +1,17 @@
-import pickle
 from os.path import join, dirname
-
-import Gait_old.Resources.config as c
+import Gait.Resources.config as c
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.stats import pearsonr
-
-from Sandbox.Zeev.Gait_old.Pipeline import StepDetection
-
-
-def _read_apdm_measures(idx):
-    # Read APDM measures
-    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
-        sample = pickle.load(fp)
-    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
-        acc = pickle.load(fp)
-    with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
-        apdm_measures = pickle.load(fp)
-    with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
-        apdm_events = pickle.load(fp)
-    sd = StepDetection(acc, sample, apdm_measures, apdm_events)
-    sd.select_specific_samples(idx)
-    apdm_measures = sd.apdm_measures
-    del sd
-    return apdm_measures
+from Gait.Resources.gait_utils import read_apdm_measures
+from Gait.Pipeline.StepDetection import StepDetection
 
 
 def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot=False):
     # Read data
     alg_res = pd.read_csv(alg_data_file, index_col='SampleId')
     idx = alg_res.index.tolist()
-    apdm_measures = _read_apdm_measures(idx)
+    apdm_measures = read_apdm_measures(idx)
 
     # Loop of plots for different metrics
     for metric in apdm_metrics:
@@ -100,9 +81,7 @@ if __name__ == '__main__':
     alg_data_path = join(save_path, 'gait_measures_all.csv')
     alg_data_path = join(save_path, 'gait_measures_all.csv')
 
-
-    algorithms = ['lhs', 'rhs', 'overlap', 'combined']
-    algorithms = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
+    algorithms = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union', 'fusion_low_level_sum', 'fusion_low_level_diff']
     metrics = ['cadence', 'step_time_asymmetry', 'step_time_var', 'stride_time_var']
     metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var', 'step_time_asymmetry2_median']
     metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var', 'step_time_asymmetry2_median', 'toe_off_asymmetry_median']

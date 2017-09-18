@@ -1,12 +1,10 @@
 import pickle
 from os.path import join
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
-
-from Sandbox.Zeev import Gait_old as c
+import Gait.Resources.config as c
 
 do_algorithm = True
 input_file = join('C:\\Users\\zwaks\\Desktop\\GaitPaper\\param_per5', 'gait_measures_all.csv')
@@ -19,7 +17,7 @@ y_count = sample['CadenceWithCrop'].tolist()
 
 data = pd.read_csv(input_file)
 ids = data['SampleId'].tolist()
-y_alg = data['cadence_overlap_strong'].tolist()
+y_alg = data['cadence_fusion_high_level_union'].tolist()
 
 x = [x[i] for i in ids]
 y_count = [y_count[i] for i in ids]

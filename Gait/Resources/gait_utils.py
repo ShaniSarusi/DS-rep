@@ -1,14 +1,17 @@
 import copy
 import pickle
 from os.path import join
-
-import Gait_old.Resources.config as c
+import Gait.Resources.config as c
 import numpy as np
 import pandas as pd
-from Gait_old.ParameterOptimization.compare_to_apdm import compare_to_apdm
-
-from Sandbox.Zeev.Gait_old.Pipeline import StepDetection
+from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
+from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Connections.connections import load_pickle_file_from_s3
+from hyperopt import space_eval
+import pprint
+from math import sqrt
+from sklearn.metrics import mean_squared_error
+from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
 
 
 def create_sd_class_for_obj_functions():
@@ -143,8 +146,62 @@ def calculate_time_duration_of_samples():
     return res
 
 
-# def typefilter(data, filt_data, string):
-#     filt = (filt_data == string).as_matrix()
-#     a = [i for (i, v) in zip(data, filt) if v]
-#     b = [i for (i, v) in zip(data, ~filt) if v]
-#     return a, b
+def evaluate_on_test_set(p_space, p_res, test_set, objective, fold_i=None, folds=None, verbose=False):
+    params = space_eval(p_space, p_res)
+    params['sample_ids'] = test_set
+    params['metric'] = 'both'
+    root_mean_squared_error, mape = objective(params)
+
+    # Print cross validation fold results
+    if verbose:
+        print("\nRMSE of fold " + str(fold_i + 1) + ' from ' + str(folds) + ' is ' + str(
+            round(root_mean_squared_error, 1)) + ". The param values are:")
+        pprint.pprint(params)
+        print()
+
+    return root_mean_squared_error, mape, params
+
+
+def read_apdm_measures(idx):
+    # Read APDM measures
+    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
+        sample = pickle.load(fp)
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
+        acc = pickle.load(fp)
+    with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
+        apdm_measures = pickle.load(fp)
+    with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
+        apdm_events = pickle.load(fp)
+    sd = StepDetection(acc, sample, apdm_measures, apdm_events)
+    sd.select_specific_samples(idx)
+    apdm_measures = sd.apdm_measures
+    del sd
+    return apdm_measures
+
+
+def get_obj_function_results(s, alg_name, metric, verbose=True):
+    if metric == 'get_res':
+        return s.res
+    elif metric == 'both':
+        rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + alg_name]))
+        mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + alg_name], handle_zeros=True)
+        if verbose: print('\tResult: RMSE is ' + str(round(rmse, 2)))
+        return rmse, mape
+    elif metric == 'sc_mape':
+        mape = mean_absolute_percentage_error(s.res['sc_manual'], s.res['sc_' + alg_name], handle_zeros=True)
+        if verbose: print('\tResult: Mean Absolute Percentage Error is ' + str(round(mape, 2)))
+        return mape
+    elif metric == 'sc_rmse':
+        rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + alg_name]))
+        if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
+        return rmse
+    elif metric == 'asym_rmse':
+        nanval = 0.5
+        asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
+                                            s.res['step_time_asymmetry2_median_' + alg_name].fillna(nanval)))
+        if verbose: print('\tResult: Toe off asymmetry RMSE is ' + str(round(asym_rmse, 2)))
+        return asym_rmse
+    else:  # rmse
+        rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + alg_name]))
+        if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
+        return rmse

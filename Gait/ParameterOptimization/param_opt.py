@@ -2,51 +2,48 @@ import pickle
 from multiprocessing import Pool
 from os.path import join
 
-import Gait_old.Resources.config as c
 import hyperopt as hp
 import numpy as np
 import pandas as pd
-from Gait_old.ParameterOptimization.evaluate_test_set import evaluate_on_test_set
-from Gait_old.ParameterOptimization.objective_functions import all_algorithms
-from Gait_old.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
-from Gait_old.ParameterOptimization.sum_results_for_plotting_parameters import sum_results_for_plotting_parameters
-from Gait_old.Pipeline.gait_utils import gait_measure_analysis
 from hyperopt import fmin, Trials, tpe, space_eval
 
-from Sandbox.Zeev.Gait_old.ParameterOptimization.sum_results import sum_results
+import Gait.Resources.config as c
+from Gait.Resources.gait_utils import evaluate_on_test_set, gait_measure_analysis
+import Gait.ParameterOptimization.objective_functions as o
+from Gait.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
+from Gait.ParameterOptimization.sum_results import sum_results
+from Gait.ParameterOptimization.sum_results_for_plotting_parameters import sum_results_for_plotting_parameters
 from Utils.Preprocessing.other_utils import split_data
 
 # Set search spaces
-if c.search_space == 'param6':
-    import Gait_old.Resources.param_space_6 as param_search_space
-if c.search_space == 'param7':
-    import Gait_old.Resources.param_space_7 as param_search_space
-if c.search_space == 'param8':
-    import Gait_old.Resources.param_space_8 as param_search_space
-if c.search_space == 'param9':
-    import Gait_old.Resources.param_space_9 as param_search_space
+if c.search_space == 'param1':
+    import Gait.Resources.param_space_1 as param_search_space
 if c.search_space == 'param_asym_1':
-    import Gait_old.Resources.param_asym_1 as param_search_space
+    import Gait.Resources.param_asym_1 as param_search_space
 
 # Set algorithms
 algs = c.algs
-space_all = list()
-objective_function_all = list()
+search_spaces = list()
+objective_functions = list()
 if 'lhs' in algs:
-    space_all.append(param_search_space.space_single_side_lhs)
-    objective_function_all.append('step_detection_single_side_lhs')
-if 'overlap' in algs:
-    objective_function_all.append('step_detection_two_sides_overlap')
-    space_all.append(param_search_space.space_overlap)
-if 'overlap_strong' in algs:
-    objective_function_all.append('step_detection_two_sides_overlap_strong')
-    space_all.append(param_search_space.space_overlap_strong)
-if 'combined' in algs:
-    objective_function_all.append('step_detection_fusion_low_level')
-    space_all.append(param_search_space.space_combined)
+    search_spaces.append(param_search_space.space_single_side)
+    objective_functions.append(o.objective_step_detection_single_side_lhs)
+if 'intersection' in algs:
+    search_spaces.append(param_search_space.space_fusion_high_level)
+    objective_functions.append(o.step_detection_fusion_high_level_intersection)
+if 'union' in algs:
+    search_spaces.append(param_search_space.space_fusion_high_level)
+    objective_functions.append(o.step_detection_fusion_high_level_union)
+if 'sum' in algs:
+    search_spaces.append(param_search_space.space_fusion_low_level)
+    objective_functions.append(o.step_detection_fusion_low_level_sum)
+if 'diff' in algs:
+    search_spaces.append(param_search_space.space_fusion_low_level)
+    objective_functions.append(o.step_detection_fusion_low_level_diff)
 if 'rhs' in algs:
-    objective_function_all.append('step_detection_single_side_rhs')
-    space_all.append(param_search_space.space_single_side_rhs)
+    search_spaces.append(param_search_space.space_single_side)
+    objective_functions.append(o.objective_step_detection_single_side_rhs)
+
 
 # Set running parameters
 n_folds = c.n_folds
@@ -104,8 +101,8 @@ elif c.tasks_to_optimize == 'both_split_and_all':
 
 train_all = []
 test_all = []
-for k in range(len(task_ids)):
-    train_i, test_i = split_data(task_ids[k], n_folds=n_folds)
+for i in range(len(task_ids)):
+    train_i, test_i = split_data(task_ids[i], n_folds=n_folds)
     train_all.append(train_i)
     test_all.append(test_i)
 
@@ -117,11 +114,9 @@ df_gait_measures_by_alg_split = []
 df_gait_measures_by_alg_all = []
 
 # Loop over the different algorithms (objective functions) to optimize
-for i in range(len(objective_function_all)):
-    objective_function = objective_function_all[i]
-    space = space_all[i]
-
-    objective = all_algorithms[objective_function]
+for i in range(len(objective_functions)):
+    space = search_spaces[i]
+    objective = objective_functions[i]
     if alg == 'tpe':
         opt_algorithm = tpe.suggest
     elif alg == 'random':
@@ -145,23 +140,15 @@ for i in range(len(objective_function_all)):
         if c.do_multi_core:
             # The parallel function. It is defined each time so that it uses various parameters from the outer
             # scope: objective, space, opt_algorithm, and max_evals
-            def par_fmin(k):
+            def par_fmin(k_iter):
                 print('************************************************************************')
-                print('\rOptimizing Walk Task ' + str(
-                    walk_tasks[j]) + ': algorithm- ' + objective_function + '.   Using '
-                      + alg + " search.   Running fold " + str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' +
-                      str(c.max_evals))
+                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + objective_functions[i] +
+                      '.   Using ' + alg + " search.   Running fold " + str(k_iter + 1) + ' of ' + str(n_folds) +
+                      '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
-                space['sample_ids'] = train[k]
+                space['sample_ids'] = train[k_iter]
                 par_results = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=Trials())
                 return par_results
-
-                # show progress
-                # with open(
-                #         join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(k + 1)),
-                #         'wb') as fp:
-                #     results2 = [results, train_all, test_all]
-                #     pickle.dump(results2, fp)
 
             # The parallel code
             # pool = Pool(processes=cpu_count())
@@ -172,9 +159,9 @@ for i in range(len(objective_function_all)):
         else:
             for k in range(n_folds):
                 print('************************************************************************')
-                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + objective_function + '.   Using '
-                      + alg + " search.   Running fold " + str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' +
-                      str(c.max_evals))
+                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + objective_functions[i] +
+                      '.   Using ' + alg + " search.   Running fold " + str(k + 1) + ' of ' + str(n_folds) +
+                      '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
 
                 # Optimize parameters
@@ -184,8 +171,8 @@ for i in range(len(objective_function_all)):
                 results.append(res)
 
                 # show progress
-                with open(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_fold_' + str(k+1)),
-                          'wb') as fp:
+                with open(join(save_dir, objective_functions[i] + '_walk_task' + str(walk_tasks[j]) + '_fold_' +
+                          str(k+1)), 'wb') as fp:
                     results2 = [results, train_all, test_all]
                     pickle.dump(results2, fp)
 
@@ -225,9 +212,9 @@ for i in range(len(objective_function_all)):
         save_results['train'] = train
         save_results['test'] = test
         r = pd.DataFrame(save_results)
-        r.to_csv(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_all.csv'))
+        r.to_csv(join(save_dir, objective_functions[i] + '_walk_task' + str(walk_tasks[j]) + '_all.csv'))
 
-        with open(join(save_dir, objective_function + '_walk_task' + str(walk_tasks[j]) + '_all'), 'wb') as fp:
+        with open(join(save_dir, objective_functions[i] + '_walk_task' + str(walk_tasks[j]) + '_all'), 'wb') as fp:
             to_save = [save_results, train_all, test_all]
             pickle.dump(to_save, fp)
 

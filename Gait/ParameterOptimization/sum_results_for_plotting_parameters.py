@@ -1,16 +1,12 @@
 from os.path import join
-
 import numpy as np
 import pandas as pd
-
 from Utils.DataHandling.data_processing import string_to_int_list
 
 
 def sum_results_for_plotting_parameters(input_file, save_dir):
     data = pd.read_csv(input_file)
-    params = ['Signal', 'Smoothing', 'Smoothing(window/filter frequency)', 'Peaks', 'Peak_param1', 'Peak_param2',
-           'Overlap_Merge_Window', 'Overlap_adjacent_peaks_window', 'Mva_combined_window', 'Sine-min Hz', 'Sine-max Hz',
-           'Sine-factor', 'Z']
+    params = ['Mva_win', 'Peak_min_thr', 'Peak_min_dist', 'Intersect_win', 'Union_min_dist', 'Union_min_thr']
     res = pd.DataFrame(index=params)
     algs = data['Algorithm'].unique().tolist()
     split_types = ['all', 'split']

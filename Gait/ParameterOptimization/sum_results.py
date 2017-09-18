@@ -2,10 +2,8 @@ import ast
 import pickle
 import re
 from os.path import join
-
 import pandas as pd
-
-from Sandbox.Zeev import Gait_old as c
+import Gait.Resources.config as c
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory
 
 
@@ -13,10 +11,8 @@ def sum_results(save_dir, return_file_path=False):
     # Start code
     with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
         task_filters = pickle.load(fp)
-    res = pd.DataFrame(columns=['Algorithm', 'WalkingTask', 'TaskNum', 'FoldNum', 'RMSE', 'MAPE', 'Signal', 'Smoothing',
-                                'Smoothing(window/filter frequency)', 'Peaks', 'Peak_param1', 'Peak_param2',
-                                'Overlap_Merge_Window', 'Overlap_adjacent_peaks_window', 'Mva_combined_window',
-                                'Sine-min Hz', 'Sine-max Hz', 'Sine-factor', 'Z'])
+    res = pd.DataFrame(columns=['Algorithm', 'WalkingTask', 'TaskNum', 'FoldNum', 'RMSE', 'MAPE', 'Mva_win',
+                                'Peak_min_thr', 'Peak_min_dist', 'Intersect_win', 'Union_min_dist', 'Union_min_thr'])
     f = read_all_files_in_directory(dir_path=save_dir, file_type='csv')
     for i in range(len(f)):
         if '_walk' not in f[i]:
@@ -43,46 +39,17 @@ def sum_results(save_dir, return_file_path=False):
 
             # params
             p = ast.literal_eval(f_i['best'][j])
-            # Signal
-            if p['signal_to_use'] == 'norm':
-                res.set_value(idx, 'Signal', p['signal_to_use'])
-            elif not p['do_windows_if_vertical']:
-                res.set_value(idx, 'Signal', 'Vertical-no windows')
-            else:
-                res.set_value(idx, 'Signal', 'Vertical: window- ' + str(p['vert_win']))
-            # Smoothing
-            if p['smoothing'] == 'mva':
-                res.set_value(idx, 'Smoothing', 'mva')
-                res.set_value(idx, 'Smoothing(window/filter frequency)', p['mva_win'])
-            if p['smoothing'] == 'butter':
-                res.set_value(idx, 'Smoothing', 'Butterfilter')
-                res.set_value(idx, 'Smoothing(window/filter frequency)', p['butter_freq'])
-            # Peaks
-            # if p['peak_type'] == 'scipy':
-            #     res.set_value(idx, 'Peaks', 'Scipy (' + str(p['p1_sc']) + ', ' + str(p['p2_sc']) + ')')
-            # if p['peak_type'] == 'peak_utils':
-            #     res.set_value(idx, 'Peaks', 'PeakUtils (' + str(p['p1_pu']) + ', ' + str(p['p2_pu']) + ')')
-            res.set_value(idx, 'Peaks', p['peak_type'])
-            if p['peak_type'] == 'scipy':
-                res.set_value(idx, 'Peak_param1', p['p1_sc'])
-                res.set_value(idx, 'Peak_param2', p['p2_sc'])
-            elif p['peak_type'] == 'peak_utils':
-                res.set_value(idx, 'Peak_param1', p['p1_pu'])
-                res.set_value(idx, 'Peak_param2', p['p2_pu'])
-
-            # Overlap algorithm
-            if "overlap" in alg:
-                res.set_value(idx, 'Overlap_Merge_Window', p['win_size_merge'])
-                res.set_value(idx, 'Overlap_adjacent_peaks_window', p['win_size_remove_adjacent_peaks'])
-
-            if "overlap_strong" in alg:
-                res.set_value(idx, 'Z', p['z'])
-
-            if "combined" in alg:
-                res.set_value(idx, 'Mva_combined_window', p['mva_win_combined'])
-                res.set_value(idx, 'Sine-min Hz', p['min_hz'])
-                res.set_value(idx, 'Sine-max Hz', p['max_hz'])
-                res.set_value(idx, 'Sine-factor', p['factor'])
+            res.set_value(idx, 'Mva_win', p['mva_win'])
+            res.set_value(idx, 'Peak_min_thr', p['peak_min_thr'])
+            res.set_value(idx, 'Peak_min_dist', p['peak_min_dist'])
+            if "intersect_win" in p:
+                res.set_value(idx, 'Intersect_win', p['intersect_win'])
+            if "union_min_dist" in p:
+                res.set_value(idx, 'Union_min_dist', p['union_min_dist'])
+            if "union_min_thresh" in p:
+                res.set_value(idx, 'Union_min_thr', p['union_min_thresh'])
+            if "mva_win_combined" in p:
+                res.set_value(idx, 'Mva_win_combined', p['mva_win_combined'])
 
     # Save
     file_name = 'Summary_search_' + c.search_space + '_alg_' + c.opt_alg + '_evals_' + str(c.max_evals) + '_folds_' + \

@@ -5,13 +5,12 @@ n_folds = 5
 max_evals = 4
 opt_alg = 'random'  # Can be 'tpe' or 'random'
 do_verbose = False
-tasks_to_optimize = 'both_split_and_all'
+tasks_to_optimize = 'all'
 
-algs = ['lhs', 'rhs', 'overlap', 'overlap_strong', 'combined']
-#algs = ['overlap_strong']
+algs = ['lhs', 'rhs', 'intersection', 'union', 'sum', 'diff']
 
 metric_to_optimize = 'sc_rmse'
-search_space = 'param9'
+search_space = 'param1'
 outlier_percent_to_remove = 5
 
 # metric_to_optimize = 'asym_rmse'
@@ -45,6 +44,8 @@ if exp == 1:
     common_path = join(data_path, 'Intel APDM March 6 2017')
 elif exp == 2:
     common_path = join(data_path, 'APDM June 2017')
+else:
+    common_path = None
 pickle_path = join(common_path, 'Pickled')
 input_path = join(common_path, 'Subjects')
 results_path = join(common_path, 'Results')

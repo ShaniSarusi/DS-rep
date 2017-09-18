@@ -1,12 +1,10 @@
 import pickle
 from os.path import join
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
-
-from Sandbox.Zeev import Gait_old as c
+import Gait.Resources.config as c
 from Utils.DataHandling.data_processing import string_to_float_list
 
 do_algorithm = True
@@ -26,7 +24,7 @@ remove = 'mean_same'
 z = 2
 apdm_side = 'lhs'
 alg_side = 'side2'
-alg_name = 'overlap_strong'
+alg_name = 'high_level_fusion_union'
 
 data = pd.read_csv(input_file)
 ids = data['SampleId'].tolist()
