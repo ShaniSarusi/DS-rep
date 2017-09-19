@@ -274,20 +274,26 @@ class StepDetection:
 
     def add_step_time_asymmetry(self, cols, n_samples):
         for col in cols:
-            side1 = [np.median(self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]) for i in
-                     range(n_samples)]
-            side2 = [np.median(self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]) for i in
-                     range(n_samples)]
+            step_time_asymmetry = []
+            for i in range(n_samples):
+                val = np.nan
+                s1 = self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]
+                s2 = self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]
+                if len(s1) > 0 and len(s2) > 0:
+                    s1_m = np.median(s1)
+                    s2_m = np.median(s2)
+                    m = np.mean([s1_m, s2_m])
+                    if m != 0:
+                        val = 100.0*(np.abs(s1_m - s2_m) / m)
+                step_time_asymmetry.append(val)
 
-            step_time_asymmetry = [100.0*(np.abs(side1[i] - side2[i]) / np.mean([side1[i], side2[i]])) for i in
-                                   range(n_samples)]
             res = pd.Series(step_time_asymmetry, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry_'))
             self.res = pd.concat([self.res, res], axis=1)
 
     def add_step_time_asymmetry2(self, cols, n_samples):
         for col in cols:
             asym = []
-            asym_mean = []
+            asym_median = []
             for i in range(n_samples):
                 side1 = self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]
                 side2 = self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]
@@ -296,12 +302,15 @@ class StepDetection:
                     val = np.abs(side1[j] - side2[j])/np.mean([side1[j], side2[j]])
                     asym_i.append(val)
                 asym.append(asym_i)
-                asym_mean.append(np.median(asym_i))
+                val = np.nan
+                if len(asym_i) > 0:
+                    val = np.median(asym_i)
+                asym_median.append(val)
 
             res = pd.Series(asym, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry2_values_'))
             self.res = pd.concat([self.res, res], axis=1)
 
-            res = pd.Series(asym_mean, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry2_median_'))
+            res = pd.Series(asym_median, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry2_median_'))
             self.res = pd.concat([self.res, res], axis=1)
 
     def save(self, path):

@@ -34,6 +34,10 @@ def cv(values, round_by=3):
         out1 (str): Return the string of the CV value, rounded to the round_by decimal
     """
     values = pd_to_np(values)
+    if len(values) == 0:
+        return ""
+    if np.mean(values) == 0:
+        return ""
     coefficient_of_var = np.std(values) / np.mean(values)
     return str(round(coefficient_of_var, round_by))
 

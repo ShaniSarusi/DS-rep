@@ -2,8 +2,8 @@ from os.path import join, sep
 from os import getcwd
 
 n_folds = 5
-max_evals = 50
-opt_alg = 'random'  # Can be 'tpe' or 'random'
+max_evals = 10
+opt_alg = 'tpe'  # Can be 'tpe' or 'random'
 do_verbose = False
 tasks_to_optimize = 'all'
 max_dist_from_apdm_for_comparing_events = 0.9
