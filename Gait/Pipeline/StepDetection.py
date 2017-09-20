@@ -96,7 +96,7 @@ class StepDetection:
 
         # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
         lhs = reduce_dim_3_to_1(lhs, signal_to_use, vert_win, verbose)
-        rhs = reduce_dim_3_to_1(rhs, signal_to_use, vert_win, verbose)
+        rhs = reduce_dim_3_to_1(rhs, signal_to_use, vert_win, False)
 
         # Normalize between 0 and 1 using min and max signal of all samples
         lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
@@ -145,7 +145,7 @@ class StepDetection:
 
         # Dimensionality reduction (3 to 1): Choose norm, vertical, or vertical with windows
         lhs = reduce_dim_3_to_1(lhs, signal_to_use, vert_win, verbose)
-        rhs = reduce_dim_3_to_1(rhs, signal_to_use, vert_win, verbose)
+        rhs = reduce_dim_3_to_1(rhs, signal_to_use, vert_win, False)
 
         # Normalize between 0 and 1 using min and max signal of all samples
         lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
