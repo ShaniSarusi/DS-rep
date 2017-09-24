@@ -101,7 +101,10 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
             side1 = events_i.iloc[idx_off_right, j] - events_i.iloc[idx_off_left, j]
             side2 = events_i.iloc[idx_off_left, j + 1] - events_i.iloc[idx_off_right, j]
             asym_toe_vals.append(calc_asymmetry(side1,side2))
-        asym_toes = np.median(asym_toe_vals)
+        val = np.nan
+        if len(asym_toe_vals) > 0:
+            val = np.median(asym_toe_vals)
+        asym_toes = val
 
         row = [cadence, stride_time_var_lhs, stride_time_var_rhs, step_time_var_lhs,
                step_time_var_rhs, 0, asymmetry_median, asym_toes, stride_l_m, stride_r_m]

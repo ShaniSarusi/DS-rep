@@ -64,7 +64,7 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             axarr[a, b].set_xlim(ax_min, ax_max)
             axarr[a, b].set_ylim(ax_min, ax_max)
             axarr[a, b].text(ax_min + 0.05 * ax_range, ax_min + 0.9 * ax_range, 'R= ' + str(round(corr_j, 3)))
-        plt.tight_layout()
+        #plt.tight_layout()
         plt.suptitle(name_prefix + metric + ' comparison')
 
         # Save and show

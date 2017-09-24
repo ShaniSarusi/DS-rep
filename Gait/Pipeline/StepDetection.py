@@ -280,11 +280,11 @@ class StepDetection:
             asym_gait_cycles_sample_i = []
             num_gait_cycles = min(len(side1), len(side2))
             for j in range(num_gait_cycles):
-                m = np.mean(side1[j], side2[j])
+                m = np.mean([side1[j], side2[j]])
                 if m <= 0:
                     val = np.nan
                 else:
-                    val = np.abs(side1 - side2) / m
+                    val = np.abs(side1[j] - side2[j]) / m
                 asym_gait_cycles_sample_i.append(val)
             asym_gait_cycles.append(asym_gait_cycles_sample_i)
         res = pd.Series(asym_gait_cycles, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry_values_'))
@@ -296,7 +296,8 @@ class StepDetection:
             asym_gait_cycles_sample_i = asym_gait_cycles[i]
             val = np.nan
             if len(asym_gait_cycles_sample_i) > 0:
-                val = np.median(asym_gait_cycles_sample_i)
+                if not np.any(np.isnan(asym_gait_cycles_sample_i)):
+                    val = np.median(asym_gait_cycles_sample_i)
             asym_median.append(val)
         res = pd.Series(asym_median, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry_median_'))
         self.res = pd.concat([self.res, res], axis=1)

@@ -2,7 +2,7 @@ from os.path import join, sep
 from os import getcwd
 
 n_folds = 5
-max_evals = 10000
+max_evals = 2
 opt_alg = 'random'  # Can be 'tpe' or 'random'  #tpe doesn't work anymore for some reason for intersect. it fails every once in a while
 do_verbose = False
 tasks_to_optimize = 'all'

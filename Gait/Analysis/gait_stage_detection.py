@@ -133,3 +133,19 @@ plt.xticks(fontsize=14)
 plt.gca().yaxis.grid(True)
 plt.tight_layout()
 plt.savefig('gait_stage_comparison.png')
+
+
+#### Plotting personal
+df2 = pd.DataFrame(columns=['l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std'], index=range(len(off_lhs)))
+for i in range(len(off_lhs)):
+    l = off_lhs.iloc[i]['idx_fusion_high_level_union']
+    r = off_rhs.iloc[i]['idx_fusion_high_level_union']
+    row = [np.mean(l), np.mean(r), np.median(l), np.median(r), np.std(l), np.std(r)]
+    df2.iloc[i] = row
+
+df2.to_csv('testing.csv')
+
+
+
+
+
