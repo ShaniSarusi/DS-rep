@@ -1,5 +1,5 @@
 import pickle
-from os.path import join
+from os.path import join, sep
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -25,7 +25,7 @@ with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     acc = pickle.load(fp)
     ts = [(acc[i]['lhs']['ts'] - acc[i]['lhs']['ts'].iloc[0])/np.timedelta64(1, 's') for i in range(len(acc))]
 
-input_file = join('C:\\Users\\zwaks\\Desktop\\GaitPaper\\param_per5', 'gait_measures_all.csv')
+input_file = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_10k_sc_story', 'gait_measures.csv')
 data = pd.read_csv(input_file)
 max_dist_between_apdm_to_wrist_alg = 0.3
 

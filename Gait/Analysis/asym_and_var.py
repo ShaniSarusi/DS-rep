@@ -1,5 +1,5 @@
 import pickle
-from os.path import join
+from os.path import join, sep
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -7,8 +7,7 @@ from scipy.stats import pearsonr
 import Gait.Resources.config as c
 from Utils.DataHandling.data_processing import string_to_float_list
 
-do_algorithm = True
-input_file = join('C:\\Users\\zwaks\\Desktop\\GaitPaper\\param_per5', 'gait_measures_all.csv')
+input_file = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_10k_sc_story', 'gait_measures.csv')
 
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
@@ -24,7 +23,7 @@ remove = 'mean_same'
 z = 2
 apdm_side = 'lhs'
 alg_side = 'side2'
-alg_name = 'high_level_fusion_union'
+alg_name = 'fusion_high_level_union'
 
 data = pd.read_csv(input_file)
 ids = data['SampleId'].tolist()

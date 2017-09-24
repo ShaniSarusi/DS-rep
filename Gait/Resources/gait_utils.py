@@ -146,6 +146,14 @@ def calculate_time_duration_of_samples():
     return res
 
 
+def calc_asymmetry(side1, side2):
+    m = np.mean([side1, side2])
+    if m <= 0:
+        return np.nan
+    asymmetry = np.abs(side1 - side2) / m
+    return asymmetry
+
+
 def evaluate_on_test_set(p_space, p_res, test_set, objective, fold_i=None, folds=None, verbose=False):
     params = space_eval(p_space, p_res)
     params['sample_ids'] = test_set
@@ -180,8 +188,8 @@ def get_obj_function_results(s, alg_name, metric, verbose=True):
         return rmse
     elif metric == 'asym_rmse':
         nanval = 0.5
-        asym_rmse = sqrt(mean_squared_error(s.apdm_measures['toe_off_asymmetry_median'],
-                                            s.res['step_time_asymmetry2_median_' + alg_name].fillna(nanval)))
+        asym_rmse = sqrt(mean_squared_error(s.apdm_measures['apdm_toe_off_asymmetry_median'],
+                                            s.res['step_time_asymmetry_median_' + alg_name].fillna(nanval)))
         if verbose: print('\tResult: Toe off asymmetry RMSE is ' + str(round(asym_rmse, 2)))
         return asym_rmse
     else:  # rmse

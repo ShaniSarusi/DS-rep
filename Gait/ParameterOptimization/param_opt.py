@@ -245,14 +245,13 @@ file_name = sum_results(save_dir, return_file_path=True)
 sum_results_for_plotting_parameters(file_name, save_dir)
 
 # Summarize and save gait measure results
-metrics = ['cadence', 'step_time_asymmetry', 'step_time_asymmetry2_median', 'stride_time_var',
-           'toe_off_asymmetry_median']
+metrics = ['cadence', 'step_time_asymmetry_median', 'stride_time_var', 'apdm_toe_off_asymmetry_median']
 save_name = 'gait_measures.csv'
 gait_measure_analysis(df_gait_measures_by_alg, save_dir, save_name, algs, metrics)
 data_file = join(save_dir, save_name)
-create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape2.png', rotate=True,
+create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True,
                                    show_plot=False)
-create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse2.png', rotate=True,
+create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True,
                                    show_plot=False)
-create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_rmse2.png', rotate=True,
+create_regression_performance_plot(data_file, 'PE', save_name='alg_performance_pe.png', rotate=True,
                                    show_plot=False, y_min=-20)

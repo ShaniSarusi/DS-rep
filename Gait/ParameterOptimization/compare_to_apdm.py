@@ -1,4 +1,4 @@
-from os.path import join, dirname
+from os.path import join, dirname, sep
 import Gait.Resources.config as c
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -25,8 +25,8 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
         idx_keep = pd.notnull(apdm_vals)
         apdm_vals = apdm_vals[idx_keep]
         metric_for_algs = metric
-        if metric == 'toe_off_asymmetry_median':
-            metric_for_algs = 'step_time_asymmetry2_median'
+        if metric == 'apdm_toe_off_asymmetry_median':
+            metric_for_algs = 'step_time_asymmetry_median'
         if 'time_var' in metric:
             alg_vals = []
             for j in range(len(algs)):
@@ -75,18 +75,10 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             plt.show()
 
 if __name__ == '__main__':
-    alg_file_name = 'gait_measures.csv'
-    alg_file_name = 'gait_measures_all.csv'
-    alg_data_path = join(c.results_path, 'param_opt', alg_file_name)
-
-    save_path = 'C:\\Users\\zwaks\\Desktop\\apdm-june2017\\param7_machine1_5percent'
-    alg_data_path = join(save_path, 'gait_measures_all.csv')
-    alg_data_path = join(save_path, 'gait_measures_all.csv')
+    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_10k_sc_story')
+    alg_data_path = join(save_path, 'gait_measures.csv')
 
     algorithms = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union', 'fusion_low_level_sum', 'fusion_low_level_diff']
-    metrics = ['cadence', 'step_time_asymmetry', 'step_time_var', 'stride_time_var']
-    metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var', 'step_time_asymmetry2_median']
-    metrics = ['cadence', 'step_time_asymmetry', 'stride_time_var', 'step_time_asymmetry2_median', 'toe_off_asymmetry_median']
-    metrics = ['step_time_asymmetry', 'stride_time_var']
+    metrics = ['cadence', 'stride_time_var', 'step_time_asymmetry_median', 'apdm_toe_off_asymmetry_median']
 
     compare_to_apdm(alg_data_path, algorithms, metrics, show_plot=True)

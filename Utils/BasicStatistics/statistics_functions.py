@@ -22,7 +22,7 @@ def mean_and_std(values, round_by=2):
     return str(round(np.mean(values), round_by)) + ' +- ' + str(round(np.std(values), round_by))
 
 
-def cv(values, round_by=3):
+def cv(values, round_by=4):
     """
     Take the values and return the coefficient of variation (CV), rounded to the round_by decimal
 

@@ -1,5 +1,5 @@
 import pickle
-from os.path import join
+from os.path import join, sep
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -7,8 +7,11 @@ from scipy.stats import pearsonr
 import Gait.Resources.config as c
 
 do_algorithm = True
-input_file = join('C:\\Users\\zwaks\\Desktop\\GaitPaper\\param_per5', 'gait_measures_all.csv')
+input_file = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_10k_sc_story', 'gait_measures.csv')
 
+
+
+###################################################################
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
 
@@ -44,7 +47,6 @@ y = [y[i] if y[i]>0 else x[i] for i in range(len(y))]
 
 plt.scatter(x, y)
 plt.xlabel('Leg acceleromer cadence (steps/minute)', fontsize=12)
-plt.ylabel('Wrist accelerometer cadence (union approach)\n (steps/minute)', fontsize=12)
 
 val_max = max(max(x), max(y))
 val_min = min(min(x), min(y))

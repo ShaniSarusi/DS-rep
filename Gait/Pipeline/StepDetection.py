@@ -183,135 +183,123 @@ class StepDetection:
         if verbose: print("\rRunning: Adding gait metrics")
         # Find 'idx_' columns
         cols = [col for col in self.res.columns if 'idx_' in col]
+        for col in cols:
+            self.total_step_count_and_cadence(col)
+            self.step_and_stride_durations(col, max_dist_from_apdm)
+            self.step_and_stride_time_variability(col)
+            self.step_time_asymmetry(col)
+
+    def total_step_count_and_cadence(self, col):
+        # Step count
         n_samples = self.res.shape[0]
+        val = [len(self.res.iloc[i][col]) for i in range(n_samples)]
+        res_steps = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'sc_'))
+        # Cadence
+        val = [60 * res_steps.iloc[i] / self.res.iloc[i]['duration'] for i in range(n_samples)]
+        res_cadence = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'cadence_'))
+        self.res = pd.concat([self.res, res_steps, res_cadence], axis=1)
 
-        self.add_total_step_count_and_cadence(cols, n_samples)
-        self.add_step_and_stride_durations(cols, n_samples, max_dist_from_apdm)
-        self.add_step_and_stride_time_variability(cols, n_samples)
-        self.add_step_time_asymmetry(cols, n_samples)
-        self.add_step_time_asymmetry2(cols, n_samples)
+    def step_and_stride_durations(self, col, max_dist_from_apdm=1234.5):
+        step_durations = []
+        n_samples = self.res.shape[0]
+        for i in range(n_samples):
+            step_idx = self.res[col].iloc[i]
+            step_durations_i = []
+            if len(step_idx) > 0:
+                step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
+                             / np.timedelta64(1, 's')
+                if max_dist_from_apdm != 1234.5:
+                    apdm_i = np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[i] +
+                                              self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[i])
+                    if not np.any(np.isnan(apdm_i)):
+                        step_times = np.array([step_time for step_time in step_times if
+                                               np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
+                        step_durations_i = np.diff(step_times)
+            step_durations.append(step_durations_i)
 
-    def add_total_step_count_and_cadence(self, cols, n_samples):
-        for col in cols:
-            # Step count
-            val = [len(self.res.iloc[i][col]) for i in range(n_samples)]
-            res_steps = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'sc_'))
-            # Cadence
-            val = [60 * res_steps.iloc[i] / self.res.iloc[i]['duration'] for i in range(n_samples)]
-            res_cadence = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'cadence_'))
-            self.res = pd.concat([self.res, res_steps, res_cadence], axis=1)
+        stride_durations = []
+        for i in range(n_samples):
+            stride_dur_i = []
+            step_dur_i = step_durations[i]
+            for j in range(1, len(step_dur_i)):
+                stride_time = step_dur_i[j - 1] + step_dur_i[j]
+                stride_dur_i.append(stride_time)
+            stride_durations.append(stride_dur_i)
 
-    def add_step_and_stride_durations(self, cols, n_samples, max_dist_from_apdm=1234.5):
-        for col in cols:
-            step_durations = []
-            for i in range(n_samples):
-                step_idx = self.res[col].iloc[i]
-                step_durations_i = []
-                if len(step_idx) > 0:
-                    step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
-                                 / np.timedelta64(1, 's')
-                    if max_dist_from_apdm != 1234.5:
-                        apdm_i = np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[i] +
-                                                  self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[i])
-                        if not np.any(np.isnan(apdm_i)):
-                            step_times = np.array([step_time for step_time in step_times if
-                                                   np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
-                            step_durations_i = np.diff(step_times)
-                step_durations.append(step_durations_i)
+        # Save step values
+        val = [step_durations[i] for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_durations_all_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            stride_durations = []
-            for i in range(n_samples):
-                stride_dur_i = []
-                step_dur_i = step_durations[i]
-                for j in range(1, len(step_dur_i)):
-                    stride_time = step_dur_i[j - 1] + step_dur_i[j]
-                    stride_dur_i.append(stride_time)
-                stride_durations.append(stride_dur_i)
+        val = [step_durations[i][::2] for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_durations_side1_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            # Save step values
-            val = [step_durations[i] for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_durations_all_'))
-            self.res = pd.concat([self.res, res], axis=1)
+        val = [step_durations[i][1::2] for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_durations_side2_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            val = [step_durations[i][::2] for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_durations_side1_'))
-            self.res = pd.concat([self.res, res], axis=1)
+        # Save stride values
+        val = [stride_durations[i] for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_durations_all_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            val = [step_durations[i][1::2] for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_durations_side2_'))
-            self.res = pd.concat([self.res, res], axis=1)
+        val = [stride_durations[i][::2] for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_durations_side1_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            # Save stride values
-            val = [stride_durations[i] for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_durations_all_'))
-            self.res = pd.concat([self.res, res], axis=1)
+        val = [stride_durations[i][1::2] for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_durations_side2_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            val = [stride_durations[i][::2] for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_durations_side1_'))
-            self.res = pd.concat([self.res, res], axis=1)
+    def step_and_stride_time_variability(self, col):
+        n_samples = self.res.shape[0]
+        val = [cv(self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]) for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_time_var_side1_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            val = [stride_durations[i][1::2] for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_durations_side2_'))
-            self.res = pd.concat([self.res, res], axis=1)
+        val = [cv(self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]) for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_time_var_side2_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-    def add_step_and_stride_time_variability(self, cols, n_samples):
-        for col in cols:
-            val = [cv(self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]) for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_time_var_side1_'))
-            self.res = pd.concat([self.res, res], axis=1)
+        val = [cv(self.res.iloc[i][col.replace('idx_', 'stride_durations_side1_')]) for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_time_var_side1_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            val = [cv(self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]) for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'step_time_var_side2_'))
-            self.res = pd.concat([self.res, res], axis=1)
+        val = [cv(self.res.iloc[i][col.replace('idx_', 'stride_durations_side2_')]) for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_time_var_side2_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            val = [cv(self.res.iloc[i][col.replace('idx_', 'stride_durations_side1_')]) for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_time_var_side1_'))
-            self.res = pd.concat([self.res, res], axis=1)
+    def step_time_asymmetry(self, col):
+        n_samples = self.res.shape[0]
+        # all gait cycle asymmetries per sample
+        asym_gait_cycles = []
+        for i in range(n_samples):
+            side1 = self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]
+            side2 = self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]
+            asym_gait_cycles_sample_i = []
+            num_gait_cycles = min(len(side1), len(side2))
+            for j in range(num_gait_cycles):
+                m = np.mean(side1[j], side2[j])
+                if m <= 0:
+                    val = np.nan
+                else:
+                    val = np.abs(side1 - side2) / m
+                asym_gait_cycles_sample_i.append(val)
+            asym_gait_cycles.append(asym_gait_cycles_sample_i)
+        res = pd.Series(asym_gait_cycles, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry_values_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
-            val = [cv(self.res.iloc[i][col.replace('idx_', 'stride_durations_side2_')]) for i in range(n_samples)]
-            res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_time_var_side2_'))
-            self.res = pd.concat([self.res, res], axis=1)
-
-    def add_step_time_asymmetry(self, cols, n_samples):
-        for col in cols:
-            step_time_asymmetry = []
-            for i in range(n_samples):
-                val = np.nan
-                s1 = self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]
-                s2 = self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]
-                if len(s1) > 0 and len(s2) > 0:
-                    s1_m = np.median(s1)
-                    s2_m = np.median(s2)
-                    m = np.mean([s1_m, s2_m])
-                    if m != 0:
-                        val = 100.0*(np.abs(s1_m - s2_m) / m)
-                step_time_asymmetry.append(val)
-
-            res = pd.Series(step_time_asymmetry, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry_'))
-            self.res = pd.concat([self.res, res], axis=1)
-
-    def add_step_time_asymmetry2(self, cols, n_samples):
-        for col in cols:
-            asym = []
-            asym_median = []
-            for i in range(n_samples):
-                side1 = self.res.iloc[i][col.replace('idx_', 'step_durations_side1_')]
-                side2 = self.res.iloc[i][col.replace('idx_', 'step_durations_side2_')]
-                asym_i = []
-                for j in range(min(len(side1), len(side2))):
-                    val = np.abs(side1[j] - side2[j])/np.mean([side1[j], side2[j]])
-                    asym_i.append(val)
-                asym.append(asym_i)
-                val = np.nan
-                if len(asym_i) > 0:
-                    val = np.median(asym_i)
-                asym_median.append(val)
-
-            res = pd.Series(asym, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry2_values_'))
-            self.res = pd.concat([self.res, res], axis=1)
-
-            res = pd.Series(asym_median, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry2_median_'))
-            self.res = pd.concat([self.res, res], axis=1)
+        # Median per sample
+        asym_median = []
+        for i in range(n_samples):
+            asym_gait_cycles_sample_i = asym_gait_cycles[i]
+            val = np.nan
+            if len(asym_gait_cycles_sample_i) > 0:
+                val = np.median(asym_gait_cycles_sample_i)
+            asym_median.append(val)
+        res = pd.Series(asym_median, index=self.res.index, name=col.replace('idx_', 'step_time_asymmetry_median_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
     def save(self, path):
         print("\rRunning: Saving data")

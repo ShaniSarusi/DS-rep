@@ -1,14 +1,13 @@
 import pickle
 from os import listdir
 from os.path import join, isdir
-
 import h5py
 import numpy as np
 import pandas as pd
-
 import Gait.Resources.config as c
 from Utils.DataHandling.data_processing import make_df_from_hdf5_dataset
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory, pickle_excel_file
+from Gait.Resources.gait_utils import calc_asymmetry
 
 # params and global variables
 sides = [{"name": 'lhs', "sensor": "/Sensors/" + str(c.lhs_wrist_sensor) + "/"},
@@ -57,9 +56,9 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
     assert num_files == p_len_raw_data, "Number of apdm files is not equal to length of raw data input"
 
     # Set measures DataFrame
-    cols_measures = ['cadence', 'step_time_asymmetry', 'stride_time_var_lhs', 'stride_time_var_rhs',
-                     'step_time_var_lhs', 'step_time_var_rhs', 'step_time_asymmetry2_values',
-                     'step_time_asymmetry2_median', 'toe_off_asymmetry_median', 'stride_time_mean_lhs',
+    cols_measures = ['cadence', 'stride_time_var_lhs', 'stride_time_var_rhs',
+                     'step_time_var_lhs', 'step_time_var_rhs', 'step_time_asymmetry_values',
+                     'step_time_asymmetry_median', 'apdm_toe_off_asymmetry_median', 'stride_time_mean_lhs',
                      'stride_time_mean_rhs']
     measures = pd.DataFrame(index=range(num_files), columns=cols_measures)
     first_event_idx = 5
@@ -82,19 +81,17 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
         stride_r_m = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['Mean']
         stride_r_std = measures_i.loc['Gait - Lower Limb - Gait Cycle Duration R (s)']['StDev']
 
-        step_time_asymmetry = 100.0*(np.abs(step_l_m - step_r_m) / np.mean([step_l_m, step_r_m]))
         stride_time_var_lhs = round(stride_l_std / stride_l_m, 4)
         stride_time_var_rhs = round(stride_r_std / stride_r_m, 4)
         step_time_var_lhs = round(step_l_std / step_l_m, 4)
         step_time_var_rhs = round(step_r_std / step_r_m, 4)
 
-        asym2_vals = []
+        asymmetry_vals = []
         for j in range(first_event_idx, measures_i.shape[1]):
             side1 = measures_i.loc['Gait - Lower Limb - Step Duration L (s)'][str(j-4)]
             side2 = measures_i.loc['Gait - Lower Limb - Step Duration R (s)'][str(j-4)]
-            val = np.abs(side1-side2)/np.mean([side1, side2])
-            asym2_vals.append(val)
-        asym2_median = np.median(asym2_vals)
+            asymmetry_vals.append(calc_asymmetry(side1, side2))
+        asymmetry_median = np.median(asymmetry_vals)
 
         asym_toe_vals = []
         events_i = pd.read_csv(p_apdm_files[i], skiprows=np.arange(66), header=None)
@@ -103,14 +100,13 @@ def extract_apdm_results(p_apdm_files, input_files, p_len_raw_data):
         for j in range(first_event_idx, measures_i.shape[1]-1):
             side1 = events_i.iloc[idx_off_right, j] - events_i.iloc[idx_off_left, j]
             side2 = events_i.iloc[idx_off_left, j + 1] - events_i.iloc[idx_off_right, j]
-            val = np.abs(side1 - side2) / np.mean([side1, side2])
-            asym_toe_vals.append(val)
+            asym_toe_vals.append(calc_asymmetry(side1,side2))
         asym_toes = np.median(asym_toe_vals)
 
-        row = [cadence, step_time_asymmetry, stride_time_var_lhs, stride_time_var_rhs, step_time_var_lhs,
-               step_time_var_rhs, 0, asym2_median, asym_toes, stride_l_m, stride_r_m]
+        row = [cadence, stride_time_var_lhs, stride_time_var_rhs, step_time_var_lhs,
+               step_time_var_rhs, 0, asymmetry_median, asym_toes, stride_l_m, stride_r_m]
         measures.iloc[i] = row
-        measures.set_value(i, 'step_time_asymmetry2_values', asym2_vals)
+        measures.set_value(i, 'step_time_asymmetry_values', asymmetry_vals)
 
     # Set events DataFrame
     # get time
@@ -247,33 +243,6 @@ def pickle_sensor_data(p_acc, p_bar, p_gyr, p_mag, p_temp, p_time):
     with open(join(c.pickle_path, 'mag'), 'wb') as fp: pickle.dump(p_mag, fp)
     with open(join(c.pickle_path, 'temp'), 'wb') as fp: pickle.dump(p_temp, fp)
     with open(join(c.pickle_path, 'time'), 'wb') as fp: pickle.dump(p_time, fp)
-
-
-def load_sensor_data():
-    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp: p_sample = pickle.load(fp)
-    with open(join(c.pickle_path, 'time'), 'rb') as fp: p_time = pickle.load(fp)
-    with open(join(c.pickle_path, 'acc'), 'rb') as fp: p_acc = pickle.load(fp)
-    with open(join(c.pickle_path, 'bar'), 'rb') as fp: p_bar = pickle.load(fp)
-    with open(join(c.pickle_path, 'gyr'), 'rb') as fp: p_gyr = pickle.load(fp)
-    with open(join(c.pickle_path, 'mag'), 'rb') as fp: p_mag = pickle.load(fp)
-    with open(join(c.pickle_path, 'temp'), 'rb') as fp: p_temp = pickle.load(fp)
-    return p_acc, p_bar, p_gyr, p_mag, p_temp, p_time, p_sample
-
-
-def create_result_matrix():
-    with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp: sample = pickle.load(fp)
-    with open(join(c.pickle_path, 'features_steps'), 'rb') as fp: step_features = pickle.load(fp)
-    # with open(join(common_input, 'features_armswing'), 'rb') as fp: arm_swing_features = pickle.load(fp)
-
-    # connect DataFrame
-    step_features = step_features.drop('step_durations', axis=1)
-
-    # df_results = pd.concat([step_features, arm_swing_features], axis=1)
-    df_results = step_features
-    df_sample_and_results = pd.concat([sample, df_results], axis=1)
-
-    # save csvs
-    df_sample_and_results.to_csv(join(c.results_path, 'Results.csv'))
 
 
 if __name__ == '__main__':
