@@ -33,7 +33,7 @@ from Utils.Features import ts_fresh
 import Utils.Preprocessing.projections as projections
 import Utils.Preprocessing.denoising as Denoiseing_func
 import LDopa.DataReading.read_data_from_ldopa as data_reading
-import LDopa.Classification.classification as classifier
+import LDopa.Classification.Classification as classifier
 import LDopa.Evaluation.evaluation as evaluation
 
 ###
@@ -59,7 +59,7 @@ Read data - new approach:
 '''
 res = pd.read_csv(join(data_path, 'all_lab_data.csv'))
 #res = res.drop('Unnamed: 0', 1)
-res = data_reading.ArrangeRes(res, path=join('LDopa', 'DataReading', 'Resources', 'mapTasksClusters.csv'))
+res = data_reading.arrange_res(res, path=join('LDopa', 'DataReading', 'Resources', 'mapTasksClusters.csv'))
 tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.make_interval_from_all_data(res, 5, 2.5, 1, 1, 50)
 lab_x_numpy = lab_x.as_matrix()
 lab_x = lab_x_numpy[:, range(len(lab_x_numpy[0])-1)]
