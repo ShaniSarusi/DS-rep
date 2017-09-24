@@ -38,8 +38,10 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             alg_vals = [alg_res[metric_for_algs + '_' + algs[j]][idx_keep] for j in range(len(algs))]
 
         # Scatter plots
-        if len(algs) > 4:
+        if len(algs) > 6:
             f, axarr = plt.subplots(3, 3)
+        elif len(algs) > 4:
+            f, axarr = plt.subplots(3, 2)
         else:
             f, axarr = plt.subplots(2, 2)
         corr = []
@@ -54,7 +56,16 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             b = j % 2
             axarr[a, b].scatter(apdm_vals_j, alg_vals_j)
             axarr[a, b].set_xlabel('APDM', fontsize=12)
-            axarr[a, b].set_ylabel(algs[j] + ' algorithm', fontsize=12)
+            # Set y label
+            y_label = 'alg_name'
+            if 'lhs' in algs[j]: y_label='Lhs'
+            if 'rhs' in algs[j]: y_label = 'Rhs'
+            if 'intersect' in algs[j]: y_label = 'Intersect'
+            if 'union' in algs[j]: y_label = 'Union'
+            if 'sum' in algs[j]: y_label = 'Sum'
+            if 'diff' in algs[j]: y_label = 'Diff'
+            axarr[a, b].set_ylabel(y_label, fontsize=12)
+
             val_max = max(max(alg_vals_j), max(apdm_vals_j))
             val_min = min(min(alg_vals_j), min(apdm_vals_j))
             val_range = val_max - val_min

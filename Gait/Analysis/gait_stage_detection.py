@@ -136,12 +136,20 @@ plt.savefig('gait_stage_comparison.png')
 
 
 #### Plotting personal
-df2 = pd.DataFrame(columns=['l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std'], index=range(len(off_lhs)))
+with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
+    apdm_measures_tmp = pickle.load(fp)
+    apdm_measures = apdm_measures_tmp.iloc[[i for i in data['SampleId'].tolist()]]
+    apdm_vals = apdm_measures['apdm_toe_off_asymmetry_median']
+
+df2 = pd.DataFrame(columns=['l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std', 'apdm_asym', 'alg_asym'], index=range(len(off_lhs)))
 for i in range(len(off_lhs)):
     l = off_lhs.iloc[i]['idx_fusion_high_level_union']
     r = off_rhs.iloc[i]['idx_fusion_high_level_union']
-    row = [np.mean(l), np.mean(r), np.median(l), np.median(r), np.std(l), np.std(r)]
+    row = [np.mean(l), np.mean(r), np.median(l), np.median(r), np.std(l), np.std(r), apdm_vals[i],
+           data[i]['step_time_asymmetry2_median_fusion_high_level_union']]
     df2.iloc[i] = row
+
+
 
 df2.to_csv('testing.csv')
 
