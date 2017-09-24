@@ -18,6 +18,8 @@ from Utils.Preprocessing.other_utils import split_data
 # Set search spaces
 if c.search_space == 'param1':
     import Gait.ParameterOptimization.ParamSearchSpace.param_space_1 as param_search_space
+if c.search_space == 'param1small':
+    import Gait.ParameterOptimization.ParamSearchSpace.param_space_1small as param_search_space
 if c.search_space == 'param_asym_1':
     import Gait.ParameterOptimization.ParamSearchSpace.param_asym_1 as param_search_space
 
