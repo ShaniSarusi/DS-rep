@@ -52,9 +52,18 @@ class StepDetection:
                 if self.apdm_events is not None:
                     self.apdm_events = self.apdm_events.iloc[[i for i in sample_ids]]
 
+    def normalize_norm(self, use_single_max_min_for_all_samples=True):
+        lhs = [self.acc[i]['lhs']['n'] for i in range(len(self.acc))]
+        lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+        rhs = [self.acc[i]['rhs']['n'] for i in range(len(self.acc))]
+        rhs = normalize_max_min(rhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+        for i in range(len(self.acc)):
+            self.acc[i]['lhs']['n'] = lhs[i]
+            self.acc[i]['rhs']['n'] = rhs[i]
+
     def step_detection_single_side(self, side='lhs', signal_to_use='norm', vert_win=None,
                                    use_single_max_min_for_all_samples=True, smoothing=None, mva_win=20,
-                                   peak_min_thr=0.2, peak_min_dist=20, verbose=True):
+                                   peak_min_thr=0.2, peak_min_dist=20, verbose=True, do_normalization=True):
         if verbose: print("Running: step_detection_single_side on side: " + side)
 
         # Choose side
@@ -64,7 +73,8 @@ class StepDetection:
         data = reduce_dim_3_to_1(data, signal_to_use, vert_win, verbose)
 
         # Normalize between 0 and 1 using min and max signal of all samples
-        data = normalize_max_min(data, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+        if do_normalization:
+            data = normalize_max_min(data, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
 
         # Smoothing
         if smoothing == 'mva':
@@ -86,7 +96,7 @@ class StepDetection:
                                          use_single_max_min_for_all_samples=True, smoothing=None, mva_win=15,
                                          peak_min_thr=0.2, peak_min_dist=20, fusion_type='intersect',
                                          intersect_win=25, union_min_dist=20, union_min_thresh=0.5,
-                                         verbose=True):
+                                         verbose=True, do_normalization=True):
 
         if verbose: print("Running: step_detection_fusion_high_level - " + str(fusion_type))
 
@@ -99,8 +109,9 @@ class StepDetection:
         rhs = reduce_dim_3_to_1(rhs, signal_to_use, vert_win, False)
 
         # Normalize between 0 and 1 using min and max signal of all samples
-        lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
-        rhs = normalize_max_min(rhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+        if do_normalization:
+            lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+            rhs = normalize_max_min(rhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
 
         # Smoothing
         if smoothing == 'mva':
@@ -135,7 +146,7 @@ class StepDetection:
 
     def step_detection_fusion_low_level(self, signal_to_use='norm', vert_win=None, smoothing=None, mva_win=15,
                                         use_single_max_min_for_all_samples=True, fusion_type='sum', mva_win_combined=40,
-                                        peak_min_thr=0.2, peak_min_dist=30, verbose=True):
+                                        peak_min_thr=0.2, peak_min_dist=30, verbose=True, do_normalization=True):
 
         if verbose: print("Running: step_detection_fusion_low_level with fusion type: " + str(fusion_type))
 
@@ -148,8 +159,9 @@ class StepDetection:
         rhs = reduce_dim_3_to_1(rhs, signal_to_use, vert_win, False)
 
         # Normalize between 0 and 1 using min and max signal of all samples
-        lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
-        rhs = normalize_max_min(rhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+        if do_normalization:
+            lhs = normalize_max_min(lhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
+            rhs = normalize_max_min(rhs, use_single_max_min_for_all_samples=use_single_max_min_for_all_samples)
 
         # Smoothing
         if smoothing == 'mva':

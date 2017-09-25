@@ -224,10 +224,21 @@ for i in range(len(objective_functions)):
 
         ################################################################################################################
         # Print results
+        print('*****************************************************************************************')
         print('Best params are:')
-        print(best)
-        print('RMSE results for all folds are:')
-        print(root_mean_squared_error)
+        for d in best:
+            if 'verbose' in d:
+                del d['verbose']
+            if 'sample_ids' in d:
+                del d['sample_ids']
+            if 'metric' in d:
+                del d['metric']
+        for key in best[0].keys():
+            vals = [x[key] for x in best]
+            print('\t' + key + ': ' + ', '.join(str(x) for x in vals))
+        rmse_to_print = [(round(x, 1)) for x in root_mean_squared_error]
+        print('RMSE results for all folds are: ' + ', '.join(str(x) for x in rmse_to_print))
+        print('\n')
 
     if c.tasks_to_optimize == 'both_split_and_all':
         df_for_alg_i_split = pd.concat(df_gait_measures_by_task[0:-1])
