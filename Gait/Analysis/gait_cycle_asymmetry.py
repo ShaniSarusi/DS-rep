@@ -25,7 +25,8 @@ with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     acc = pickle.load(fp)
     ts = [(acc[i]['lhs']['ts'] - acc[i]['lhs']['ts'].iloc[0])/np.timedelta64(1, 's') for i in range(len(acc))]
 
-input_file = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_10k_sc_story', 'gait_measures.csv')
+save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
+input_file = join(save_dir, 'aa_param1_1k_sc_09262017', 'gait_measures.csv')
 data = pd.read_csv(input_file)
 max_dist_between_apdm_to_wrist_alg = 0.3
 
@@ -140,20 +141,18 @@ with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
     apdm_measures_tmp = pickle.load(fp)
     apdm_measures = apdm_measures_tmp.iloc[[i for i in data['SampleId'].tolist()]]
     apdm_vals = apdm_measures['apdm_toe_off_asymmetry_median']
+with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
+    sample = pickle.load(fp)
 
-df2 = pd.DataFrame(columns=['l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std', 'apdm_asym', 'alg_asym'], index=range(len(off_lhs)))
-for i in range(len(off_lhs)):
-    l = off_lhs.iloc[i]['idx_fusion_high_level_union']
-    r = off_rhs.iloc[i]['idx_fusion_high_level_union']
-    row = [np.mean(l), np.mean(r), np.median(l), np.median(r), np.std(l), np.std(r), apdm_vals[i],
-           data[i]['step_time_asymmetry2_median_fusion_high_level_union']]
-    df2.iloc[i] = row
-
-
-
-df2.to_csv('testing.csv')
+df2 = pd.DataFrame(columns=['SampleId', 'l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std', 'apdm_asym', 'alg_asym', 'walk_task'], index=data['SampleId'])
+for id in data['SampleId']:
+    l = off_lhs.iloc[id]['idx_fusion_high_level_union']
+    r = off_rhs.iloc[id]['idx_fusion_high_level_union']
+    row = [id, np.mean(l), np.mean(r), np.median(l), np.median(r), np.std(l), np.std(r), apdm_vals.loc[id],
+           data[data['SampleId'] == id]['step_time_asymmetry_median_fusion_high_level_union'].iloc[0], sample['TaskName'].iloc[id]]
+    df2.loc[id] = row
 
 
-
+df2.to_csv(join(save_dir, 'asymmetry_evaluation.csv'), index=False)
 
 

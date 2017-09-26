@@ -63,6 +63,7 @@ def merge_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, merge_type='u
                 if sig_left_out[i] >= union_min_thresh:
                     peaks.append(idx_left_out[i])
 
+    peaks.sort()
     return peaks
 
 

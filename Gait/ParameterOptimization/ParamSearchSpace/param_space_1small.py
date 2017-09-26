@@ -4,7 +4,7 @@ from hyperopt import hp
 # Reduction in search space *****
 # mva_win [2-71] instead of [2-129] - 55% of previous space
 # peak_min_thr [0.01-0.60] instead of [0.01-0.99] - 60% of previous space
-# peak_min_dist [0.01-0.60] instead of [10-80] - 60% of previous space
+# peak_min_dist [0.01-0.60] instead of [10-79] - 60% of previous space
 # union_min_thresh [0.01-0.5] instead of [0.01-0.99] - 50% of previous space
 # mva_win_combined [2-70] instead of [2-129] - 55% of previous space
 
