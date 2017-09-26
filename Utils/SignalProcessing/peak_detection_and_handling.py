@@ -1,5 +1,6 @@
 import numpy as np
 import peakutils
+import pandas as pd
 from Utils.DataHandling.data_processing import pd_to_np
 
 
@@ -57,11 +58,26 @@ def merge_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, merge_type='u
                 idx_left_out.append(idx2[j])
                 sig_left_out.append(sig2[j])
 
-        for i in range(len(idx_left_out)):
-            nearest = np.min(np.abs(merged_idx - idx_left_out[i]))
-            if nearest > union_min_dist:
-                if sig_left_out[i] >= union_min_thresh:
-                    peaks.append(idx_left_out[i])
+        # remove peaks not in intersection that are below min threshold
+        left_out = pd.DataFrame(list(zip(idx_left_out, sig_left_out)), columns=['idx', 'sig'])
+        left_out = left_out[left_out['sig'] >= union_min_thresh].reset_index(drop=True)
+
+        # remove peaks not in intersection that are closer to intersection than min dist
+        left_out['nearest_intersect_idx'] = np.nan
+        for i in range(len(left_out)):
+            left_out['nearest_intersect_idx'].set_value(i, np.min(np.abs(merged_idx - left_out['idx'].iloc[i])))
+        left_out = left_out[left_out['nearest_intersect_idx'] >= union_min_dist]
+        left_out = left_out.sort_values('sig', ascending=False).reset_index(drop=True)
+        left_out['dist_to_curr_idx'] = np.nan
+        left_out['keep'] = True
+        for i in range(len(left_out)):
+            if not left_out['keep'].iloc[i]:
+                continue
+            left_out['dist_to_curr_idx'] = np.abs(left_out['idx'] - left_out['idx'].iloc[i])
+            left_out.loc[left_out['dist_to_curr_idx'] < union_min_dist, 'keep'] = False
+            left_out.loc[i, 'keep'] = True
+        union_idx = left_out['idx'].loc[left_out['keep']==True].tolist()
+        peaks = peaks + union_idx
 
     peaks.sort()
     return peaks

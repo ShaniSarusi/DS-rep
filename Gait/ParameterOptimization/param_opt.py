@@ -224,7 +224,7 @@ for i in range(len(objective_functions)):
 
         ################################################################################################################
         # Print results
-        print('*****************************************************************************************')
+        print('**************************')
         print('Best params are:')
         for d in best:
             if 'verbose' in d:
@@ -233,6 +233,8 @@ for i in range(len(objective_functions)):
                 del d['sample_ids']
             if 'metric' in d:
                 del d['metric']
+            if 'max_dist_from_apdm' in d:
+                del d['max_dist_from_apdm']
         for key in best[0].keys():
             vals = [x[key] for x in best]
             print('\t' + key + ': ' + ', '.join(str(x) for x in vals))

@@ -348,6 +348,7 @@ if __name__ == "__main__":
 
     # Preprocessing
     sd = StepDetection(acc, sample, apdm_measures, apdm_events)
+    sd.normalize_norm()
     sd.select_specific_samples(id_nums)
 
     # Run the step detection algorithms
@@ -356,9 +357,9 @@ if __name__ == "__main__":
                                peak_min_thr=0.2, peak_min_dist=20, verbose=True)
 
     sd.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None,
-                                         use_single_max_min_for_all_samples=True, smoothing=None, mva_win=15,
-                                         peak_min_thr=0.2, peak_min_dist=20, fusion_type='intersect',
-                                         intersect_win=25, union_min_dist=20, union_min_thresh=0.5,
+                                         use_single_max_min_for_all_samples=True, smoothing='mva', mva_win=25,
+                                         peak_min_thr=0.2, peak_min_dist=47, fusion_type='union',
+                                         intersect_win=23, union_min_dist=45, union_min_thresh=0.19,
                                          verbose=True)
 
     sd.step_detection_fusion_low_level(signal_to_use='norm', vert_win=None, smoothing=None, mva_win=15,
