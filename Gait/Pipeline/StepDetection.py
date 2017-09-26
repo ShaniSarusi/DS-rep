@@ -191,7 +191,7 @@ class StepDetection:
         res = pd.Series(idx, index=self.res.index, name='idx_' + alg_name)
         self.res = pd.concat([self.res, res], axis=1)
 
-    def add_gait_metrics(self, verbose=True, max_dist_from_apdm=1234.5):
+    def add_gait_metrics(self, verbose=True, max_dist_from_apdm=0.9):
         if verbose: print("\rRunning: Adding gait metrics")
         # Find 'idx_' columns
         cols = [col for col in self.res.columns if 'idx_' in col]
@@ -211,22 +211,35 @@ class StepDetection:
         res_cadence = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'cadence_'))
         self.res = pd.concat([self.res, res_steps, res_cadence], axis=1)
 
-    def step_and_stride_durations(self, col, max_dist_from_apdm=1234.5):
+    def step_and_stride_durations(self, col, max_dist_from_apdm=0.9):
         step_durations = []
         n_samples = self.res.shape[0]
         for i in range(n_samples):
             step_idx = self.res[col].iloc[i]
+            if len(step_idx) < 2:
+                step_durations.append([])
+                continue
             step_durations_i = []
-            if len(step_idx) > 0:
-                step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
-                             / np.timedelta64(1, 's')
-                if max_dist_from_apdm != 1234.5:
-                    apdm_i = np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[i] +
-                                              self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[i])
-                    if not np.any(np.isnan(apdm_i)):
-                        step_times = np.array([step_time for step_time in step_times if
-                                               np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
-                        step_durations_i = np.diff(step_times)
+
+            step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
+                         / np.timedelta64(1, 's')
+            apdm_i = np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[i] +
+                                      self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[i])
+            if not np.any(np.isnan(apdm_i)):
+                steps = []
+                for j in range(1, len(step_times)):
+                    s1 = step_times[j-1]
+                    s2 = step_times[j]
+                    if np.min(np.abs(apdm_i - s1)) > max_dist_from_apdm:
+                        continue
+                    if np.min(np.abs(apdm_i - s2)) > max_dist_from_apdm:
+                        continue
+                    curr_step = s2 - s1
+                    steps.append(curr_step)
+                step_durations_i = np.array(steps)
+                # step_times = np.array([step_time for step_time in step_times if
+                #                        np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
+                # step_durations_i = np.diff(step_times)
             step_durations.append(step_durations_i)
 
         stride_durations = []

@@ -26,7 +26,7 @@ with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     ts = [(acc[i]['lhs']['ts'] - acc[i]['lhs']['ts'].iloc[0])/np.timedelta64(1, 's') for i in range(len(acc))]
 
 save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
-input_file = join(save_dir, 'aa_param1_1k_sc_09262017', 'gait_measures.csv')
+input_file = join(save_dir, 'aa_param1small_0.1k_sc', 'gait_measures.csv')
 data = pd.read_csv(input_file)
 max_dist_between_apdm_to_wrist_alg = 0.3
 
