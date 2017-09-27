@@ -39,21 +39,26 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
 
         # Scatter plots
         if len(algs) > 6:
-            f, axarr = plt.subplots(3, 3)
+            a1 = 3
+            b1 = 3
         elif len(algs) > 4:
-            f, axarr = plt.subplots(3, 2)
+            a1 = 3
+            b1 = 2
         else:
-            f, axarr = plt.subplots(2, 2)
+            a1 = 2
+            b1 = 2
+        f, axarr = plt.subplots(a1, b1)
         corr = []
         for j in range(len(algs)):
+            a = int(j/a1)
+            b = j % b1
+
             idx_keep_j = pd.notnull(alg_vals[j])
             alg_vals_j = alg_vals[j][idx_keep_j]
             apdm_vals_j = apdm_vals[idx_keep_j]
             corr_j = pearsonr(apdm_vals_j, alg_vals_j)[0]
             corr.append(corr_j)
 
-            a = int(j/2)
-            b = j % 2
             axarr[a, b].scatter(apdm_vals_j, alg_vals_j)
             axarr[a, b].set_xlabel('APDM', fontsize=12)
             # Set y label
@@ -61,7 +66,8 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             if 'lhs' in algs[j]: y_label='Lhs'
             if 'rhs' in algs[j]: y_label = 'Rhs'
             if 'intersect' in algs[j]: y_label = 'Intersect'
-            if 'union' in algs[j]: y_label = 'Union'
+            if 'two_sta' in algs[j]: y_label = 'Union 2 stages'
+            if 'one_sta' in algs[j]: y_label = 'Union 1 stage'
             if 'sum' in algs[j]: y_label = 'Sum'
             if 'diff' in algs[j]: y_label = 'Diff'
             axarr[a, b].set_ylabel(y_label, fontsize=12)
@@ -90,7 +96,8 @@ if __name__ == '__main__':
     save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_10k_sc_story')
     alg_data_path = join(save_path, 'gait_measures.csv')
 
-    algorithms = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union', 'fusion_low_level_sum', 'fusion_low_level_diff']
+    algorithms = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union_two_stages',
+                  'fusion_high_level_union_one_stage', 'fusion_low_level_sum', 'fusion_low_level_diff']
     metrics = ['cadence', 'stride_time_var', 'step_time_asymmetry_median', 'apdm_toe_off_asymmetry_median']
 
     compare_to_apdm(alg_data_path, algorithms, metrics, show_plot=True)

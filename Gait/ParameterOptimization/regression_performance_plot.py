@@ -52,7 +52,8 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
         true_label = 'sc_manual'
         if true_label in algs: algs.remove(true_label)
         # Set order
-        algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_union')))
+        algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_union_one_stage')))
+        algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_union_two_stages')))
         algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_intersect')))
         algs.insert(0, algs.pop(algs.index('sc_fusion_low_level_diff')))
         algs.insert(0, algs.pop(algs.index('sc_fusion_low_level_sum')))
@@ -102,12 +103,13 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     algs = ['Fusion - Sum raw signal' if 'sum' in alg else alg for alg in algs]
     algs = ['Fusion - Diff raw signal' if 'diff' in alg else alg for alg in algs]
     algs = ['Fusion - Intersection of steps' if 'intersect' in alg else alg for alg in algs]
-    algs = ['Fusion - Union of steps' if 'union' in alg else alg for alg in algs]
+    algs = ['Fusion - Union two stages' if 'two_sta' in alg else alg for alg in algs]
+    algs = ['Fusion - Union one stage' if 'one_sta' in alg else alg for alg in algs]
     legends = algs
 
     groups = means
     errors = stds
-    colors = ['r', 'm', 'b', 'c', 'g', 'k']
+    colors = ['r', 'm', 'b', 'c', 'y', 'g', 'k']
 
     x = range(len(groups[0]))
     list_dots = list()

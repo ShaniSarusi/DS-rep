@@ -20,8 +20,6 @@ if c.search_space == 'param1':
     import Gait.ParameterOptimization.ParamSearchSpace.param_space_1 as param_search_space
 if c.search_space == 'param1small':
     import Gait.ParameterOptimization.ParamSearchSpace.param_space_1small as param_search_space
-if c.search_space == 'param_asym_1':
-    import Gait.ParameterOptimization.ParamSearchSpace.param_asym_1 as param_search_space
 
 # Set algorithms
 algs = c.algs
@@ -33,9 +31,12 @@ if 'lhs' in algs:
 if 'fusion_high_level_intersect' in algs:
     search_spaces.append(param_search_space.space_fusion_high_level_intersect)
     objective_functions.append(o.step_detection_fusion_high_level_intersect)
-if 'fusion_high_level_union' in algs:
-    search_spaces.append(param_search_space.space_fusion_high_level_union)
-    objective_functions.append(o.step_detection_fusion_high_level_union)
+if 'fusion_high_level_union_two_stages' in algs:
+    search_spaces.append(param_search_space.space_fusion_high_level_union_two_stages)
+    objective_functions.append(o.step_detection_fusion_high_level_union_two_stages)
+if 'fusion_high_level_union_one_stage' in algs:
+    search_spaces.append(param_search_space.space_fusion_high_level_union_one_stage)
+    objective_functions.append(o.step_detection_fusion_high_level_union_one_stage)
 if 'fusion_low_level_sum' in algs:
     search_spaces.append(param_search_space.space_fusion_low_level)
     objective_functions.append(o.step_detection_fusion_low_level_sum)
@@ -164,7 +165,7 @@ for i in range(len(objective_functions)):
             for k in range(n_folds):
                 print('************************************************************************')
                 print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
-                      '.   Using ' + alg + " search.   Running fold " + str(k + 1) + ' of ' + str(n_folds) +
+                      '.   Using ' + alg + " search, with " + c.search_space + " search space.   Running fold " + str(k + 1) + ' of ' + str(n_folds) +
                       '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
 

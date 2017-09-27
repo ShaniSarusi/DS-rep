@@ -95,7 +95,7 @@ for apdm_gait_stage in apdm_gait_stages:
 
 # alg to plot
 alg_to_plot = 'lhs'
-alg_to_plot = 'fusion_high_level_union'
+alg_to_plot = 'fusion_high_level_union_two_stages'
 
 on_lhs_bp = [item for sublist in initial_lhs['idx_' + alg_to_plot].tolist() for item in sublist]
 on_rhs_bp = [item for sublist in initial_rhs['idx_' + alg_to_plot].tolist() for item in sublist]
@@ -115,7 +115,7 @@ plt.savefig(join(save_dir, 'gait_stage_' + alg_to_plot + '.png'))
 
 
 alg1 = 'lhs'
-alg2 = 'fusion_high_level_union'
+alg2 = 'fusion_high_level_union_two_stages'
 off_lhs_alg1 = [item for sublist in off_lhs['idx_' + alg1].tolist() for item in sublist]
 off_rhs_alg1 = [item for sublist in off_rhs['idx_' + alg1].tolist() for item in sublist]
 off_lhs_alg2 = [item for sublist in off_lhs['idx_' + alg2].tolist() for item in sublist]
@@ -148,11 +148,11 @@ with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
 df2 = pd.DataFrame(columns=['SampleId', 'l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std', 'apdm_asym', 'alg_asym',
                             'diff', 'walk_task'], index=data['SampleId'])
 for id in data['SampleId']:
-    l = off_lhs.iloc[id]['idx_fusion_high_level_union']
-    r = off_rhs.iloc[id]['idx_fusion_high_level_union']
+    l = off_lhs.iloc[id]['idx_fusion_high_level_union_two_stages']
+    r = off_rhs.iloc[id]['idx_fusion_high_level_union_two_stages']
 
     apdm_asym = apdm_vals.loc[id]
-    alg_asym = data[data['SampleId'] == id]['step_time_asymmetry_median_fusion_high_level_union'].iloc[0]
+    alg_asym = data[data['SampleId'] == id]['step_time_asymmetry_median_fusion_high_level_union_two_stages'].iloc[0]
     diff = alg_asym - apdm_asym
 
     row = [id, np.mean(l), np.mean(r), np.median(l), np.median(r), np.std(l), np.std(r), apdm_asym,

@@ -23,7 +23,7 @@ remove = 'mean_same'
 z = 2
 apdm_side = 'lhs'
 alg_side = 'side2'
-alg_name = 'fusion_high_level_union'
+alg_name = 'fusion_high_level_union_two_stages'
 
 data = pd.read_csv(input_file)
 ids = data['SampleId'].tolist()

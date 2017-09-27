@@ -20,7 +20,7 @@ y_count = sample['CadenceWithCrop'].tolist()
 
 data = pd.read_csv(input_file)
 ids = data['SampleId'].tolist()
-y_alg = data['cadence_fusion_high_level_union'].tolist()
+y_alg = data['cadence_fusion_high_level_union_two_stages'].tolist()
 
 x = [x[i] for i in ids]
 y_count = [y_count[i] for i in ids]

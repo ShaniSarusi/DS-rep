@@ -36,16 +36,27 @@ def step_detection_fusion_high_level_intersect(p):
     return get_obj_function_results(s, 'fusion_high_level_intersect', p['metric'], verbose=p['verbose'])
 
 
-def step_detection_fusion_high_level_union(p):
+def step_detection_fusion_high_level_union_two_stages(p):
     s = create_sd_class_for_obj_functions()
     s.normalize_norm()
     s.select_specific_samples(p['sample_ids'])
     s.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None, use_single_max_min_for_all_samples=True,
         smoothing='mva', mva_win=p['mva_win'], peak_min_thr=p['peak_min_thr'], peak_min_dist=p['peak_min_dist'],
-        fusion_type='union', intersect_win=p['intersect_win'], union_min_dist=p['union_min_dist'],
+        fusion_type='union_two_stages', intersect_win=p['intersect_win'], union_min_dist=p['union_min_dist'],
         union_min_thresh=p['union_min_thresh'], verbose=p['verbose'], do_normalization=False)
     s.add_gait_metrics(verbose=False, max_dist_from_apdm=p['max_dist_from_apdm'])
-    return get_obj_function_results(s, 'fusion_high_level_union', p['metric'], verbose=p['verbose'])
+    return get_obj_function_results(s, 'fusion_high_level_union_two_stages', p['metric'], verbose=p['verbose'])
+
+
+def step_detection_fusion_high_level_union_one_stage(p):
+    s = create_sd_class_for_obj_functions()
+    s.normalize_norm()
+    s.select_specific_samples(p['sample_ids'])
+    s.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None, use_single_max_min_for_all_samples=True,
+        smoothing='mva', mva_win=p['mva_win'], peak_min_thr=p['peak_min_thr'], peak_min_dist=p['peak_min_dist'],
+        fusion_type='union_one_stage', union_min_dist=p['union_min_dist'], verbose=p['verbose'], do_normalization=False)
+    s.add_gait_metrics(verbose=False, max_dist_from_apdm=p['max_dist_from_apdm'])
+    return get_obj_function_results(s, 'fusion_high_level_union_one_stage', p['metric'], verbose=p['verbose'])
 
 
 def step_detection_fusion_low_level_sum(p):

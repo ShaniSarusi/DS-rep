@@ -7,7 +7,7 @@ from Utils.BasicStatistics.statistics_functions import cv
 from Utils.Preprocessing.denoising import moving_average_no_nans
 from Utils.Preprocessing.other_utils import normalize_max_min, reduce_dim_3_to_1
 from Utils.SignalProcessing.peak_detection_and_handling import run_peak_utils_peak_detection, \
-    merge_peaks_from_two_signals
+    merge_peaks_from_two_signals, merge_peaks_from_two_signals_union_one_stage
 
 
 class StepDetection:
@@ -129,14 +129,24 @@ class StepDetection:
         if verbose:
             if fusion_type == 'intersect':
                 print("\tStep: Merging peaks from both sides. Max distance for intersect: " + str(intersect_win))
-            else:
-                print("\tStep: Merging peaks from both sides. Max distance for intersect: " + str(intersect_win) +
+            elif fusion_type == 'union_two_stages':
+                print("\tStep: Merging peaks from both sides (union 2 stage). Max distance for intersect: " + str(intersect_win) +
                       ". Min dist for union: " + str(union_min_dist) + ". Min peak thresh-union: " +
                       str(union_min_thresh))
-        idx = [merge_peaks_from_two_signals(idx_lhs[i], idx_rhs[i], lhs[i][idx_lhs[i]], rhs[i][idx_rhs[i]],
+            else:
+                print("\tStep: Merging peaks from both sides (union 1 stage): " + ". Min dist for union: " +
+                      str(union_min_dist) + ".")
+
+        if fusion_type == 'union_one_stage':
+            idx = [merge_peaks_from_two_signals_union_one_stage(idx_lhs[i], idx_rhs[i], lhs[i][idx_lhs[i]],
+                         rhs[i][idx_rhs[i]], union_min_dist=union_min_dist) for i in range(len(lhs))]
+        else:
+            idx = [merge_peaks_from_two_signals(idx_lhs[i], idx_rhs[i], lhs[i][idx_lhs[i]], rhs[i][idx_rhs[i]],
                                             merge_type=fusion_type, intersect_win_size=intersect_win,
                                             union_min_dist=union_min_dist, union_min_thresh=union_min_thresh) for i
                                             in range(len(lhs))]
+
+
 
         # Save results
         if verbose: print("\tStep: Saving results")
@@ -358,7 +368,7 @@ if __name__ == "__main__":
 
     sd.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None,
                                          use_single_max_min_for_all_samples=True, smoothing='mva', mva_win=25,
-                                         peak_min_thr=0.2, peak_min_dist=47, fusion_type='union',
+                                         peak_min_thr=0.2, peak_min_dist=47, fusion_type='union_two_stages',
                                          intersect_win=23, union_min_dist=45, union_min_thresh=0.19,
                                          verbose=True)
 

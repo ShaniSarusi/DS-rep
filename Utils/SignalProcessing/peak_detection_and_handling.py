@@ -4,6 +4,34 @@ import pandas as pd
 from Utils.DataHandling.data_processing import pd_to_np
 
 
+def merge_peaks_from_two_signals_union_one_stage(idx1, idx2, sig1=None, sig2=None, union_min_dist=40):
+    if len(idx1) == 0:
+        return []
+    elif len(idx2) == 0:
+        return []
+    elif sig1 is None:
+        return []
+    elif sig2 is None:
+        return []
+
+    sig = np.concatenate((pd_to_np(sig1), pd_to_np(sig2)))
+    idx = np.concatenate((np.asarray(idx1), np.asarray(idx2)))
+
+    peaks = pd.DataFrame(list(zip(idx, sig)), columns=['idx', 'sig'])
+    peaks = peaks.sort_values('sig', ascending=False).reset_index(drop=True)
+    peaks['dist_to_curr_idx'] = np.nan
+    peaks['keep'] = True
+    for i in range(len(peaks)):
+        if not peaks['keep'].iloc[i]:
+            continue
+        peaks['dist_to_curr_idx'] = np.abs(peaks['idx'] - peaks['idx'].iloc[i])
+        peaks.loc[peaks['dist_to_curr_idx'] < union_min_dist, 'keep'] = False
+        peaks.loc[i, 'keep'] = True
+    union_idx = peaks['idx'].loc[peaks['keep'] == True].tolist()
+    union_idx.sort()
+    return union_idx
+
+
 def merge_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, merge_type='union', intersect_win_size=10,
                                  union_min_dist=40, union_min_thresh=1):
     peaks = []

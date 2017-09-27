@@ -146,5 +146,5 @@ if __name__ == '__main__':
         #plot_type = 'all_events'
         save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
         input_file = join(save_dir, 'aa_param1small_0.1k_sc_v2', 'gait_measures.csv')
-        plot_channels_and_events(id, file=input_file, alg='fusion_high_level_union',
+        plot_channels_and_events(id, file=input_file, alg='fusion_high_level_union_two_stages',
                                  start_time=2, time_range=18, plot_type=plot_type, save=False, show_plot=True)
