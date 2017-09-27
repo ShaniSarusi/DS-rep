@@ -36,11 +36,12 @@ def sum_results_for_plotting_parameters(input_file, save_dir):
     for i in res.index:
         for col in res.columns:
             vals = string_to_int_list(res[col].loc[i])
-            try:
+            if len(vals) > 0:
                 res_mean[col].loc[i] = np.mean(vals)
                 res_std[col].loc[i] = np.std(vals)
-            except:
-                'do nothing'
+            else:
+                res_mean[col].loc[i] = np.nan
+                res_std[col].loc[i] = np.nan
 
     # Save results
     res.to_csv(join(save_dir, 'Summary_params_for_plots.csv'))

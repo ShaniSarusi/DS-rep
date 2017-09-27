@@ -148,7 +148,7 @@ for i in range(len(objective_functions)):
             def par_fmin(k_iter):
                 print('************************************************************************')
                 print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
-                      '.   Using ' + alg + " search.   Search space: " + c.search_space + "Running fold " +
+                      '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
                       str(k_iter + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
                 space['sample_ids'] = train[k_iter]
@@ -165,7 +165,7 @@ for i in range(len(objective_functions)):
             for k in range(n_folds):
                 print('************************************************************************')
                 print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
-                      '.   Using ' + alg + " search, with " + c.search_space + " search space.   Running fold " +
+                      '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
                       str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
 

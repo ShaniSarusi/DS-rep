@@ -52,13 +52,20 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
         true_label = 'sc_manual'
         if true_label in algs: algs.remove(true_label)
         # Set order
-        algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_union_one_stage')))
-        algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_union_two_stages')))
-        algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_intersect')))
-        algs.insert(0, algs.pop(algs.index('sc_fusion_low_level_diff')))
-        algs.insert(0, algs.pop(algs.index('sc_fusion_low_level_sum')))
-        algs.insert(0, algs.pop(algs.index('sc_rhs')))
-        algs.insert(0, algs.pop(algs.index('sc_lhs')))
+        if 'sc_fusion_high_level_union_one_stage' in algs:
+            algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_union_one_stage')))
+        if 'sc_fusion_high_level_union_two_stages' in algs:
+            algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_union_two_stages')))
+        if 'sc_fusion_high_level_intersect' in algs:
+            algs.insert(0, algs.pop(algs.index('sc_fusion_high_level_intersect')))
+        if 'sc_fusion_low_level_diff' in algs:
+            algs.insert(0, algs.pop(algs.index('sc_fusion_low_level_diff')))
+        if 'sc_fusion_low_level_sum' in algs:
+            algs.insert(0, algs.pop(algs.index('sc_fusion_low_level_sum')))
+        if 'sc_rhs' in algs:
+            algs.insert(0, algs.pop(algs.index('sc_rhs')))
+        if 'sc_lhs' in algs:
+            algs.insert(0, algs.pop(algs.index('sc_lhs')))
 
         with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
             sample = pickle.load(fp)

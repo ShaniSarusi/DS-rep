@@ -1,8 +1,8 @@
 from os.path import join, sep
 from os import getcwd
 
-n_folds = 2
-max_evals = 2
+n_folds = 5
+max_evals = 1000
 opt_alg = 'random'  # Can be 'tpe' or 'random'  #tpe doesn't work anymore for some reason for intersect. it fails every once in a while
 do_verbose = False
 tasks_to_optimize = 'all'
@@ -10,6 +10,8 @@ max_dist_from_apdm_for_comparing_events = 0.9
 
 algs = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union_two_stages',
         'fusion_high_level_union_one_stage', 'fusion_low_level_sum', 'fusion_low_level_diff']
+
+# algs = ['fusion_high_level_union_two_stages', 'fusion_high_level_union_one_stage']
 
 metric_to_optimize = 'sc_rmse'
 search_space = 'param1'

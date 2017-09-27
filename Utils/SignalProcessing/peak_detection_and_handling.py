@@ -16,23 +16,21 @@ def merge_peaks_from_two_signals_union_one_stage(idx1, idx2, sig1=None, sig2=Non
 
     sig = np.concatenate((pd_to_np(sig1), pd_to_np(sig2)))
     idx = np.concatenate((np.asarray(idx1), np.asarray(idx2)))
-
-    peaks = pd.DataFrame(list(zip(idx, sig)), columns=['idx', 'sig'])
-    peaks = peaks.sort_values('sig', ascending=False).reset_index(drop=True)
-    peaks['dist_to_curr_idx'] = np.nan
-    peaks['keep'] = True
-    for i in range(len(peaks)):
-        if not peaks['keep'].iloc[i]:
+    a = np.argsort(sig)
+    sig = sig[a[::-1]]
+    idx = idx[a[::-1]]
+    keep = np.ones((len(idx)), dtype=bool)
+    for i in range(len(idx)):
+        if not keep[i]:
             continue
-        peaks['dist_to_curr_idx'] = np.abs(peaks['idx'] - peaks['idx'].iloc[i])
-        peaks.loc[peaks['dist_to_curr_idx'] < union_min_dist, 'keep'] = False
-        peaks.loc[i, 'keep'] = True
-    union_idx = peaks['idx'].loc[peaks['keep'] == True].tolist()
-    union_idx.sort()
-    return union_idx
+        keep = np.abs(idx - idx[i]) >= union_min_dist
+        keep[i] = True
+    res = idx[keep]
+    res.sort()
+    return res
 
 
-def merge_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, merge_type='union', intersect_win_size=10,
+def merge_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, merge_type='union_two_stages', intersect_win_size=10,
                                  union_min_dist=40, union_min_thresh=1):
     peaks = []
     if len(idx1) == 0:
@@ -73,7 +71,7 @@ def merge_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, merge_type='u
                     peaks.append(idx2[j])
 
     # Union
-    if merge_type == 'union' and len(merged_idx) > 0:
+    if merge_type == 'union_two_stages' and len(merged_idx) > 0:
         merged_idx = np.asarray(merged_idx)
         idx_left_out = []
         sig_left_out = []
@@ -95,17 +93,19 @@ def merge_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, merge_type='u
         for i in range(len(left_out)):
             left_out['nearest_intersect_idx'].set_value(i, np.min(np.abs(merged_idx - left_out['idx'].iloc[i])))
         left_out = left_out[left_out['nearest_intersect_idx'] >= union_min_dist]
+
+        # remove peaks that are too close to each other
         left_out = left_out.sort_values('sig', ascending=False).reset_index(drop=True)
-        left_out['dist_to_curr_idx'] = np.nan
-        left_out['keep'] = True
-        for i in range(len(left_out)):
-            if not left_out['keep'].iloc[i]:
+        sig = np.asarray(left_out['sig'])
+        idx = np.asarray(left_out['idx'])
+        keep = np.ones((len(idx)), dtype=bool)
+        for i in range(len(idx)):
+            if not keep[i]:
                 continue
-            left_out['dist_to_curr_idx'] = np.abs(left_out['idx'] - left_out['idx'].iloc[i])
-            left_out.loc[left_out['dist_to_curr_idx'] < union_min_dist, 'keep'] = False
-            left_out.loc[i, 'keep'] = True
-        union_idx = left_out['idx'].loc[left_out['keep']==True].tolist()
-        peaks = peaks + union_idx
+            keep = np.abs(idx - idx[i]) >= union_min_dist
+            keep[i] = True
+        union_idx = idx[keep]
+        peaks = peaks + union_idx.tolist()
 
     peaks.sort()
     return peaks
