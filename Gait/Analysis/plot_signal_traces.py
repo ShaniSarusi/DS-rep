@@ -93,14 +93,16 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
         elif plot_type == 'toes_off':
             for j in range(len(l_off)):
                 ax2 = plt.axvline(l_off[j], color='r', ls='--', lw=2)
+                # break
             for j in range(len(r_off)):
-                ax4 = plt.axvline(r_off[j], color='k', ls='--', lw=2)
+                ax4 = plt.axvline(r_off[j], color='g', ls='--', lw=2)
+                #break
             for j in range(len(alg_ts)):
-                ax5 = plt.axvline(alg_ts[j], color='g', ls='-', lw=2)
+                ax5 = plt.axvline(alg_ts[j], color='k', ls='-', lw=2)
             if i == 0:
                 plt.legend([ax2, ax4, ax5], ["Left toe off", "Right toe off", "Algorithm"], loc="center left",
                            bbox_to_anchor=(0.2, 1.18), numpoints=1, fontsize=14, ncol=3)
-        else:  # 'all_events'
+        elif plot_type == 'all_events':
             for j in range(len(l_on)):
                 ax1 = plt.axvline(l_on[j], color='r', ls='-', lw=2)
             for j in range(len(l_off)):
@@ -113,6 +115,8 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
                 plt.legend([ax1, ax2, ax3, ax4], ["Left initial contact", "Left toe off", 'Right initial contact',
                                                   "Right toe off"], loc="center left", bbox_to_anchor=(0.25, 1.24),
                            numpoints=1, fontsize=13, ncol=2)
+        else:
+            pass
 
     plt.xlabel('Seconds', fontsize=16)
     if show_plot_title:
@@ -131,9 +135,7 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
 if __name__ == '__main__':
     do_and_save_everything = False
     do_all_plots = False
-    id = 145  #20, 204, 214
-    id = 193
-    #id = 207
+    id = 257
 
     if do_and_save_everything:
         do_everything(start_time=8, time_range=5)
@@ -143,8 +145,9 @@ if __name__ == '__main__':
         #plot_type = 'left_leg_events'
         # plot_type = 'initial_contacts'
         plot_type = 'toes_off'
-        #plot_type = 'all_events'
+        #plot_type = 'nothing'
         save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
-        input_file = join(save_dir, 'aa_param1small_0.1k_sc_v2', 'gait_measures.csv')
+        input_file = join(save_dir, 'aa_param1_1k_sc_0928_1', 'gait_measures.csv')
+        input_file = join(save_dir, 'aa_param1_5k_sc_union2_0928', 'gait_measures.csv')
         plot_channels_and_events(id, file=input_file, alg='fusion_high_level_union_two_stages',
-                                 start_time=2, time_range=18, plot_type=plot_type, save=False, show_plot=True)
+                                 start_time=30, time_range=7, plot_type=plot_type, save=False, show_plot=True)

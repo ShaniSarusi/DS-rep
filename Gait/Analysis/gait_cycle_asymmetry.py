@@ -27,9 +27,9 @@ with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     ts = [(acc[i]['lhs']['ts'] - acc[i]['lhs']['ts'].iloc[0])/np.timedelta64(1, 's') for i in range(len(acc))]
 
 save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
-input_file = join(save_dir, 'aa_param1_1k_sc_union2', 'gait_measures.csv')
+input_file = join(save_dir, 'aa_param1_5k_sc_union2_0928', 'gait_measures.csv')
 data = pd.read_csv(input_file)
-max_dist_between_apdm_to_wrist_alg = 0.3
+max_dist_between_apdm_to_wrist_alg = 0.5
 
 algs = [data.columns[i] for i in range(len(data.columns)) if 'idx_' in data.columns[i]]
 for alg in algs:
@@ -114,27 +114,27 @@ plt.tight_layout()
 plt.savefig(join(save_dir, 'gait_stage_' + alg_to_plot + '.png'))
 
 
-alg1 = 'lhs'
-alg2 = 'fusion_high_level_union_two_stages'
-off_lhs_alg1 = [item for sublist in off_lhs['idx_' + alg1].tolist() for item in sublist]
-off_rhs_alg1 = [item for sublist in off_rhs['idx_' + alg1].tolist() for item in sublist]
-off_lhs_alg2 = [item for sublist in off_lhs['idx_' + alg2].tolist() for item in sublist]
-off_rhs_alg2 = [item for sublist in off_rhs['idx_' + alg2].tolist() for item in sublist]
-a = plt.boxplot([off_lhs_alg1, off_lhs_alg2, off_rhs_alg1, off_rhs_alg2], 0, '', positions=[1, 1.4, 2, 2.4],
-            labels=['Lhs', 'Union', 'Lhs', 'Union'], patch_artist=True)
-
-colors = ['pink', 'lightblue', 'pink', 'lightblue']
-for patch, color in zip(a['boxes'], colors):
-    patch.set_facecolor(color)
-plt.ylabel('\u0394t from nearest wrist event\n(ms)', fontsize=16)
-plt.xlabel('Left toe             Right toe', fontsize=18)
-plt.ylim(-100, 75)
-plt.axhline(0, color='black', linestyle='--')
-plt.yticks(fontsize=12)
-plt.xticks(fontsize=14)
-plt.gca().yaxis.grid(True)
-plt.tight_layout()
-plt.savefig(join(save_dir, 'gait_stage_comparison.png'))
+# alg1 = 'lhs'
+# alg2 = 'fusion_high_level_union_two_stages'
+# off_lhs_alg1 = [item for sublist in off_lhs['idx_' + alg1].tolist() for item in sublist]
+# off_rhs_alg1 = [item for sublist in off_rhs['idx_' + alg1].tolist() for item in sublist]
+# off_lhs_alg2 = [item for sublist in off_lhs['idx_' + alg2].tolist() for item in sublist]
+# off_rhs_alg2 = [item for sublist in off_rhs['idx_' + alg2].tolist() for item in sublist]
+# a = plt.boxplot([off_lhs_alg1, off_lhs_alg2, off_rhs_alg1, off_rhs_alg2], 0, '', positions=[1, 1.4, 2, 2.4],
+#             labels=['Lhs', 'Union', 'Lhs', 'Union'], patch_artist=True)
+#
+# colors = ['pink', 'lightblue', 'pink', 'lightblue']
+# for patch, color in zip(a['boxes'], colors):
+#     patch.set_facecolor(color)
+# plt.ylabel('\u0394t from nearest wrist event\n(ms)', fontsize=16)
+# plt.xlabel('Left toe             Right toe', fontsize=18)
+# plt.ylim(-100, 75)
+# plt.axhline(0, color='black', linestyle='--')
+# plt.yticks(fontsize=12)
+# plt.xticks(fontsize=14)
+# plt.gca().yaxis.grid(True)
+# plt.tight_layout()
+# plt.savefig(join(save_dir, 'gait_stage_comparison.png'))
 
 
 #### Plotting personal
@@ -145,30 +145,40 @@ with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
 
-df2 = pd.DataFrame(columns=['SampleId', 'l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std', 'apdm_asym', 'alg_asym',
-                            'diff', 'walk_task'], index=data['SampleId'])
+alg_name = 'fusion_high_level_union_two_stages'
+df2 = pd.DataFrame(columns=['SampleId', 'l_all', 'r_all', 'l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std', 'apdm_asym', 'alg_asym',
+                            'diff', 'sc_pct_error', 'walk_task'], index=data['SampleId'])
 for id in data['SampleId']:
-    l = off_lhs.iloc[id]['idx_fusion_high_level_union_two_stages']
-    r = off_rhs.iloc[id]['idx_fusion_high_level_union_two_stages']
+    l = off_lhs.iloc[id]['idx_' + alg_name]
+    r = off_rhs.iloc[id]['idx_' + alg_name]
 
     apdm_asym = apdm_vals.loc[id]
-    alg_asym = data[data['SampleId'] == id]['step_time_asymmetry_median_fusion_high_level_union_two_stages'].iloc[0]
+    alg_asym = data[data['SampleId'] == id]['step_time_asymmetry_median_' + alg_name].iloc[0]
     diff = alg_asym - apdm_asym
 
-    row = [id, np.mean(l), np.mean(r), np.median(l), np.median(r), np.std(l), np.std(r), apdm_asym,
-           alg_asym, diff, sample['TaskName'].iloc[id]]
+    sc_manual = data[data['SampleId'] == id]['sc_manual'].iloc[0]
+    sc_alg = data[data['SampleId'] == id]['sc_' + alg_name].iloc[0]
+    err = (sc_alg - sc_manual)/sc_manual
+
+    l.sort()
+    r.sort()
+    row = [id, str(l), str(r), np.mean(l), np.mean(r), np.median(l), np.median(r), np.std(l), np.std(r), apdm_asym,
+           alg_asym, diff, err, sample['TaskName'].iloc[id]]
+
     df2.loc[id] = row
 df2.to_csv(join(save_dir, 'asymmetry_evaluation.csv'), index=False)
 
-df_corr = pd.DataFrame(columns=['walk_task', 'corr'], index=range(len(df2['walk_task'].unique())))
+df_corr = pd.DataFrame(columns=['walk_task', 'apdm_med', 'alg_med', 'corr'], index=range(len(df2['walk_task'].unique())))
 df_corr['walk_task'] = df2['walk_task'].unique()
 for i in range(len(df_corr)):
     task = df_corr.iloc[i]['walk_task']
     idx_bool = df2['walk_task'] == task
     a = df2[idx_bool]['apdm_asym'].as_matrix()
     b = df2[idx_bool]['alg_asym'].as_matrix()
-    corr = pearsonr(a, b)[0]
-    df_corr.iloc[i]['corr'] = corr
+    # values
+    df_corr.iloc[i]['apdm_med'] = np.median(a)
+    df_corr.iloc[i]['alg_med'] = np.median(b)
+    df_corr.iloc[i]['corr'] = pearsonr(a, b)[0]
 
 df_corr.to_csv(join(save_dir, 'asymmetry_corr_per_task.csv'), index=False)
 
