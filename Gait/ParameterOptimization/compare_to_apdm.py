@@ -93,11 +93,13 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             plt.show()
 
 if __name__ == '__main__':
-    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_10k_sc_story')
+    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_5k_sc_union2_0928')
     alg_data_path = join(save_path, 'gait_measures.csv')
 
     algorithms = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union_two_stages',
                   'fusion_high_level_union_one_stage', 'fusion_low_level_sum', 'fusion_low_level_diff']
     metrics = ['cadence', 'stride_time_var', 'step_time_asymmetry_median', 'apdm_toe_off_asymmetry_median']
 
+    algorithms = ['fusion_high_level_union_two_stages', 'fusion_high_level_union_one_stage']
+    metrics = ['stride_time_var']
     compare_to_apdm(alg_data_path, algorithms, metrics, show_plot=True)

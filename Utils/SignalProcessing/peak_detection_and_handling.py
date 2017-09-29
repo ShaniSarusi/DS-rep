@@ -14,17 +14,17 @@ def merge_peaks_from_two_signals_union_one_stage(idx1, idx2, sig1=None, sig2=Non
     elif sig2 is None:
         return []
 
-    sig = np.concatenate((pd_to_np(sig1), pd_to_np(sig2)))
+    sig = np.concatenate((np.asarray(sig1), np.asarray(sig2)))
     idx = np.concatenate((np.asarray(idx1), np.asarray(idx2)))
     a = np.argsort(sig)
     sig = sig[a[::-1]]
     idx = idx[a[::-1]]
     keep = np.ones((len(idx)), dtype=bool)
     for i in range(len(idx)):
-        if not keep[i]:
-            continue
-        keep = np.abs(idx - idx[i]) >= union_min_dist
-        keep[i] = True
+        if keep[i]:
+            keep_tmp = np.abs(idx - idx[i]) >= union_min_dist
+            keep = keep & keep_tmp
+            keep[i] = True
     res = idx[keep]
     res.sort()
     return res
@@ -100,10 +100,10 @@ def merge_peaks_from_two_signals(idx1, idx2, sig1=None, sig2=None, merge_type='u
         idx = np.asarray(left_out['idx'])
         keep = np.ones((len(idx)), dtype=bool)
         for i in range(len(idx)):
-            if not keep[i]:
-                continue
-            keep = np.abs(idx - idx[i]) >= union_min_dist
-            keep[i] = True
+            if keep[i]:
+                keep_tmp = np.abs(idx - idx[i]) >= union_min_dist
+                keep = keep & keep_tmp
+                keep[i] = True
         union_idx = idx[keep]
         peaks = peaks + union_idx.tolist()
 
