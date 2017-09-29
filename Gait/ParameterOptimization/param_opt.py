@@ -147,7 +147,7 @@ for i in range(len(objective_functions)):
             # scope: objective, space, opt_algorithm, and max_evals
             def par_fmin(k_iter):
                 print('************************************************************************')
-                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
+                print('\rOptimizing ' + c.metric_to_optimize + '. Optimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
                       '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
                       str(k_iter + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
@@ -164,7 +164,7 @@ for i in range(len(objective_functions)):
         else:
             for k in range(n_folds):
                 print('************************************************************************')
-                print('\rOptimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
+                print('\rOptimizing ' + c.metric_to_optimize + '. Optimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
                       '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
                       str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
