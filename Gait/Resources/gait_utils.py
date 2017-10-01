@@ -4,7 +4,6 @@ from os.path import join
 import Gait.Resources.config as c
 import numpy as np
 import pandas as pd
-from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
 from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Connections.connections import load_pickle_file_from_s3
 from hyperopt import space_eval
@@ -49,7 +48,7 @@ def split_by_person():
     return filt
 
 
-def gait_measure_analysis(df, p_dir, p_save_name, p_algs, p_metrics, prefix=""):
+def create_gait_measure_csvs(df, p_gait_measure_path):
     res_gait = df[0]
     for i in range(1, len(df)):
         right = df[i]
@@ -59,11 +58,7 @@ def gait_measure_analysis(df, p_dir, p_save_name, p_algs, p_metrics, prefix=""):
         right = right.drop(cols_shared, axis=1)
         res_gait = res_gait.join(right, how='outer')
     res_gait = res_gait.sort_index()
-    gait_measure_path = join(p_dir, p_save_name)
-    res_gait.to_csv(gait_measure_path)
-
-    # Plot gait metric comparisons to APDM
-    compare_to_apdm(gait_measure_path, p_algs, p_metrics, name_prefix=prefix)
+    res_gait.to_csv(p_gait_measure_path)
 
 
 def set_filters(exp=2):

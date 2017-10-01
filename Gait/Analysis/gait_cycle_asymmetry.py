@@ -27,7 +27,7 @@ with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     ts = [(acc[i]['lhs']['ts'] - acc[i]['lhs']['ts'].iloc[0])/np.timedelta64(1, 's') for i in range(len(acc))]
 
 save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
-input_file = join(save_dir, 'aa_param1_5k_sc_union2_0928', 'gait_measures.csv')
+input_file = join(save_dir, 'aa_param1_10k_sc_1001_1', 'gait_measures.csv')
 data = pd.read_csv(input_file)
 max_dist_between_apdm_to_wrist_alg = 0.5
 
@@ -96,6 +96,7 @@ for apdm_gait_stage in apdm_gait_stages:
 # alg to plot
 alg_to_plot = 'lhs'
 alg_to_plot = 'fusion_high_level_union_two_stages'
+alg_to_plot = 'fusion_high_level_union_one_stage'
 
 on_lhs_bp = [item for sublist in initial_lhs['idx_' + alg_to_plot].tolist() for item in sublist]
 on_rhs_bp = [item for sublist in initial_rhs['idx_' + alg_to_plot].tolist() for item in sublist]
@@ -146,6 +147,7 @@ with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
 
 alg_name = 'fusion_high_level_union_two_stages'
+alg_name = 'fusion_high_level_union_one_stage'
 df2 = pd.DataFrame(columns=['SampleId', 'l_all', 'r_all', 'l_mean', 'r_mean', 'l_med', 'r_med', 'l_std', 'r_std', 'apdm_asym', 'alg_asym',
                             'diff', 'sc_pct_error', 'walk_task'], index=data['SampleId'])
 for id in data['SampleId']:

@@ -185,7 +185,6 @@ if __name__ == '__main__':
     #               'gait_measures_split.csv')
 
     rotate = False
-    metric = 'MAPE'  # 'MAPE' or 'RMSE'
     metric = 'PE'  # 'MAPE' or 'RMSE'
     show_plot = True
     save_name = 'pe_all2.png'

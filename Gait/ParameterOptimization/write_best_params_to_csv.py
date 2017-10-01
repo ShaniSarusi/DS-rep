@@ -7,7 +7,7 @@ import Gait.Resources.config as c
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory
 
 
-def sum_results(save_dir, return_file_path=False):
+def write_best_params_to_csv(save_dir, return_file_path=False):
     # Start code
     with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
         task_filters = pickle.load(fp)
@@ -63,4 +63,4 @@ def sum_results(save_dir, return_file_path=False):
 
 if __name__ == '__main__':
     save_path = join(c.results_path, 'param_opt')
-    sum_results(save_path)
+    write_best_params_to_csv(save_path)

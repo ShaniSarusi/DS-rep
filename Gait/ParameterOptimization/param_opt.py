@@ -1,18 +1,16 @@
 import pickle
 from multiprocessing import Pool
 from os.path import join
-
 import hyperopt as hp
 import numpy as np
 import pandas as pd
 from hyperopt import fmin, Trials, tpe, space_eval
-
 import Gait.Resources.config as c
-from Gait.Resources.gait_utils import evaluate_on_test_set, gait_measure_analysis
+from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs
 import Gait.ParameterOptimization.objective_functions as o
+from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
 from Gait.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
-from Gait.ParameterOptimization.sum_results import sum_results
-from Gait.ParameterOptimization.sum_results_for_plotting_parameters import sum_results_for_plotting_parameters
+from Gait.ParameterOptimization.write_best_params_to_csv import write_best_params_to_csv
 from Utils.Preprocessing.other_utils import split_data
 
 # Set search spaces
@@ -253,16 +251,19 @@ for i in range(len(objective_functions)):
         df_gait_measures_by_alg.append(df_for_alg_i)
 
 ########################################################################################################################
-# Summarize and save all optimization results
-print('***Summarizing and saving results***')
-file_name = sum_results(save_dir, return_file_path=True)
-sum_results_for_plotting_parameters(file_name, save_dir)
+# Summarize best parameters
+print('***Writing best params from all folds and all algs to csv***')
+file_name = write_best_params_to_csv(save_dir, return_file_path=True)
 
 # Summarize and save gait measure results
+print('***Summarizing all results for each individual sample***')
+data_file = join(save_dir, 'gait_measures.csv')
+create_gait_measure_csvs(df_gait_measures_by_alg, data_file)
+
+# Data analysis plots
 metrics = ['cadence', 'step_time_asymmetry_median', 'stride_time_var', 'apdm_toe_off_asymmetry_median']
-save_name = 'gait_measures.csv'
-gait_measure_analysis(df_gait_measures_by_alg, save_dir, save_name, algs, metrics)
-data_file = join(save_dir, save_name)
+compare_to_apdm(data_file, algs, metrics, name_prefix="")
+
 create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True,
                                    show_plot=False)
 create_regression_performance_plot(data_file, 'RMSE', save_name='alg_performance_rmse.png', rotate=True,
