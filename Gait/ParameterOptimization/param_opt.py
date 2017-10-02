@@ -18,8 +18,8 @@ if c.search_space == 'param1':
     import Gait.ParameterOptimization.ParamSearchSpace.param_space_1 as param_search_space
 if c.search_space == 'param1small':
     import Gait.ParameterOptimization.ParamSearchSpace.param_space_1small as param_search_space
-if c.search_space == 'param2small':
-    import Gait.ParameterOptimization.ParamSearchSpace.param_space_2small as param_search_space
+if c.search_space == 'param3small':
+    import Gait.ParameterOptimization.ParamSearchSpace.param_space_3small as param_search_space
 
 # Set algorithms
 algs = c.algs
