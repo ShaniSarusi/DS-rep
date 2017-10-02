@@ -106,6 +106,8 @@ def fusedlasso(sig, beta, mymatrix):
 
 
 def moving_average_no_nans(data, window_size):
+    if window_size < 2:
+        return data
     a = [1.0 / window_size] * window_size
     res = filtfilt(a, 1, data)
     return pd.Series(res)
