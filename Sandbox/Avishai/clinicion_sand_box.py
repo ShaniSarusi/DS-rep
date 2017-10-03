@@ -11,26 +11,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-task_number = 0
-meta = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/musc_motor_tasks.csv', encoding = 'latin-1')
-meta = meta.dropna(axis = 0, how = 'any', thresh = 3)
 
-my_data = read_from_s3('aws-athena-query-results-726895906399-us-west-2', 'Unsaved/2017/09/12/user_142592.csv', 
-'AKIAIEOL4GFG77QPNLCA', '06/OfU2vRMAkLGt69PjvVOSRfe1seABRQzhErL++' )
+user_number = 142594
+ses_number = 1
+
+my_data = read_from_s3('aws-athena-query-results-726895906399-us-west-2', 
+'clinic_users/Tagging_files_clinic/user_' + str(user_number) + '_ses' + str(ses_number) + '.csv', 
+'AKIAIEOL4GFG77QPNLCA', 
+'06/OfU2vRMAkLGt69PjvVOSRfe1seABRQzhErL++' )
 
 my_data['date'] = my_data['timestamp'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
-meta['date_start'] = meta['Tsstart'].apply(lambda x: dt.datetime.strptime(x, '%m/%d/%Y %H:%M.%S'))
-meta['date_end'] = meta['Tsend'].apply(lambda x: dt.datetime.strptime(x, '%m/%d/%Y %H:%M.%S'))
 
-my_data['norma'] = my_data[['x', 'y', 'z']].apply(lambda row: np.sqrt(row['x']**2 + row['y']**2 + row['z']**2) , axis = 1)
+
+#my_data['norma'] = my_data[['x', 'y', 'z']].apply(lambda row: np.sqrt(row['x']**2 + row['y']**2 + row['z']**2) , axis = 1)
 
 np.unique(meta.Task)
-pateint = 142592
 date_border_up = my_data['date'][len(my_data['date']) - 1]
 date_border_low = my_data['date'][0]
 
-meta_pateint = meta.iloc[np.where((meta.user_id == pateint) & (meta['date_start'] > date_border_low) &
+meta_pateint = meta.iloc[np.where((meta.user_id == user_number) & (meta['date_start'] > date_border_low) &
                                   (meta['date_end'] < date_border_up))]
+meta_pateint = meta_pateint.sort('date_start')
 num = 1
 #num_task = np.where((meta_pateint.Task == task) & (meta_pateint.user_id == 142592))[0][num]
 
@@ -45,13 +46,16 @@ index2 = np.where((my_data['date'] >= meta_pateint['date_start'].iloc[num]) &
 
 print(num)
 alpha = 0.5
-plt.plot(my_data.loc[index]['x'], alpha = alpha)
-plt.plot(my_data.loc[index]['y'], alpha = alpha)
-plt.plot(my_data.loc[index]['z'], alpha = alpha)
+plt.plot(range(len(index[0])),my_data.loc[index]['x'], alpha = alpha)
+plt.plot(range(len(index[0])),my_data.loc[index]['y'], alpha = alpha)
+plt.plot(range(len(index[0])),my_data.loc[index]['z'], alpha = alpha)
+plt.xlabel('seconds')
+plt.ylabel('accelerometer value')
 currentAxis = plt.gca()
 currentAxis.set_title(meta_pateint.Task.iloc[num])
 currentAxis.set_ylim([-2,2])
-currentAxis.add_patch(Rectangle((index2[0][0], -2), len(index2[0]), 4, fill=None, alpha=1, edgecolor ="red"))
+plt.xticks(np.arange(0, len(index[0]), 1000.0))
+currentAxis.add_patch(Rectangle((np.where(index[0] == index2[0][0])[0], -2), len(index2[0]), 4, fill=None, alpha=1, edgecolor ="red"))
 plt.show()
 
 curr = num + 1
