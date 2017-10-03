@@ -3,9 +3,9 @@ from Gait.Resources.gait_utils import create_sd_class_for_obj_functions, get_obj
 
 
 def objective_step_detection_single_side_lhs(p):
-    # s = create_sd_class_for_obj_functions()
-    # s.normalize_norm()
-    # s.select_specific_samples(p['sample_ids'])
+    s = create_sd_class_for_obj_functions()
+    s.normalize_norm()
+    s.select_specific_samples(p['sample_ids'])
     s = p['s']
     s.step_detection_single_side(side='lhs', signal_to_use='norm', vert_win=None,
         use_single_max_min_for_all_samples=True, smoothing='mva', mva_win=p['mva_win'], peak_min_thr=p['peak_min_thr'],

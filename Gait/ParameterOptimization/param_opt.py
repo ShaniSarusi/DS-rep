@@ -3,7 +3,6 @@ from multiprocessing import Pool
 from os.path import join
 import hyperopt as hp
 import numpy as np
-from copy import copy
 import pandas as pd
 from hyperopt import fmin, Trials, tpe, space_eval
 import Gait.Resources.config as c
@@ -156,10 +155,7 @@ for i in range(len(objective_functions)):
                       '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
                       str(k_iter + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
-                #space['sample_ids'] = train[k_iter]
-                s_i = copy(s)
-                s_i.select_specific_samples(train[k_iter])
-                space['s'] = s_i
+                space['sample_ids'] = train[k_iter]
                 par_results = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=Trials())
                 return par_results
 
