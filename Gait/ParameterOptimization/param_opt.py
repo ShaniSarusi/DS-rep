@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from hyperopt import fmin, Trials, tpe, space_eval
 import Gait.Resources.config as c
-from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs, create_sd_class_for_obj_functions
+from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs, create_sd_class_for_obj_functions, par_fmin
 import Gait.ParameterOptimization.objective_functions as o
 from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
 from Gait.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
@@ -142,28 +142,19 @@ for i in range(len(objective_functions)):
         space['metric'] = metric
         space['verbose'] = do_verbose
         space['max_dist_from_apdm'] = c.max_dist_from_apdm_for_comparing_events
-        # New
-        s = create_sd_class_for_obj_functions()
-        s.normalize_norm()
 
         if c.do_multi_core:
             # The parallel function. It is defined each time so that it uses various parameters from the outer
             # scope: objective, space, opt_algorithm, and max_evals
-            def par_fmin(a, k_iter):
-                print(a)
-                print('************************************************************************')
-                print('\rOptimizing ' + c.metric_to_optimize + '. Optimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
-                      '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
-                      str(k_iter + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
-                print('************************************************************************')
-                space['sample_ids'] = train[k_iter]
-                par_results = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=Trials())
-                return par_results
 
             # The parallel code
             # pool = Pool(processes=cpu_count())
+            l = []
+            for k in range(n_folds):
+                l.append((space, train[k], objective, opt_algorithm, max_evals, k))
             pool = Pool(processes=n_folds)
-            results = pool.map(par_fmin, [('oo', 0), ('you', 1), ('yann', 2), ('bb',3), ('aa',4) ])
+            # results = pool.starmap(par_fmin, [('oo', 0), ('you', 1), ('yann', 2), ('bb',3), ('aa', 4)])
+            results = pool.starmap(par_fmin, l)
             pool.close()
             pool.join()
         else:
