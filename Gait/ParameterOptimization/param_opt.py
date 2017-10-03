@@ -5,6 +5,7 @@ import hyperopt as hp
 import numpy as np
 import pandas as pd
 from hyperopt import fmin, Trials, tpe, space_eval
+from copy import deepcopy
 import Gait.Resources.config as c
 from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs, create_sd_class_for_obj_functions, par_fmin
 import Gait.ParameterOptimization.objective_functions as o
@@ -151,7 +152,9 @@ for i in range(len(objective_functions)):
             # pool = Pool(processes=cpu_count())
             l = []
             for k in range(n_folds):
-                l.append((space, train[k], objective, opt_algorithm, max_evals, k))
+                sp = deepcopy(space)
+                sp['sample_ids'] = train[k]
+                l.append((sp, objective, opt_algorithm, max_evals))
             pool = Pool(processes=n_folds)
             # results = pool.starmap(par_fmin, [('oo', 0), ('you', 1), ('yann', 2), ('bb',3), ('aa', 4)])
             results = pool.starmap(par_fmin, l)

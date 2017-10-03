@@ -14,14 +14,14 @@ from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_
 from hyperopt import fmin, Trials
 
 
-def par_fmin(space, train, objective, opt_algorithm, max_evals, k_iter):
+def par_fmin(space, objective, opt_algorithm, max_evals):
     print('************************************************************************')
     # print('\rOptimizing ' + c.metric_to_optimize + '. Optimizing Walk Task ' + str(
     #     walk_tasks[j]) + ': algorithm- ' + obj_func_name +
     #       '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
     #       str(k_iter + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
     # print('************************************************************************')
-    space['sample_ids'] = train[k_iter]
+    #space['sample_ids'] = train[k_iter]
     s = create_sd_class_for_obj_functions()
     s.normalize_norm()
     s.select_specific_samples(space['sample_ids'])
