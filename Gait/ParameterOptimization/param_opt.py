@@ -5,7 +5,6 @@ import hyperopt as hp
 import numpy as np
 import pandas as pd
 from hyperopt import fmin, Trials, tpe, space_eval
-from copy import deepcopy
 import Gait.Resources.config as c
 from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs
 import Gait.ParameterOptimization.objective_functions as o
