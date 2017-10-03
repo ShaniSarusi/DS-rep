@@ -149,7 +149,8 @@ for i in range(len(objective_functions)):
         if c.do_multi_core:
             # The parallel function. It is defined each time so that it uses various parameters from the outer
             # scope: objective, space, opt_algorithm, and max_evals
-            def par_fmin(k_iter):
+            def par_fmin(a, k_iter):
+                print(a)
                 print('************************************************************************')
                 print('\rOptimizing ' + c.metric_to_optimize + '. Optimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
                       '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
@@ -162,7 +163,7 @@ for i in range(len(objective_functions)):
             # The parallel code
             # pool = Pool(processes=cpu_count())
             pool = Pool(processes=n_folds)
-            results = pool.map(par_fmin, range(n_folds))
+            results = pool.map(par_fmin, [('oo', 0), ('you', 1), ('yann', 2), ('bb',3), ('aa',4) ])
             pool.close()
             pool.join()
         else:
