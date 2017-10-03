@@ -66,10 +66,13 @@ def create_regression_performance_plot(data_file, save_name='alg_performance.png
     x = [1, 1.5, 2.5, 3, 4, 4.5]
 
     plt.boxplot([vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]], 0, '', positions=x,
-                labels=['Left', 'Right', 'Sum', 'Diff', 'Intersect', 'Union'], widths=0.4)
+                labels=['Left', 'Right', 'Sum', 'Diff', 'Intersect', 'Union'], widths=0.4, whis=[5, 95])
     plt.yticks(fontsize=14)
     plt.ylabel('Percent error', fontsize=14)
     plt.tight_layout()
+    ax = fig.gca()
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+    plt.show()
 
     x = [1, 1.4, 2.5, 2.9, 4, 4.4]
     plt.errorbar(x, means,

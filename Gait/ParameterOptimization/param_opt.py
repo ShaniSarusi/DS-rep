@@ -3,10 +3,11 @@ from multiprocessing import Pool
 from os.path import join
 import hyperopt as hp
 import numpy as np
+from copy import copy
 import pandas as pd
 from hyperopt import fmin, Trials, tpe, space_eval
 import Gait.Resources.config as c
-from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs
+from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs, create_sd_class_for_obj_functions
 import Gait.ParameterOptimization.objective_functions as o
 from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
 from Gait.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
@@ -142,6 +143,10 @@ for i in range(len(objective_functions)):
         space['metric'] = metric
         space['verbose'] = do_verbose
         space['max_dist_from_apdm'] = c.max_dist_from_apdm_for_comparing_events
+        # New
+        s = create_sd_class_for_obj_functions()
+        s.normalize_norm()
+
         if c.do_multi_core:
             # The parallel function. It is defined each time so that it uses various parameters from the outer
             # scope: objective, space, opt_algorithm, and max_evals
@@ -151,7 +156,10 @@ for i in range(len(objective_functions)):
                       '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
                       str(k_iter + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
-                space['sample_ids'] = train[k_iter]
+                #space['sample_ids'] = train[k_iter]
+                s_i = copy(s)
+                s_i.select_specific_samples(train[k_iter])
+                space['s'] = s_i
                 par_results = fmin(objective, space, algo=opt_algorithm, max_evals=max_evals, trials=Trials())
                 return par_results
 
