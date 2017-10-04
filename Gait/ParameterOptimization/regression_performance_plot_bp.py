@@ -150,8 +150,8 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     xlabs = ['Hands\non side' if x == 'Hands on side' else x for x in xlabs]
     plt.xticks(xtick_locs, xlabs)
 
-    plt.yticks(fontsize=14)
-    plt.ylabel('Percent error', fontsize=14)
+    plt.yticks(fontsize=10)
+    plt.ylabel('Step count\n(percent error)', fontsize=11)
     plt.tight_layout()
     ax = fig.gca()
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
@@ -159,7 +159,7 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     colors = ['cyan', 'lightgreen', 'pink']*len(tasks)
     for patch, color in zip(box['boxes'], colors):
         patch.set_facecolor(color)
-
+    plt.setp(box['medians'], color='k')
     plt.legend(algs)
     ax = plt.gca()
     leg = ax.get_legend()

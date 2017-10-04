@@ -27,7 +27,7 @@ def plot_channels_all_options(id, start_time=8, time_range=5, save_dir=(c.result
 
 def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5, plot_type='all_events',
                              save_dir=join(c.results_path, 'channel_plots'), show_plot_title=False, show_plot=True,
-                             save=True):
+                             save=True, do_channels=False):
     # Set signal channels
     with open(join(c.pickle_path, 'acc'), 'rb') as fp:
         acc = pickle.load(fp)
@@ -62,7 +62,23 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
     y_titles = ['Left leg', 'Left wrist', 'Right wrist']
     for i in range(num_plots):
         plt.subplot(num_plots, 1, i + 1)
-        plt.plot(x_values, channels[i])
+        if do_channels:
+            if i == 0:
+                plt.plot(x_values, channels[i])
+            elif i == 1:
+                plt.plot(x_values, acc[id]['lhs']['x'])
+                plt.plot(x_values, acc[id]['lhs']['y'])
+                plt.plot(x_values, acc[id]['lhs']['z'])
+            elif i == 2:
+                plt.plot(x_values, acc[id]['rhs']['x'])
+                plt.plot(x_values, acc[id]['rhs']['y'])
+                plt.plot(x_values, acc[id]['rhs']['z'])
+                plt.legend()
+            else:
+                plt.plot(x_values, channels[i])
+        else:
+            plt.plot(x_values, channels[i])
+
         x_max = start_time + time_range
         plt.xlim([start_time, x_max])
         plt.xticks(np.arange(start_time, x_max + x_tick_spacing, x_tick_spacing))
@@ -96,9 +112,10 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
                 # break
             for j in range(len(r_off)):
                 ax4 = plt.axvline(r_off[j], color='g', ls='--', lw=2)
-                #break
+                # break
             for j in range(len(alg_ts)):
                 ax5 = plt.axvline(alg_ts[j], color='k', ls='-', lw=2)
+                # break
             if i == 0:
                 plt.legend([ax2, ax4, ax5], ["Left toe off", "Right toe off", "Algorithm"], loc="center left",
                            bbox_to_anchor=(0.2, 1.18), numpoints=1, fontsize=14, ncol=3)
@@ -135,7 +152,7 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
 if __name__ == '__main__':
     do_and_save_everything = False
     do_all_plots = False
-    id = 257
+    id = 55
 
     if do_and_save_everything:
         do_everything(start_time=8, time_range=5)
@@ -145,9 +162,11 @@ if __name__ == '__main__':
         #plot_type = 'left_leg_events'
         # plot_type = 'initial_contacts'
         plot_type = 'toes_off'
-        #plot_type = 'nothing'
+        # plot_type = 'nothing'
         save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
         input_file = join(save_dir, 'aa_param1_1k_sc_0928_1', 'gait_measures.csv')
-        input_file = join(save_dir, 'aa_param1_5k_sc_union2_0928', 'gait_measures.csv')
+        input_file = join(save_dir, 'aa_param1small_500_sc_1002_v2', 'gait_measures.csv')
         plot_channels_and_events(id, file=input_file, alg='fusion_high_level_union_two_stages',
-                                 start_time=30, time_range=7, plot_type=plot_type, save=False, show_plot=True)
+                                 start_time=30, time_range=7, plot_type=plot_type, save=False, show_plot=True,
+                                 do_channels=False)
+

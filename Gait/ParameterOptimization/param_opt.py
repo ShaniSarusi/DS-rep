@@ -74,10 +74,18 @@ ids_avishai_sternum = np.intersect1d(ids_avishai_weingarten, ids_sternum_sensor_
 ids_people_to_remove = np.sort(np.hstack((ids_jeremy_atia, ids_efrat_wasserman, ids_avishai_sternum)))
 
 # Remove outlier step counts as compared to APDM cadence
-ids = np.setdiff1d(ids_notnull, ids_people_to_remove)
+all_ids = np.setdiff1d(ids_notnull, ids_people_to_remove)
+# if c.outlier_percent_to_remove > 0:
+#     z = sample['CadenceDifference']
+#     ids = np.array(z[z < z.iloc[ids].quantile(1 - c.outlier_percent_to_remove/100.0)].index, dtype=int)
+
 if c.outlier_percent_to_remove > 0:
-    z = sample['CadenceDifference']
-    ids = np.array(z[z < z.iloc[ids].quantile(1 - c.outlier_percent_to_remove/100.0)].index, dtype=int)
+    z = sample['CadenceDifference'].iloc[all_ids]
+    pctile = z.quantile(1 - c.outlier_percent_to_remove/100.0)
+    tr_ids = np.array(z[z <= pctile].index, dtype=int)
+    excluded_ids = np.array(z[z > pctile].index, dtype=int)
+else:
+    tr_ids = all_ids
 
 # Can also remove other samples labeled as ‘bad’ (n=~20), but excluding Chen Adamati sternum/back which was in fact good
 
@@ -87,19 +95,19 @@ task_ids = []
 if c.tasks_to_optimize == 'split':
     walk_tasks = [1, 2, 3, 4, 5, 6, 7, 10]
     for k in walk_tasks:
-        task_i = np.intersect1d(ids, sample[sample['TaskId'] == k]['SampleId'].as_matrix())
+        task_i = np.intersect1d(tr_ids, sample[sample['TaskId'] == k]['SampleId'].as_matrix())
         task_ids.append(task_i)
 elif c.tasks_to_optimize == 'all':
     walk_tasks = ['all']
-    task_i = ids
+    task_i = tr_ids
     task_ids.append(task_i)
 elif c.tasks_to_optimize == 'both_split_and_all':
     walk_tasks = [1, 2, 3, 4, 5, 6, 7, 10, 'all']
     for k in walk_tasks:
         if k == 'all':
-            task_i = ids
+            task_i = tr_ids
         else:
-            task_i = np.intersect1d(ids, sample[sample['TaskId'] == k]['SampleId'].as_matrix())
+            task_i = np.intersect1d(tr_ids, sample[sample['TaskId'] == k]['SampleId'].as_matrix())
         task_ids.append(task_i)
 
 train_all = []

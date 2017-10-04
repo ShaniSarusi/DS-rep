@@ -65,10 +65,15 @@ def create_regression_performance_plot(data_file, save_name='alg_performance.png
 
     x = [1, 1.5, 2.5, 3, 4, 4.5]
 
-    plt.boxplot([vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]], 0, '', positions=x,
-                labels=['Left', 'Right', 'Sum', 'Diff', 'Intersect', 'Union'], widths=0.4, whis=[5, 95])
-    plt.yticks(fontsize=14)
-    plt.ylabel('Percent error', fontsize=14)
+    box = plt.boxplot([vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]], 0, '', positions=x,
+                labels=['Left', 'Right', 'Sum', 'Diff', 'Inters.', 'Union'], widths=0.4, whis=[5, 95], patch_artist=True)
+    colors = ['cyan', 'cyan', 'lightgreen', 'lightgreen', 'pink', 'pink']
+    for patch, color in zip(box['boxes'], colors):
+        patch.set_facecolor(color)
+    plt.setp(box['medians'], color='k')
+    plt.yticks(fontsize=10)
+    plt.ylabel('Step count\n(percent error)', fontsize=11)
+    plt.xticks(fontsize=8.5)
     plt.tight_layout()
     ax = fig.gca()
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
@@ -83,7 +88,7 @@ def create_regression_performance_plot(data_file, save_name='alg_performance.png
                  markerfacecolor='g',
                  capsize=5,
                  linestyle='None')
-    plt.xticks(x, ['Left', 'Right', 'Sum', 'Diff', 'Intersection', 'Union'], rotation='vertical', fontsize='14')
+    plt.xticks(x, ['Left', 'Right', 'Sum', 'Diff', 'Intersection', 'Union'], rotation='vertical', fontsize='16')
     plt.yticks(fontsize=14)
     plt.ylabel('Percent error', fontsize=18)
     plt.tight_layout()

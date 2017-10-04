@@ -44,8 +44,11 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
         elif len(algs) > 4:
             a1 = 3
             b1 = 2
-        else:
+        elif len(algs) > 2:
             a1 = 2
+            b1 = 2
+        else:
+            a1 = 1
             b1 = 2
         f, axarr = plt.subplots(a1, b1)
         corr = []
@@ -59,8 +62,12 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             corr_j = pearsonr(apdm_vals_j, alg_vals_j)[0]
             corr.append(corr_j)
 
-            axarr[a, b].scatter(apdm_vals_j, alg_vals_j)
-            axarr[a, b].set_xlabel('APDM', fontsize=12)
+            if min(a1, b1) == 1:
+                axarr[max(a, b)].scatter(apdm_vals_j, alg_vals_j)
+                axarr[max(a, b)].set_xlabel('APDM', fontsize=12)
+            else:
+                axarr[a, b].scatter(apdm_vals_j, alg_vals_j)
+                axarr[a, b].set_xlabel('APDM', fontsize=12)
             # Set y label
             y_label = 'alg_name'
             if 'lhs' in algs[j]: y_label='Lhs'
@@ -70,7 +77,10 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             if 'one_sta' in algs[j]: y_label = 'Union 1 stage'
             if 'sum' in algs[j]: y_label = 'Sum'
             if 'diff' in algs[j]: y_label = 'Diff'
-            axarr[a, b].set_ylabel(y_label, fontsize=12)
+            if min(a1, b1) == 1:
+                axarr[max(a, b)].set_ylabel(y_label, fontsize=12)
+            else:
+                axarr[a, b].set_ylabel(y_label, fontsize=12)
 
             val_max = max(max(alg_vals_j), max(apdm_vals_j))
             val_min = min(min(alg_vals_j), min(apdm_vals_j))
@@ -78,9 +88,14 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             ax_min = val_min - 0.05 * val_range
             ax_max = val_max + 0.05 * val_range
             ax_range = ax_max - ax_min
-            axarr[a, b].set_xlim(ax_min, ax_max)
-            axarr[a, b].set_ylim(ax_min, ax_max)
-            axarr[a, b].text(ax_min + 0.05 * ax_range, ax_min + 0.8 * ax_range, 'R= ' + str(round(corr_j, 3)))
+            if min(a1, b1) == 1:
+                axarr[max(a, b)].set_xlim(ax_min, ax_max)
+                axarr[max(a, b)].set_ylim(ax_min, ax_max)
+                axarr[max(a, b)].text(ax_min + 0.05 * ax_range, ax_min + 0.8 * ax_range, 'R= ' + str(round(corr_j, 3)))
+            else:
+                axarr[a, b].set_xlim(ax_min, ax_max)
+                axarr[a, b].set_ylim(ax_min, ax_max)
+                axarr[a, b].text(ax_min + 0.05 * ax_range, ax_min + 0.8 * ax_range, 'R= ' + str(round(corr_j, 3)))
         #plt.tight_layout()
         plt.suptitle(name_prefix + metric + ' comparison')
         plt.subplots_adjust(wspace=.4)
@@ -93,7 +108,7 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             plt.show()
 
 if __name__ == '__main__':
-    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_5k_sc_union2_0928')
+    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1small_500_sc_1002_v2')
     alg_data_path = join(save_path, 'gait_measures.csv')
 
     algorithms = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union_two_stages',
@@ -101,5 +116,5 @@ if __name__ == '__main__':
     metrics = ['cadence', 'stride_time_var', 'step_time_asymmetry_median', 'apdm_toe_off_asymmetry_median']
 
     algorithms = ['fusion_high_level_union_two_stages', 'fusion_high_level_union_one_stage']
-    metrics = ['stride_time_var']
+    metrics = ['stride_time_var', 'apdm_toe_off_asymmetry_median']
     compare_to_apdm(alg_data_path, algorithms, metrics, show_plot=True)
