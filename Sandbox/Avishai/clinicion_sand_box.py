@@ -9,27 +9,30 @@ import datetime as dt
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+from matplotlib.patches import Rectangle
+from Utils.Connections.connections import read_from_s3
 
+pateint = 142563
 
-user_number = 142594
-ses_number = 1
+meta = read_from_s3('aws-athena-query-results-726895906399-us-west-2', 'clinic_users/Musc_data/MUSC data/CSV uploaded to S3/musc_motor_tasks.csv', 
+'AKIAIEOL4GFG77QPNLCA', '06/OfU2vRMAkLGt69PjvVOSRfe1seABRQzhErL++', encoding = 'latin-1' )
+meta = meta.dropna(axis = 0, how = 'any', thresh = 3)
 
-my_data = read_from_s3('aws-athena-query-results-726895906399-us-west-2', 
-'clinic_users/Tagging_files_clinic/user_' + str(user_number) + '_ses' + str(ses_number) + '.csv', 
-'AKIAIEOL4GFG77QPNLCA', 
-'06/OfU2vRMAkLGt69PjvVOSRfe1seABRQzhErL++' )
+my_data = read_from_s3('aws-athena-query-results-726895906399-us-west-2',
+                       'clinic_users/Tagging_files_clinic/user_'+ str(pateint)+'_ses1.csv', 
+'AKIAIEOL4GFG77QPNLCA', '06/OfU2vRMAkLGt69PjvVOSRfe1seABRQzhErL++' )
 
 my_data['date'] = my_data['timestamp'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
+meta['date_start'] = meta['TSstart'].apply(lambda x: dt.datetime.strptime(x, '%m/%d/%Y %H:%M.%S'))
+meta['date_end'] = meta['Tsend'].apply(lambda x: dt.datetime.strptime(x, '%m/%d/%Y %H:%M.%S'))
 
 
-#my_data['norma'] = my_data[['x', 'y', 'z']].apply(lambda row: np.sqrt(row['x']**2 + row['y']**2 + row['z']**2) , axis = 1)
 
-np.unique(meta.Task)
+np.unique(meta.task)
 date_border_up = my_data['date'][len(my_data['date']) - 1]
 date_border_low = my_data['date'][0]
 
-meta_pateint = meta.iloc[np.where((meta.user_id == user_number) & (meta['date_start'] > date_border_low) &
+meta_pateint = meta.iloc[np.where((meta.user_id == pateint) & (meta['date_start'] > date_border_low) &
                                   (meta['date_end'] < date_border_up))]
 meta_pateint = meta_pateint.sort('date_start')
 num = 1
@@ -46,23 +49,29 @@ index2 = np.where((my_data['date'] >= meta_pateint['date_start'].iloc[num]) &
 
 print(num)
 alpha = 0.5
-plt.plot(range(len(index[0])),my_data.loc[index]['x'], alpha = alpha)
-plt.plot(range(len(index[0])),my_data.loc[index]['y'], alpha = alpha)
-plt.plot(range(len(index[0])),my_data.loc[index]['z'], alpha = alpha)
-plt.xlabel('seconds')
-plt.ylabel('accelerometer value')
+plt.plot(range(len(my_data.loc[index]['x'])),my_data.loc[index]['x'], alpha = alpha)
+plt.plot(range(len(my_data.loc[index]['x'])),my_data.loc[index]['y'], alpha = alpha)
+plt.plot(range(len(my_data.loc[index]['x'])),my_data.loc[index]['z'], alpha = alpha)
 currentAxis = plt.gca()
-currentAxis.set_title(meta_pateint.Task.iloc[num])
+currentAxis.set_title(meta_pateint.task.iloc[num])
 currentAxis.set_ylim([-2,2])
-plt.xticks(np.arange(0, len(index[0]), 1000.0))
-currentAxis.add_patch(Rectangle((np.where(index[0] == index2[0][0])[0], -2), len(index2[0]), 4, fill=None, alpha=1, edgecolor ="red"))
+currentAxis.add_patch(Rectangle((750, -2), len(index2[0]), 4, fill=None, alpha=1, edgecolor ="red"))
 plt.show()
 
 curr = num + 1
-while  meta_pateint.Tsstart.iloc[curr] ==  meta_pateint.Tsstart.iloc[num]:
+while  meta_pateint.TSstart.iloc[curr] ==  meta_pateint.TSstart.iloc[num]:
     num = num + 1
     curr = num + 1
     
 num = num + 1
-    
+
+
+####################
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Sep 17 14:10:27 2017
+
+@author: awagner
+"""
+
 
