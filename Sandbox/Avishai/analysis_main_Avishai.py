@@ -90,7 +90,7 @@ Prepare the data for the classification process:
 task_names = tags_df.Task.as_matrix()
 task_clusters = tags_df.TaskClusterId.as_matrix()
 relevant_task_names = []
-relevant_task_clusters = [0, 1, 2] # 1=resting, 4=periodic hand movement, 5=walking
+relevant_task_clusters = [0, 1] # 1=resting, 4=periodic hand movement, 5=walking
 cond = np.asarray(lmap(lambda x: x in relevant_task_clusters, task_clusters))
 
 #Create features and labels data frames, according to the condition indicator:
@@ -148,8 +148,8 @@ agg_features = agg_features.apply(lambda x: (x - np.mean(x))/np.std(x), 0)
 
 opt_model_for_agg_segments = classifier.optimize_hyper_params(agg_features, agg_labels, agg_patients,
                                                    model_name='logistic_regression',
-                                                   hyper_params=None, scoring_measure='f1',eval_iterations = 100)
-final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments,  binary_class_thresh=0.7)
+                                                   hyper_params=None, scoring_measure='f1',eval_iterations = 50)
+final_pred = classifier.make_cv_predictions_for_agg_segments(agg_segments_df, opt_model_for_agg_segments,  binary_class_thresh=0.64)
 
 
 '''

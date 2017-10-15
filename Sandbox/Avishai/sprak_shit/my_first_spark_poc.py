@@ -15,7 +15,7 @@ from pyspark.sql.functions import ceil, unix_timestamp
 from pyspark.sql.functions import rank
 from pyspark.sql.functions import collect_list, array
 from pyspark.mllib.linalg import Vectors, VectorUDT
-
+from pyspark.sql.types import *
 
 spark = SparkSession.builder.appName("some_testing").master("local").getOrCreate()
 
@@ -61,11 +61,80 @@ df2.cache()
 def squared(x, y, z):
     norm = []
     for i in range(len(x)):
-        norm.append(pow(x[i],2) + pow(y[i],2) + pow(z[i],2))
+        norm.append(float(pow(x[i],2) + pow(y[i],2) + pow(z[i],2)))
     
-    return np.mean(norm)
+    return norm
 
-squared_udf = udf(squared, FloatType())
+squared_udf = udf(squared)
 df3 = df2['X', 'Y', 'Z', 'interval'].withColumn('norma', squared_udf("X","Y","Z"))
-df3 = df2.select(squared_udf("X","Y","Z"))
 
+
+########################################################################################
+from scipy.interpolate import interpolate
+import pywt
+from future.utils import lmap
+import numpy as np
+from functools import partial
+
+#some_test = df3.toPandas()
+df4 = df3.filter(df3.norma != some_test['norma'][0])
+df4 = df4.withColumn("norma", parse("norma"))
+
+def toDWT(sig, rel = False):
+
+        x = np.arange(0, len(sig))
+        f = interpolate.interp1d(x, sig)
+        xnew = np.arange(0, len(sig)-1, float(len(sig)-1)/2**np.ceil(np.log2(len(sig))))
+        ynew = f(xnew)
+        x = pywt.wavedec(ynew - np.mean(ynew), pywt.Wavelet('db1'), mode='smooth')
+                
+        J = len(x)
+        res = np.zeros(J)
+        for j in range(J):
+            res[j] = float(np.sqrt(np.sum(x[j]**2)))
+        if rel is True:
+            res = res/np.sum(res + 10**(-10))
+            res = (np.log(float(1)/(1-res)))
+        
+        final_res = []
+        for not_kill in np.asarray(res):
+            final_res.append(float(not_kill))
+        return final_res
+
+schema = StructType([
+    StructField("F1", FloatType(), False),
+    StructField("F2", FloatType(), False),
+    StructField("F3", FloatType(), False),
+    StructField("F4", FloatType(), False),
+    StructField("F5", FloatType(), False),
+    StructField("F6", FloatType(), False),
+    StructField("F7", FloatType(), False),
+    StructField("F8", FloatType(), False),
+    StructField("F9", FloatType(), False)
+])
+
+toDWT_new = partial(toDWT, rel = True)
+toDWT_udf = udf(toDWT_new,  schema)
+
+df4 = df4['norma', 'interval'].withColumn('wav_features', toDWT_udf("norma"))
+df4 = df4.select('interval',
+                 'wav_features.F1', 
+                 'wav_features.F2',
+                 'wav_features.F3',
+                 'wav_features.F4',
+                 'wav_features.F5',
+                 'wav_features.F6',
+                 'wav_features.F7',
+                 'wav_features.F8',
+                 'wav_features.F9')
+df4.show(2)
+
+####################################################################################
+
+from pyspark.sql.window import Window
+from pyspark.sql.functions import percent_rank
+df4=df3.select('norma', 'interval', percent_rank().over(Window.orderBy(df3.interval)).\
+              alias("interval_perc"),
+              percent_rank().over(Window.orderBy(df.DEBIT)).alias("debit_perc"))\
+  .where('debit_perc >=0.99 or debit_perc <=0.01 ').where\
+        ('credit_perc >=0.99 or credit_perc <=0.91')
