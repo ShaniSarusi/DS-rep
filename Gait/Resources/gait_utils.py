@@ -151,11 +151,16 @@ def calc_asymmetry(side1, side2):
     return asymmetry
 
 
-def evaluate_on_test_set(p_space, p_res, test_set, objective, fold_i=None, folds=None, verbose=False):
+def evaluate_on_test_set(p_space, p_res, test_set, objective, fold_i=None, folds=None, verbose=False, do_cadence=False):
     params = space_eval(p_space, p_res)
     params['sample_ids'] = test_set
-    params['metric'] = 'both'
-    root_mean_squared_error, mape = objective(params)
+    if do_cadence:
+        params['metric'] = 'apdm_cad_rmse'
+        root_mean_squared_error = objective(params)
+        mape = 1
+    else:
+        params['metric'] = 'both'
+        root_mean_squared_error, mape = objective(params)
 
     # Print cross validation fold results
     if verbose:
