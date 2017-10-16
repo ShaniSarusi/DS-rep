@@ -27,6 +27,8 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
         metric_for_algs = metric
         if metric == 'apdm_toe_off_asymmetry_median':
             metric_for_algs = 'step_time_asymmetry_median'
+        if metric == 'cadence':
+            metric_for_algs = 'cadence_apdm'
         if 'time_var' in metric:
             alg_vals = []
             for j in range(len(algs)):
@@ -108,7 +110,7 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             plt.show()
 
 if __name__ == '__main__':
-    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1small_500_sc_1002_v2')
+    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param3small_5000_195_sc_1008_v1')
     alg_data_path = join(save_path, 'gait_measures.csv')
 
     algorithms = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union_two_stages',

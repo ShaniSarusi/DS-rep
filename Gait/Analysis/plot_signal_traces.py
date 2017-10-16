@@ -59,7 +59,7 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
     plt.figure(figsize=(12, 6))
     channels = [leg, lhs, rhs]
     num_plots = len(channels)
-    y_titles = ['Left leg', 'Left wrist', 'Right wrist']
+    y_titles = ['Left ankle', 'Left wrist', 'Right wrist']
     for i in range(num_plots):
         plt.subplot(num_plots, 1, i + 1)
         if do_channels:
@@ -81,8 +81,11 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
 
         x_max = start_time + time_range
         plt.xlim([start_time, x_max])
-        plt.xticks(np.arange(start_time, x_max + x_tick_spacing, x_tick_spacing))
-        plt.ylabel(y_titles[i], fontsize=14)
+        if i == num_plots - 1:
+            plt.xticks(np.arange(start_time, x_max + x_tick_spacing, x_tick_spacing))
+        else:
+            plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.ylabel(y_titles[i], fontsize=12)
         plt.yticks([])
         # add alg_idx
         data = pd.read_csv(input_file)
@@ -125,17 +128,19 @@ def plot_channels_and_events(id, file=None, alg=None, start_time=8, time_range=5
             for j in range(len(l_off)):
                 ax2 = plt.axvline(l_off[j], color='r', ls='--', lw=2)
             for j in range(len(r_on)):
-                ax3 = plt.axvline(r_on[j], color='k', ls='-', lw=2)
+                ax3 = plt.axvline(r_on[j], color='g', ls='-', lw=2)
             for j in range(len(r_off)):
-                ax4 = plt.axvline(r_off[j], color='k', ls='--', lw=2)
+                ax4 = plt.axvline(r_off[j], color='g', ls='--', lw=2)
+            for j in range(len(alg_ts)):
+                ax5 = plt.axvline(alg_ts[j], color='k', ls='-', lw=2)
             if i == 0:
-                plt.legend([ax1, ax2, ax3, ax4], ["Left initial contact", "Left toe off", 'Right initial contact',
-                                                  "Right toe off"], loc="center left", bbox_to_anchor=(0.25, 1.24),
-                           numpoints=1, fontsize=13, ncol=2)
+                plt.legend([ax1, ax2, ax3, ax4, ax5], ["Left initial contact", "Left toe off", 'Right initial contact',
+                                                  "Right toe off", "Wrist-detection"], loc="center left",
+                           bbox_to_anchor=(0.15, 1.31), numpoints=1, fontsize=12, ncol=3)
         else:
             pass
 
-    plt.xlabel('Seconds', fontsize=16)
+    plt.xlabel('Seconds', fontsize=14)
     if show_plot_title:
         plt.suptitle('Initial contact and toe off (legs vs wrist)', fontsize=18)
 
@@ -163,10 +168,11 @@ if __name__ == '__main__':
         # plot_type = 'initial_contacts'
         plot_type = 'toes_off'
         # plot_type = 'nothing'
+        plot_type = 'all_events'
         save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
         input_file = join(save_dir, 'aa_param1_1k_sc_0928_1', 'gait_measures.csv')
         input_file = join(save_dir, 'aa_param1small_500_sc_1002_v2', 'gait_measures.csv')
         plot_channels_and_events(id, file=input_file, alg='fusion_high_level_union_two_stages',
-                                 start_time=30, time_range=7, plot_type=plot_type, save=False, show_plot=True,
+                                 start_time=30, time_range=3, plot_type=plot_type, save=False, show_plot=True,
                                  do_channels=False)
 

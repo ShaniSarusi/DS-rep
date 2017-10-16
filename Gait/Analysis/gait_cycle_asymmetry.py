@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import Gait.Resources.config as c
-from Utils.DataHandling.data_processing import string_to_int_list
+from Utils.DataHandling.data_processing import string_to_int_list, string_to_float_list
+from scipy.stats import pearsonr
+from Gait.Resources.gait_utils import bp_me
 from scipy.stats import pearsonr
 
 
@@ -27,7 +29,7 @@ with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     ts = [(acc[i]['lhs']['ts'] - acc[i]['lhs']['ts'].iloc[0])/np.timedelta64(1, 's') for i in range(len(acc))]
 
 save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
-input_file = join(save_dir, 'aa_param1_10k_sc_1001_1', 'gait_measures.csv')
+input_file = join(save_dir, 'aa_param3small_10k_big_sc_1008_v1', 'gait_measures.csv')
 data = pd.read_csv(input_file)
 max_dist_between_apdm_to_wrist_alg = 0.5
 
@@ -98,6 +100,198 @@ alg_to_plot = 'lhs'
 alg_to_plot = 'fusion_high_level_union_two_stages'
 alg_to_plot = 'fusion_high_level_union_one_stage'
 
+#NEW
+algs = ['lhs', 'rhs', 'fusion_low_level_sum', 'fusion_low_level_diff', 'fusion_high_level_intersect', 'fusion_high_level_union_one_stage']
+heel_l = []
+for alg in algs:
+    tmp = [item for sublist in initial_lhs['idx_' + alg].tolist() for item in sublist]
+    heel_l.append(tmp)
+bp_me(heel_l, save_name=join(save_dir, 'heel_L.png'), ylabel='\u0394t from heel strike (ms)')
+
+heel_r = []
+for alg in algs:
+    tmp = [item for sublist in initial_rhs['idx_' + alg].tolist() for item in sublist]
+    heel_r.append(tmp)
+bp_me(heel_r, save_name=join(save_dir, 'heel_R.png'), ylabel='\u0394t from heel strike (ms)')
+
+toe_l = []
+for alg in algs:
+    tmp = [item for sublist in off_lhs['idx_' + alg].tolist() for item in sublist]
+    toe_l.append(tmp)
+bp_me(toe_l, save_name=join(save_dir, 'toe_L.png'), ylabel='\u0394t from toe off (ms)')
+
+toe_r = []
+for alg in algs:
+    tmp = [item for sublist in off_rhs['idx_' + alg].tolist() for item in sublist]
+    toe_r.append(tmp)
+bp_me(toe_r, save_name=join(save_dir, 'toe_R.png'), ylabel='\u0394t from toe off (ms)')
+
+
+# Per task
+tasks = ['aa', 'bb']
+toe = []
+with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
+    task_filters = pickle.load(fp)
+# tasks = ['all'] + task_filters['Task Name'].tolist()
+tasks = task_filters['Task Name'].tolist()
+tasks.remove('Tug')
+tasks.remove('Tug')
+a, b = tasks.index('Walk - Regular'), tasks.index('Walk - Fast')
+tasks[b], tasks[a] = tasks[a], tasks[b]
+xlabs = ['Cane' if x == 'Asymmetry - Imagine you have a cane in the right hand' else x for x in tasks]
+xlabs = ['No shoe' if x == 'Asymmetry - No right shoe' else x for x in xlabs]
+xlabs = ['Hands on side' if x == 'Walk - Both hands side' else x for x in xlabs]
+xlabs = [x[6:] if 'Walk - ' in x else x for x in xlabs]
+xlabs = ['Right\nbag' if x == ' Right bag' else x for x in xlabs]
+xlabs = ['Hands\non side' if x == 'Hands on side' else x for x in xlabs]
+with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
+    sample = pickle.load(fp)
+sample['TaskName'] = sample['TaskName'].replace('Walk - Imagine you have a cane in the right hand',
+                                                'Asymmetry - Imagine you have a cane in the right hand')
+sample['TaskName'] = sample['TaskName'].replace('Walk - Without right shoe', 'Asymmetry - No right shoe')
+
+alg = 'fusion_high_level_union_one_stage'
+for i in range(len(tasks)):
+    sample_ids = sample[sample['TaskName'] == tasks[i]]['SampleId'].as_matrix()
+    off_tmp = off['idx_' + alg].iloc[sample_ids].as_matrix()
+    tmp = [item for sublist in off_tmp for item in sublist]
+    toe.append(tmp)
+#boxplot here
+fig, ax = plt.subplots()
+vals = toe
+x = [1, 2,3,4,5,6,7,8]
+box = plt.boxplot([vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7]], 0, '', positions=x,
+            labels=xlabs, widths=0.4, whis=[5, 95], patch_artist=True)
+# colors = ['cyan', 'cyan', 'lightgreen', 'lightgreen', 'pink', 'pink']
+# for patch, color in zip(box['boxes'], colors):
+#     patch.set_facecolor(color)
+plt.setp(box['medians'], color='k')
+plt.yticks(fontsize=10)
+plt.ylabel('\u0394t from toe off (ms)', fontsize=11)
+plt.xticks(fontsize=9)
+plt.tight_layout()
+ax = fig.gca()
+ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+
+fig = plt.gcf()
+fig.set_size_inches(6, 3)
+fig.tight_layout()
+plt.savefig(join(save_dir, 'toe_tasks_union.png'), dpi=300)
+plt.show()
+
+
+
+
+# Per person
+alg = 'fusion_high_level_union_one_stage'
+toe = []
+people = sample['Person'].unique()
+std_sort=[]
+for i in range(len(people)):
+    sample_ids = sample[sample['Person'] == people[i]]['SampleId'].as_matrix()
+    off_tmp = off['idx_' + alg].iloc[sample_ids].as_matrix()
+    tmp = [item for sublist in off_tmp for item in sublist]
+    std_sort.append(np.std(tmp))
+    toe.append(tmp)
+toe = np.array(toe)
+a = np.argsort(std_sort)
+toe = toe[a]
+#boxplot here
+fig, ax = plt.subplots()
+vals = toe.tolist()
+box = plt.boxplot(vals, 0, '', widths=0.4, patch_artist=True)
+# colors = ['cyan', 'cyan', 'lightgreen', 'lightgreen', 'pink', 'pink']
+# for patch, color in zip(box['boxes'], colors):
+#     patch.set_facecolor(color)
+plt.setp(box['medians'], color='k')
+plt.yticks(fontsize=10)
+plt.ylabel('\u0394t from toe off (ms)', fontsize=11)
+plt.xticks([])
+plt.xlabel('People sorted by variability of \u0394t')
+plt.tight_layout()
+ax = fig.gca()
+ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+
+fig = plt.gcf()
+fig.set_size_inches(6, 3)
+fig.tight_layout()
+plt.savefig(join(save_dir, 'toe_people_union.png'), dpi=300)
+plt.show()
+
+
+#scatter diff l-r
+alg = 'fusion_high_level_union_one_stage'
+med_l = np.array([np.median(x) for x in off_lhs['idx_' + alg].as_matrix()])
+med_r = np.array([np.median(x) for x in off_rhs['idx_' + alg].as_matrix()])
+diff = med_l - med_r
+diff = diff[~np.isnan(diff)]
+plt.hist(diff, bins=30)
+plt.ylabel('count', fontsize=11)
+plt.xlabel('\u0394t toe off offset between L and R\n(median_l - median_r) (ms)', fontsize=11)
+fig = plt.gcf()
+fig.set_size_inches(4, 3)
+fig.tight_layout()
+plt.savefig(join(save_dir, 'diff_union_hist.png'), dpi=300)
+plt.show()
+
+
+
+
+#Stride time var correlation....
+input_file = join(save_dir, 'aa_param3small_10k_big_sc_1008_v1', 'gait_measures.csv')
+alg = 'fusion_high_level_union_one_stage'
+#alg = 'rhs'
+a = pd.read_csv(input_file)
+ids = a['SampleId']
+strides = a['stride_durations_all_' + alg]
+alg_var = []
+# for j in range(50,91):
+strides = a['stride_durations_all_' + alg]
+alg_var = []
+pctile_high = 100
+pctile_low = 0
+for i in range(len(strides)):
+    strides_i = np.array(string_to_float_list(strides[i]))
+    tmp = strides_i
+    if pctile_high < 100:
+        tmp = tmp[tmp < np.percentile(tmp, pctile_high)]
+    if pctile_low > 0:
+        tmp = tmp[tmp > np.percentile(tmp, pctile_low)]
+    cv = np.std(tmp)/np.mean(tmp)
+    alg_var.append(cv)
+
+with open(join(c.pickle_path, 'apdm_measures'), 'rb') as fp:
+    apdm_measures = pickle.load(fp)
+apdm_var = [np.mean([apdm_measures['stride_time_var_lhs'].iloc[i], apdm_measures['stride_time_var_rhs'].iloc[i]])
+            for i in range(len(apdm_measures))]
+apdm_var = [apdm_var[i] for i in ids]
+
+diff_var = np.array(alg_var) - np.array(apdm_var)
+std_l = [np.std(off_lhs['idx_' + alg][i]) for i in ids]
+std_r = [np.std(off_rhs['idx_' + alg][i]) for i in ids]
+std_lr = [std_l[i] + std_r[i] for i in range(len(std_l))]
+std_b = [np.std(off['idx_' + alg][i]) for i in ids]
+r, _ = pearsonr(diff_var, std_b)
+print(r)
+plt.scatter(diff_var, std_b)
+
+r, _ = pearsonr(apdm_var, alg_var)
+print('pctile ' + str(pctile_high) + ' corr: ' + str(r))
+
+ids = [i for i in range(len(alg_var)) if alg_var[i] < 0.12]
+alg_var_small = [alg_var[i] for i in ids]
+apdm_var_small = [apdm_var[i] for i in ids]
+r, _ = pearsonr(apdm_var_small, alg_var_small)
+print(r)
+
+
+
+
+
+
+
+
+# OLD
 on_lhs_bp = [item for sublist in initial_lhs['idx_' + alg_to_plot].tolist() for item in sublist]
 on_rhs_bp = [item for sublist in initial_rhs['idx_' + alg_to_plot].tolist() for item in sublist]
 off_lhs_bp = [item for sublist in off_lhs['idx_' + alg_to_plot].tolist() for item in sublist]

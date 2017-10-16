@@ -8,18 +8,20 @@ from Gait.Pipeline.StepDetection import StepDetection
 from Utils.Connections.connections import load_pickle_file_from_s3
 from hyperopt import space_eval
 import pprint
+import ast
 from math import sqrt
 from sklearn.metrics import mean_squared_error
 from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
+import matplotlib.pyplot as plt
 
 
-def create_sd_class_for_obj_functions():
+def create_sd_class_for_obj_functions(force_local=False):
     # Load input data to algorithms
     path_sample = join(c.pickle_path, 'metadata_sample')
     path_acc = join(c.pickle_path, 'acc')
     path_apdm_events = join(c.pickle_path, 'apdm_events')
     path_apdm_measures = join(c.pickle_path, 'apdm_measures')
-    if c.run_on_cloud:
+    if c.run_on_cloud and not force_local:
         sample = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_sample)
         acc = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_acc)
         apdm_measures = load_pickle_file_from_s3(c.aws_region_name, c.s3_bucket, path_apdm_measures)
@@ -187,7 +189,65 @@ def get_obj_function_results(s, alg_name, metric, verbose=True):
                                             s.res['step_time_asymmetry_median_' + alg_name].fillna(nanval)))
         if verbose: print('\tResult: Toe off asymmetry RMSE is ' + str(round(asym_rmse, 2)))
         return asym_rmse
+    elif metric == 'apdm_cad_rmse':
+        nanval = 50
+        apdm_cad_rmse = sqrt(mean_squared_error(s.apdm_measures['cadence'],
+                                            s.res['cadence_apdm_' + alg_name].fillna(nanval)))
+        if verbose: print('\tResult: APDM cadence RMSE is ' + str(round(apdm_cad_rmse, 2)))
+        return apdm_cad_rmse
     else:  # rmse
         rmse = sqrt(mean_squared_error(s.res['sc_manual'], s.res['sc_' + alg_name]))
         if verbose: print('\tResult: RMSE ' + str(round(rmse, 2)))
         return rmse
+
+
+def calc_sc_for_excluded_ids(file_path, excluded_ids, alg_name='high_level_union_one_s'):
+    params = pd.read_csv(file_path)
+    n_folds = len(params)
+
+    values = []
+    for i in range(n_folds):
+        p = ast.literal_eval(params['best'][i])
+        s = create_sd_class_for_obj_functions(force_local=True)
+        s.normalize_norm()
+        s.select_specific_samples(excluded_ids)
+        if alg_name in 'fusion_high_level_union_one_stage':
+            s.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None, use_single_max_min_for_all_samples=True,
+                smoothing='mva', mva_win=p['mva_win'], peak_min_thr=p['peak_min_thr'], peak_min_dist=p['peak_min_dist'],
+                fusion_type='union_one_stage', union_min_dist=p['union_min_dist'], verbose=False, do_normalization=False)
+        else:
+            print('alg is not yet implemented')
+            return
+        s.add_gait_metrics()
+        values_fold_i = s.res['cadence_apdm_fusion_high_level_union_one_stage'].as_matrix()
+        values.append(values_fold_i)
+
+    res = np.array(values)
+    res = np.mean(res, axis=0)
+    return res.tolist()
+
+
+def bp_me(vals, labels=['Left', 'Right', 'Sum', 'Diff', 'Int', 'Union'], save_name=None, ylabel=None):
+    fig, ax = plt.subplots()
+    x = [1, 1.5, 2.5, 3, 4, 4.5]
+    box = plt.boxplot([vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]], 0, '', positions=x,
+                labels=labels, widths=0.4, whis=[5, 95], patch_artist=True)
+    colors = ['cyan', 'cyan', 'lightgreen', 'lightgreen', 'pink', 'pink']
+    for patch, color in zip(box['boxes'], colors):
+        patch.set_facecolor(color)
+    plt.setp(box['medians'], color='k')
+    plt.yticks(fontsize=10)
+    if ylabel is None:
+        plt.ylabel('Step count\n(percent error)', fontsize=11)
+    else:
+        plt.ylabel(ylabel, fontsize=11)
+    plt.xticks(fontsize=9)
+    plt.tight_layout()
+    ax = fig.gca()
+    ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+
+    fig = plt.gcf()
+    fig.set_size_inches(4, 3)
+    fig.tight_layout()
+    plt.savefig(save_name, dpi=300)
+    plt.show()

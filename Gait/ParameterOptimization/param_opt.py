@@ -71,7 +71,8 @@ ids_efrat_wasserman = np.array(sample[sample['Person'] == 'EfratWasserman'].inde
 ids_avishai_weingarten = np.array(sample[sample['Person'] == 'AvishaiWeingarten'].index, dtype=int)
 ids_sternum_sensor_incorrect = np.array(sample[sample['Comments'] == 'Sternum was on back'].index, dtype=int)
 ids_avishai_sternum = np.intersect1d(ids_avishai_weingarten, ids_sternum_sensor_incorrect)
-ids_people_to_remove = np.sort(np.hstack((ids_jeremy_atia, ids_efrat_wasserman, ids_avishai_sternum)))
+#ids_people_to_remove = np.sort(np.hstack((ids_jeremy_atia, ids_efrat_wasserman, ids_avishai_sternum)))
+ids_people_to_remove = np.sort(np.hstack((ids_jeremy_atia, ids_avishai_sternum)))
 
 # Remove outlier step counts as compared to APDM cadence
 all_ids = np.setdiff1d(ids_notnull, ids_people_to_remove)
@@ -83,9 +84,16 @@ if c.outlier_percent_to_remove > 0:
     z = sample['CadenceDifference'].iloc[all_ids]
     pctile = z.quantile(1 - c.outlier_percent_to_remove/100.0)
     tr_ids = np.array(z[z <= pctile].index, dtype=int)
-    excluded_ids = np.array(z[z > pctile].index, dtype=int)
+    excluded_ids = np.setdiff1d(all_ids, tr_ids)
 else:
     tr_ids = all_ids
+    excluded_ids = np.nan
+save_ids = dict()
+save_ids['all'] = all_ids
+save_ids['train'] = tr_ids
+save_ids['excluded'] = excluded_ids
+with open(join(save_dir, 'ids'), 'wb') as fp:
+    pickle.dump(save_ids, fp)
 
 # Can also remove other samples labeled as ‘bad’ (n=~20), but excluding Chen Adamati sternum/back which was in fact good
 
@@ -128,7 +136,7 @@ df_gait_measures_by_alg_all = []
 for i in range(len(objective_functions)):
     space = search_spaces[i]
     objective = objective_functions[i]
-    obj_func_name = objective_functions[i].__name__.replace('objective_','')
+    obj_func_name = objective_functions[i].__name__.replace('objective_', '')
     if alg == 'tpe':
         opt_algorithm = tpe.suggest
     elif alg == 'random':
@@ -173,9 +181,9 @@ for i in range(len(objective_functions)):
         else:
             for k in range(n_folds):
                 print('************************************************************************')
-                print('\rOptimizing ' + c.metric_to_optimize + '. Optimizing Walk Task ' + str(walk_tasks[j]) + ': algorithm- ' + obj_func_name +
-                      '    Search space: ' + c.search_space + '   Search type: ' + alg + '   Fold ' +
-                      str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
+                print('\rOptimizing ' + c.metric_to_optimize + '. Optimizing Walk Task ' + str(walk_tasks[j]) +
+                      ': algorithm- ' + obj_func_name + '    Search space: ' + c.search_space + '   Search type: ' + alg
+                      + '   Fold ' + str(k + 1) + ' of ' + str(n_folds) + '. Max evals: ' + str(c.max_evals))
                 print('************************************************************************')
 
                 # Optimize parameters

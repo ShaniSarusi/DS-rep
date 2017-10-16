@@ -1,15 +1,16 @@
 import pickle
 from math import sqrt
-from os.path import join, dirname, sep
+from os.path import join, sep
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 import Gait.Resources.config as c
 from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
+import numpy as np
 
 
 def create_regression_performance_plot(data_file, metric, save_name='alg_performance.png', rotate=True, show_plot=False,
-                                       set_y_lim=True, y_min=0, y_max=30):
+                                       set_y_lim=True, y_min=0, y_max=30, inp2=None):
     # Set tasks
     with open(join(c.pickle_path, 'task_filters'), 'rb') as fp:
         task_filters = pickle.load(fp)
@@ -69,11 +70,13 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
         if 'sc_lhs' in algs:
             algs.insert(0, algs.pop(algs.index('sc_lhs')))
 
-        # remove
+        # remove ***************************************************************
         algs.pop(algs.index('sc_fusion_high_level_union_one_stage'))
         algs.pop(algs.index('sc_lhs'))
         algs.pop(algs.index('sc_fusion_high_level_intersect'))
         algs.pop(algs.index('sc_fusion_low_level_diff'))
+        #and
+        algs.pop(algs.index('sc_fusion_low_level_sum'))
 
         with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
             sample = pickle.load(fp)
@@ -89,8 +92,12 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
                     sample_ids = data['SampleId'].as_matrix()
                 else:
                     sample_ids = sample[sample['TaskName'] == tasks[j]]['SampleId'].as_matrix()
-                alg_vals = data.loc[data['SampleId'].isin(sample_ids)][algs[i]].as_matrix()
-                true_vals = data.loc[data['SampleId'].isin(sample_ids)][true_label].as_matrix()
+                if inp2 is not None:
+                    true_vals = sample.loc[np.intersect1d(data['SampleId'], sample_ids)]['CadenceApdmMean'].as_matrix()
+                    alg_vals = data.loc[data['SampleId'].isin(sample_ids)][algs[i].replace('sc_', 'cadence_apdm_')].as_matrix()
+                else:
+                    true_vals = data.loc[data['SampleId'].isin(sample_ids)][true_label].as_matrix()
+                    alg_vals = data.loc[data['SampleId'].isin(sample_ids)][algs[i]].as_matrix()
 
                 if metric == 'PE':  # percent error
                     vals_j = 100 * (alg_vals - true_vals) / true_vals
@@ -132,8 +139,10 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     algs = ['Union of events' if 'one_sta' in alg else alg for alg in algs]
     legends = algs
 
-
-    colors = ['r', 'g', 'b']
+    if len(algs) == 2:
+        colors = ['r', 'b']
+    else:
+        colors = ['r', 'g', 'b']
 
     x = []
     gap = 3
@@ -151,12 +160,19 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     plt.xticks(xtick_locs, xlabs)
 
     plt.yticks(fontsize=10)
-    plt.ylabel('Step count\n(percent error)', fontsize=11)
+    if inp2 is not None:
+        ylab = 'Cadence\n(percent difference)'
+    else:
+        ylab = 'Step count\n(percent error)'
+    plt.ylabel(ylab, fontsize=11)
     plt.tight_layout()
     ax = fig.gca()
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 
-    colors = ['cyan', 'lightgreen', 'pink']*len(tasks)
+    if len(algs) == 2:
+        colors = ['cyan', 'pink'] * len(tasks)
+    else:
+        colors = ['cyan', 'lightgreen', 'pink'] * len(tasks)
     for patch, color in zip(box['boxes'], colors):
         patch.set_facecolor(color)
     plt.setp(box['medians'], color='k')
@@ -165,20 +181,26 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
     leg = ax.get_legend()
     for i in range(len(algs)):
         leg.legendHandles[i].set_color(colors[i])
+
+    fig = plt.gcf()
+    fig.set_size_inches(7.2, 3.2)
+    fig.tight_layout()
+    plt.savefig(save_name, dpi=300)
     plt.show()
-    pass
 
 
 
 if __name__ == '__main__':
-    input_file = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_500_sc_1002_v1', 'gait_measures.csv')
-
+    dirpath = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
+    #input_file = join(dirpath,'aa_param3small_10k_big_sc_1008_v1', 'gait_measures.csv')
+    input_file = join(dirpath, 'aa_param3small_5000_195_sc_1008_v1', 'gait_measures.csv')
+    inp2 = join(c.pickle_path, 'metadata_sample')
     rotate = False
     metric = 'PE'  # 'MAPE' or 'RMSE'
     show_plot = True
-    save_name = 'pe_all2.png'
+    save_name = join(dirpath, 'sc_tasks.png')
     # create_regression_performance_plot(input_file, metric, save_name, rotate, show_plot, y_min=-30)
-    create_regression_performance_plot(input_file, metric, save_name, rotate, show_plot, y_min=-30, y_max=30)
+    create_regression_performance_plot(input_file, metric, save_name, rotate, show_plot, y_min=-30, y_max=30, inp2=inp2)
 
 
 

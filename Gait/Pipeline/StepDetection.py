@@ -223,18 +223,37 @@ class StepDetection:
 
     def step_and_stride_durations(self, col, max_dist_from_apdm=0.9):
         step_durations = []
+        cadence = []
         n_samples = self.res.shape[0]
         for i in range(n_samples):
             step_idx = self.res[col].iloc[i]
             if len(step_idx) < 2:
                 step_durations.append([])
+                cadence.append(np.nan)
                 continue
-            step_durations_i = []
 
             step_times = np.array(self.acc[i]['lhs']['ts'].iloc[step_idx] - self.acc[i]['lhs']['ts'].iloc[0])\
                          / np.timedelta64(1, 's')
             apdm_i = np.array(self.apdm_events['Gait - Lower Limb - Toe Off L (s)'].iloc[i] +
                                       self.apdm_events['Gait - Lower Limb - Toe Off R (s)'].iloc[i])
+
+            #cadence
+            cadence_i = np.nan
+            if not np.any(np.isnan(apdm_i)):
+                offset = 0.2
+                n = step_times[(step_times > (np.min(apdm_i)-offset)) & (step_times < (np.max(apdm_i)+offset))]
+                if len(n) < 2:
+                    dur = 0
+                    cadence_i = np.nan
+                else:
+                    dur = np.max(n) - np.min(n)
+                if dur < 0.001:
+                    cadence_i = np.nan
+                else:
+                    cadence_i = (len(n)-1.0) / (dur/60.0)
+            cadence.append(cadence_i)
+
+            step_durations_i = []
             if not np.any(np.isnan(apdm_i)):
                 steps = []
                 for j in range(1, len(step_times)):
@@ -247,9 +266,6 @@ class StepDetection:
                     curr_step = s2 - s1
                     steps.append(curr_step)
                 step_durations_i = np.array(steps)
-                # step_times = np.array([step_time for step_time in step_times if
-                #                        np.min(np.abs(apdm_i - step_time)) < max_dist_from_apdm])
-                # step_durations_i = np.diff(step_times)
             step_durations.append(step_durations_i)
 
         stride_durations = []
@@ -260,6 +276,11 @@ class StepDetection:
                 stride_time = step_dur_i[j - 1] + step_dur_i[j]
                 stride_dur_i.append(stride_time)
             stride_durations.append(stride_dur_i)
+
+        # Save cadence values
+        val = [cadence[i] for i in range(n_samples)]
+        res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'cadence_apdm_'))
+        self.res = pd.concat([self.res, res], axis=1)
 
         # Save step values
         val = [step_durations[i] for i in range(n_samples)]
@@ -286,6 +307,7 @@ class StepDetection:
         val = [stride_durations[i][1::2] for i in range(n_samples)]
         res = pd.Series(val, index=self.res.index, name=col.replace('idx_', 'stride_durations_side2_'))
         self.res = pd.concat([self.res, res], axis=1)
+
 
     def step_and_stride_time_variability(self, col):
         n_samples = self.res.shape[0]
@@ -352,13 +374,13 @@ if __name__ == "__main__":
         apdm_measures = pickle.load(fp)
     with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
         apdm_events = pickle.load(fp)
+    sd = StepDetection(acc, sample, apdm_measures, apdm_events)
+
+    # Preprocessing
+    sd.normalize_norm()
 
     # Use only samples with step count
     id_nums = sample[sample['StepCount'].notnull()].index.tolist()
-
-    # Preprocessing
-    sd = StepDetection(acc, sample, apdm_measures, apdm_events)
-    sd.normalize_norm()
     sd.select_specific_samples(id_nums)
 
     # Run the step detection algorithms
