@@ -2,7 +2,7 @@ from os.path import join, sep
 from os import getcwd
 
 n_folds = 5
-max_evals = 2
+max_evals = 10000
 opt_alg = 'random'  # Can be 'tpe' or 'random'  #tpe doesn't work anymore for some reason for intersect. it fails every once in a while
 do_verbose = False
 tasks_to_optimize = 'all'
@@ -18,6 +18,7 @@ metric_to_optimize = 'apdm_cad_rmse'
 
 search_space = 'param1'
 search_space = 'param3small'
+search_space = 'param4small'
 outlier_percent_to_remove = 5
 
 # metric_to_optimize = 'asym_rmse'

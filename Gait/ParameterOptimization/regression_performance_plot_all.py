@@ -35,13 +35,19 @@ def create_regression_performance_plot(data_file, save_name='alg_performance.png
         algs.insert(0, algs.pop(algs.index('sc_lhs')))
 
     sample_ids = data['SampleId'].as_matrix()
+    # remove 36 - temp
+    sample_ids = sample_ids[sample_ids != 66]
     if inp2 is not None:
         with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
             sample = pickle.load(fp)
     for i in range(len(algs)):
-        # if 'two_sta' in algs[i]:
-        if 'one_sta' in algs[i]:
+        print(algs[i])
+        #if 'one_sta' in algs[i]:
+        if 'two_sta' in algs[i]:
+
+        #if 'diff' in algs[i]:
             continue
+        #print(algs[i])
         if inp2 is not None:
             true_vals = sample.loc[np.intersect1d(data['SampleId'], sample_ids)]['CadenceApdmMean'].as_matrix()
             alg_vals = data.loc[data['SampleId'].isin(sample_ids)][algs[i].replace('sc_', 'cadence_apdm_')].as_matrix()
@@ -104,6 +110,8 @@ if __name__ == '__main__':
     dirpath = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
     input_file = join(dirpath,'aa_param3small_10k_big_sc_1008_v1', 'gait_measures.csv')
     input_file = join(dirpath, 'aa_param3small_5000_195_sc_1008_v1', 'gait_measures.csv')
+    input_file = join(dirpath, 'a_cad_param3small_100_1016_v1', 'gait_measures.csv')
+    #input_file = join(dirpath, 'a_cad_param3small_1000_1017_v1', 'gait_measures.csv')
     show_plot = True
     save_name = join(dirpath, 'SC_all.png')
     inp2 = join(c.pickle_path, 'metadata_sample')

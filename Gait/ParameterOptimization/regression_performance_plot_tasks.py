@@ -71,7 +71,7 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
             algs.insert(0, algs.pop(algs.index('sc_lhs')))
 
         # remove ***************************************************************
-        algs.pop(algs.index('sc_fusion_high_level_union_one_stage'))
+        #algs.pop(algs.index('sc_fusion_high_level_union_one_stage'))
         algs.pop(algs.index('sc_lhs'))
         algs.pop(algs.index('sc_fusion_high_level_intersect'))
         algs.pop(algs.index('sc_fusion_low_level_diff'))
@@ -88,11 +88,14 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
             means_i = []
             stds_i = []
             for i in range(len(algs)):
+                if len(vals) == 13:
+                    a=3
                 if tasks[j] == 'all':
                     sample_ids = data['SampleId'].as_matrix()
                 else:
                     sample_ids = sample[sample['TaskName'] == tasks[j]]['SampleId'].as_matrix()
                 if inp2 is not None:
+                    sample_ids = sample_ids[sample_ids != 66]
                     true_vals = sample.loc[np.intersect1d(data['SampleId'], sample_ids)]['CadenceApdmMean'].as_matrix()
                     alg_vals = data.loc[data['SampleId'].isin(sample_ids)][algs[i].replace('sc_', 'cadence_apdm_')].as_matrix()
                 else:
@@ -113,6 +116,7 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
                 means_i.append(mean_val)
                 stds_i.append(std_val)
                 vals.append(vals_j)
+                print(algs[i])
             means.append(means_i)
             stds.append(stds_i)
 
@@ -193,7 +197,8 @@ def create_regression_performance_plot(data_file, metric, save_name='alg_perform
 if __name__ == '__main__':
     dirpath = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
     #input_file = join(dirpath,'aa_param3small_10k_big_sc_1008_v1', 'gait_measures.csv')
-    input_file = join(dirpath, 'aa_param3small_5000_195_sc_1008_v1', 'gait_measures.csv')
+    input_file = join(dirpath, 'a_cad_param3small_100_1016_v1', 'gait_measures.csv')
+    #input_file = join(dirpath, 'a_cad_param3small_1000_1017_v1', 'gait_measures.csv')
     inp2 = join(c.pickle_path, 'metadata_sample')
     rotate = False
     metric = 'PE'  # 'MAPE' or 'RMSE'
