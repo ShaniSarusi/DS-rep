@@ -1,9 +1,10 @@
 import pickle
-from os.path import join, sep
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
+from os.path import join, sep
+import matplotlib.pyplot as plt
+# Imports from within package or from our Utils
 import Gait.Resources.config as c
 from Utils.DataHandling.data_processing import string_to_float_list
 

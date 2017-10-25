@@ -1,16 +1,17 @@
 import pickle
 from multiprocessing import Pool
 from os.path import join
+
 import hyperopt as hp
 import numpy as np
 import pandas as pd
 from hyperopt import fmin, Trials, tpe, space_eval
-import Gait.Resources.config as c
-from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs
+
 import Gait.ParameterOptimization.objective_functions as o
-from Gait.ParameterOptimization.compare_to_apdm import compare_to_apdm
+import Gait.Resources.config as c
+from Gait.Analysis.plot_scatter_gait_metrics_vs_apdm import plot_scatter_gait_metrics_vs_apdm
 from Gait.ParameterOptimization.regression_performance_plot import create_regression_performance_plot
-from Gait.ParameterOptimization.write_best_params_to_csv import write_best_params_to_csv
+from Gait.Resources.gait_utils import evaluate_on_test_set, create_gait_measure_csvs, write_best_params_to_csv
 from Utils.Preprocessing.other_utils import split_data
 
 # Set search spaces
@@ -73,7 +74,7 @@ ids_efrat_wasserman = np.array(sample[sample['Person'] == 'EfratWasserman'].inde
 ids_avishai_weingarten = np.array(sample[sample['Person'] == 'AvishaiWeingarten'].index, dtype=int)
 ids_sternum_sensor_incorrect = np.array(sample[sample['Comments'] == 'Sternum was on back'].index, dtype=int)
 ids_avishai_sternum = np.intersect1d(ids_avishai_weingarten, ids_sternum_sensor_incorrect)
-#ids_people_to_remove = np.sort(np.hstack((ids_jeremy_atia, ids_efrat_wasserman, ids_avishai_sternum)))
+# ids_people_to_remove = np.sort(np.hstack((ids_jeremy_atia, ids_efrat_wasserman, ids_avishai_sternum)))
 ids_people_to_remove = np.sort(np.hstack((ids_jeremy_atia, ids_avishai_sternum)))
 
 # Remove outlier step counts as compared to APDM cadence
@@ -283,7 +284,7 @@ create_gait_measure_csvs(df_gait_measures_by_alg, data_file)
 
 # Data analysis plots
 metrics = ['cadence', 'step_time_asymmetry_median', 'stride_time_var', 'apdm_toe_off_asymmetry_median']
-compare_to_apdm(data_file, algs, metrics, name_prefix="")
+plot_scatter_gait_metrics_vs_apdm(data_file, algs, metrics, name_prefix="")
 
 create_regression_performance_plot(data_file, 'MAPE', save_name='alg_performance_mape.png', rotate=True,
                                    show_plot=False)

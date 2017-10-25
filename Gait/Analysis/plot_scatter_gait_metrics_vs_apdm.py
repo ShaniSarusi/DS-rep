@@ -7,7 +7,7 @@ import pickle
 from Gait.Pipeline.StepDetection import StepDetection
 
 
-def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot=False):
+def plot_scatter_gait_metrics_vs_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot=False):
     # Read data
     alg_res = pd.read_csv(alg_data_file, index_col='SampleId')
     idx = alg_res.index.tolist()
@@ -110,13 +110,15 @@ def compare_to_apdm(alg_data_file, algs, apdm_metrics, name_prefix="", show_plot
             plt.show()
 
 if __name__ == '__main__':
-    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param3small_5000_195_sc_1008_v1')
-    alg_data_path = join(save_path, 'gait_measures.csv')
+    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','a_cad10k_param4small_oct22_final')
 
+    # Which algorithms to compare
+    algorithms = ['fusion_high_level_union_two_stages', 'fusion_high_level_union_one_stage']
     algorithms = ['lhs', 'rhs', 'fusion_high_level_intersect', 'fusion_high_level_union_two_stages',
                   'fusion_high_level_union_one_stage', 'fusion_low_level_sum', 'fusion_low_level_diff']
-    metrics = ['cadence', 'stride_time_var', 'step_time_asymmetry_median', 'apdm_toe_off_asymmetry_median']
 
-    algorithms = ['fusion_high_level_union_two_stages', 'fusion_high_level_union_one_stage']
+    # What metrics to compare
+    metrics = ['cadence', 'stride_time_var', 'step_time_asymmetry_median', 'apdm_toe_off_asymmetry_median']
     metrics = ['stride_time_var', 'apdm_toe_off_asymmetry_median']
-    compare_to_apdm(alg_data_path, algorithms, metrics, show_plot=True)
+
+    plot_scatter_gait_metrics_vs_apdm(join(save_path, 'gait_measures.csv'), algorithms, metrics, show_plot=True)

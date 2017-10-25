@@ -29,7 +29,8 @@ with open(join(c.pickle_path, 'acc'), 'rb') as fp:
     ts = [(acc[i]['lhs']['ts'] - acc[i]['lhs']['ts'].iloc[0])/np.timedelta64(1, 's') for i in range(len(acc))]
 
 save_dir = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
-input_file = join(save_dir, 'aa_param3small_10k_big_sc_1008_v1', 'gait_measures.csv')
+input_file = join(save_dir, 'a_cad_param3small_1000_1017_v1', 'gait_measures.csv')
+input_file = join(save_dir, 'a_cad10k_param4small_oct22_final', 'gait_measures.csv')
 data = pd.read_csv(input_file)
 max_dist_between_apdm_to_wrist_alg = 0.5
 
@@ -100,31 +101,60 @@ alg_to_plot = 'lhs'
 alg_to_plot = 'fusion_high_level_union_two_stages'
 alg_to_plot = 'fusion_high_level_union_one_stage'
 
+
+just_union = []
+just_union.append([item/1000.0 for sublist in initial_lhs['idx_fusion_high_level_union_one_stage'].tolist() for item in sublist])
+just_union.append([item/1000.0 for sublist in initial_rhs['idx_fusion_high_level_union_one_stage'].tolist() for item in sublist])
+just_union.append([item/1000.0 for sublist in off_lhs['idx_fusion_high_level_union_one_stage'].tolist() for item in sublist])
+just_union.append([item/1000.0 for sublist in off_rhs['idx_fusion_high_level_union_one_stage'].tolist() for item in sublist])
+labels=['Heel-L', 'Heel-R', 'Toe off-L', 'Toe off-R']
+fig, ax = plt.subplots()
+x = [1, 1.5, 2.5, 3]
+box = plt.boxplot([just_union[0], just_union[1], just_union[2], just_union[3]], 0, '', positions=x,
+                  labels=labels, widths=0.4, whis=[5, 95], patch_artist=True)
+colors = ['cyan', 'cyan', 'lightgreen', 'lightgreen']
+for patch, color in zip(box['boxes'], colors):
+    patch.set_facecolor(color)
+plt.setp(box['medians'], color='k')
+plt.yticks(fontsize=10)
+plt.ylabel('\u0394t after nearest toe off event (s)', fontsize=11)
+plt.xticks(fontsize=9)
+plt.tight_layout()
+ax = fig.gca()
+ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+fig = plt.gcf()
+fig.set_size_inches(3.5, 2.75)
+fig.tight_layout()
+plt.savefig(join(save_dir, 'gait_phase_just_union.png'), dpi=300)
+plt.show()
+
+
+
 #NEW
 algs = ['lhs', 'rhs', 'fusion_low_level_sum', 'fusion_low_level_diff', 'fusion_high_level_intersect', 'fusion_high_level_union_one_stage']
 heel_l = []
 for alg in algs:
-    tmp = [item for sublist in initial_lhs['idx_' + alg].tolist() for item in sublist]
+    tmp = [item/1000.0 for sublist in initial_lhs['idx_' + alg].tolist() for item in sublist]
     heel_l.append(tmp)
-bp_me(heel_l, save_name=join(save_dir, 'heel_L.png'), ylabel='\u0394t from heel strike (ms)')
+bp_me(heel_l, save_name=join(save_dir, 'heel_L.png'), ylabel='\u0394t after nearest heel strike (s)')
 
 heel_r = []
 for alg in algs:
-    tmp = [item for sublist in initial_rhs['idx_' + alg].tolist() for item in sublist]
+    tmp = [item/1000.0 for sublist in initial_rhs['idx_' + alg].tolist() for item in sublist]
     heel_r.append(tmp)
-bp_me(heel_r, save_name=join(save_dir, 'heel_R.png'), ylabel='\u0394t from heel strike (ms)')
+bp_me(heel_r, save_name=join(save_dir, 'heel_R.png'), ylabel='\u0394t after nearest heel strike (s)')
 
 toe_l = []
 for alg in algs:
-    tmp = [item for sublist in off_lhs['idx_' + alg].tolist() for item in sublist]
+    tmp = [item/1000.0 for sublist in off_lhs['idx_' + alg].tolist() for item in sublist]
     toe_l.append(tmp)
-bp_me(toe_l, save_name=join(save_dir, 'toe_L.png'), ylabel='\u0394t from toe off (ms)')
+bp_me(toe_l, save_name=join(save_dir, 'toe_L.png'), ylabel='\u0394t after nearest toe off event (s)')
 
 toe_r = []
 for alg in algs:
-    tmp = [item for sublist in off_rhs['idx_' + alg].tolist() for item in sublist]
+    tmp = [item/1000.0 for sublist in off_rhs['idx_' + alg].tolist() for item in sublist]
     toe_r.append(tmp)
-bp_me(toe_r, save_name=join(save_dir, 'toe_R.png'), ylabel='\u0394t from toe off (ms)')
+bp_me(toe_r, save_name=join(save_dir, 'toe_R.png'), ylabel='\u0394t after nearest toe off event (s)')
 
 
 # Per task
@@ -238,7 +268,7 @@ plt.show()
 
 
 #Stride time var correlation....
-input_file = join(save_dir, 'aa_param3small_10k_big_sc_1008_v1', 'gait_measures.csv')
+input_file = join(save_dir, 'a_cad_param3small_1000_1017_v1', 'gait_measures.csv')
 alg = 'fusion_high_level_union_one_stage'
 #alg = 'rhs'
 a = pd.read_csv(input_file)

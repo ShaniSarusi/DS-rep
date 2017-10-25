@@ -1,9 +1,10 @@
 import pickle
-from os.path import join, sep
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from os.path import join, sep
+import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
+# Imports from within package
 import Gait.Resources.config as c
 from Gait.Resources.gait_utils import calc_sc_for_excluded_ids
 
