@@ -48,7 +48,7 @@ tags_df, lab_x, lab_y, lab_z, lab_n = data_reading.MakeIntervalFromAllData(res, 
 """
 Read Itzik
 """
-exec(open('./LDopa/Data_reading/load_from_csv.py').read())
+exec(open('./LDopa/DataReading/load_from_csv.py').read())
 tags_df = read_tag_data(data_path)
 lab_x, lab_y, lab_z = read_data_windows(data_path, read_also_home_data=False,
                                         sample_freq=50, window_size=5)
