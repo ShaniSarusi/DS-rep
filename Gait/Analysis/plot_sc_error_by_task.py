@@ -26,7 +26,7 @@ def plot_sc_error_by_task(data_file, save_name='sc_err_tasks.png', hide_splines=
     with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
         sample = pickle.load(fp)
         sample['TaskName'] = sample['TaskName'].replace('Walk - Imagine you have a cane in the right hand',
-                                                    'Asymmetry - Imagine you have a cane in the right hand')
+                                                        'Asymmetry - Imagine you have a cane in the right hand')
         sample['TaskName'] = sample['TaskName'].replace('Walk - Without right shoe', 'Asymmetry - No right shoe')
 
     # Set algorithms and their order
@@ -88,15 +88,16 @@ def plot_sc_error_by_task(data_file, save_name='sc_err_tasks.png', hide_splines=
     plt.xticks(xtick_locs, x_labels, fontsize=10)
 
     # Y axis stuff
-    plt.yticks(np.arange(-15,30,5), fontsize=10)
+    plt.yticks(np.arange(-15, 30, 5), fontsize=10)
     plt.ylabel('Step count error (%)', fontsize=10)
     # for label in ax.yaxis.get_ticklabels()[::2]:
     #     label.set_visible(False)
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
     plt.ylim(-15, 20)
 
+    col = ['#1f77b4', '#ff7f0e']
     if len(algs) == 2:
-        colors = ['cyan', 'lightgreen'] * len(tasks)
+        colors = col * len(tasks)
     else:
         colors = ['cyan', 'lightgreen', 'pink'] * len(tasks)
     for patch, color in zip(box['boxes'], colors):
@@ -104,8 +105,8 @@ def plot_sc_error_by_task(data_file, save_name='sc_err_tasks.png', hide_splines=
     plt.setp(box['medians'], color='k')
 
     # Set legend
-    right = mpatches.Patch(facecolor='cyan', label='Right only (no fusion)', edgecolor='black')
-    union = mpatches.Patch(facecolor='lightgreen', label='Union fusion', edgecolor='black')
+    right = mpatches.Patch(facecolor=col[0], label='Right only (no fusion)', edgecolor='black')
+    union = mpatches.Patch(facecolor=col[1], label='Union (high-level) fusion', edgecolor='black')
     plt.legend(handles=[right, union], fontsize=9.5)
 
     # Hide the right and top spines
@@ -115,7 +116,7 @@ def plot_sc_error_by_task(data_file, save_name='sc_err_tasks.png', hide_splines=
         ax.spines['top'].set_visible(False)
 
     fig = plt.gcf()
-    fig.set_size_inches(5.5, 2.25)
+    fig.set_size_inches(5.5, 2.2)
     fig.tight_layout()
     plt.savefig(save_name, dpi=600)
     plt.show()
@@ -125,4 +126,4 @@ if __name__ == '__main__':
     dirpath = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
     input_file = join(dirpath, 'a_cad10k_param4small_oct22_final', 'gait_measures.csv')
     save_name = join(dirpath, 'sc_err_tasks.png')
-    plot_sc_error_by_task(input_file, save_name)
+    plot_sc_error_by_task(input_file, save_name, hide_splines=True)

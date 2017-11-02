@@ -16,8 +16,8 @@ import Gait.Resources.config as c
 # Imports from outside package
 from Utils.BasicStatistics.statistics_functions import mean_absolute_percentage_error
 from Utils.DataHandling.reading_and_writing_files import read_all_files_in_directory
+from Utils.DataHandling.data_processing import string_to_int_list
 from Utils.Connections.connections import load_pickle_file_from_s3
-
 
 
 def create_sd_class_for_obj_functions(force_local=False):
@@ -202,7 +202,7 @@ def get_obj_function_results(s, alg_name, metric, verbose=True):
     elif metric == 'apdm_cad_rmse':
         nanval = 50
         apdm_cad_rmse = sqrt(mean_squared_error(s.apdm_measures['cadence'],
-                                            s.res['cadence_apdm_' + alg_name].fillna(nanval)))
+                                                s.res['cadence_apdm_' + alg_name].fillna(nanval)))
         if verbose: print('\tResult: APDM cadence RMSE is ' + str(round(apdm_cad_rmse, 2)))
         return apdm_cad_rmse
     else:  # rmse
@@ -222,9 +222,10 @@ def calc_sc_for_excluded_ids(file_path, excluded_ids, alg_name='high_level_union
         s.normalize_norm()
         s.select_specific_samples(excluded_ids)
         if alg_name in 'fusion_high_level_union_one_stage':
-            s.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None, use_single_max_min_for_all_samples=True,
-                smoothing='mva', mva_win=p['mva_win'], peak_min_thr=p['peak_min_thr'], peak_min_dist=p['peak_min_dist'],
-                fusion_type='union_one_stage', union_min_dist=p['union_min_dist'], verbose=False, do_normalization=False)
+            s.step_detection_fusion_high_level(signal_to_use='norm', vert_win=None,
+                use_single_max_min_for_all_samples=True, smoothing='mva', mva_win=p['mva_win'],
+                peak_min_thr=p['peak_min_thr'], peak_min_dist=p['peak_min_dist'], fusion_type='union_one_stage',
+                union_min_dist=p['union_min_dist'], verbose=False, do_normalization=False)
         else:
             print('alg is not yet implemented')
             return
@@ -241,7 +242,7 @@ def bp_me(vals, labels=['Left', 'Right', 'Sum', 'Diff', 'Int', 'Union'], save_na
     fig, ax = plt.subplots()
     x = [1, 1.5, 2.5, 3, 4, 4.5]
     box = plt.boxplot([vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]], 0, '', positions=x,
-                labels=labels, widths=0.4, whis=[5, 95], patch_artist=True)
+                      labels=labels, widths=0.4, whis=[5, 95], patch_artist=True)
     colors = ['cyan', 'cyan', 'lightgreen', 'lightgreen', 'pink', 'pink']
     for patch, color in zip(box['boxes'], colors):
         patch.set_facecolor(color)
@@ -316,3 +317,85 @@ def write_best_params_to_csv(save_dir, return_file_path=False):
 
     if return_file_path:
         return file_path
+
+
+def initialize_offset_plots_data(input_file, max_dist_between_apdm_to_wrist_alg):
+    # Read APDM events
+    with open(join(c.pickle_path, 'apdm_events'), 'rb') as fp:
+        apdm_events = pickle.load(fp)
+        apdm_events['initial'] = apdm_events['Gait - Lower Limb - Initial Contact L (s)'] + \
+            apdm_events['Gait - Lower Limb - Initial Contact R (s)']
+        apdm_events['off'] = apdm_events['Gait - Lower Limb - Toe Off L (s)'] + \
+            apdm_events['Gait - Lower Limb - Toe Off R (s)']
+        apdm_events['initial_lhs'] = apdm_events['Gait - Lower Limb - Initial Contact L (s)']
+        apdm_events['initial_rhs'] = apdm_events['Gait - Lower Limb - Initial Contact R (s)']
+        apdm_events['off_lhs'] = apdm_events['Gait - Lower Limb - Toe Off L (s)']
+        apdm_events['off_rhs'] = apdm_events['Gait - Lower Limb - Toe Off R (s)']
+
+    # Read all time stamps
+    with open(join(c.pickle_path, 'acc'), 'rb') as fp:
+        acc = pickle.load(fp)
+        ts = [(acc[i]['lhs']['ts'] - acc[i]['lhs']['ts'].iloc[0])/np.timedelta64(1, 's') for i in range(len(acc))]
+
+    # organize data input
+    df = pd.concat([apdm_events['initial'], apdm_events['initial_lhs'], apdm_events['initial_rhs'], apdm_events['off'],
+                    apdm_events['off_lhs'], apdm_events['off_rhs']], axis=1)
+    data = pd.read_csv(input_file)
+
+    algs = [data.columns[i] for i in range(len(data.columns)) if 'idx_' in data.columns[i]]
+    for alg in algs:
+        ts_idx = []
+        for j in range(len(df)):
+            if j not in data['SampleId'].tolist():
+                ts_idx.append([])
+                continue
+            data_idx = data[data['SampleId'] == j].index[0]
+            idx = string_to_int_list(data[alg][data_idx])
+            ts_idx.append(ts[j][idx].tolist())
+        t = pd.Series(ts_idx, name=alg)
+        df = pd.concat([df, t], axis=1)
+
+    # Calculate distance from apdm event
+    apdm_gait_stages = ['initial', 'initial_lhs', 'initial_rhs', 'off', 'off_lhs', 'off_rhs']
+    for apdm_gait_stage in apdm_gait_stages:
+        res = pd.DataFrame(index=range(len(df)))
+        for alg in algs:
+            alg_series = []
+            for j in range(len(df)):
+                cell_vals = []
+                if j not in data['SampleId'].tolist():
+                    alg_series.append(cell_vals)
+                    continue
+                if np.any(np.isnan(df[apdm_gait_stage][j])):
+                    alg_series.append(cell_vals)
+                    continue
+                alg_event = df[alg][j]
+                apdm_event = np.asanyarray(df[apdm_gait_stage][j])
+
+                # Distance from each APDM event detected
+                if len(alg_event) > 0:
+                    for i in range(len(apdm_event)):
+                        dt = alg_event - apdm_event[i]
+                        min_dist_from_apdm_event_i = dt[(np.abs(dt)).argmin()]
+                        if np.abs(min_dist_from_apdm_event_i) > max_dist_between_apdm_to_wrist_alg:
+                            continue
+                        cell_vals.append(min_dist_from_apdm_event_i*1000)
+
+                alg_series.append(cell_vals)
+            t = pd.Series(alg_series, name=alg)
+            res = pd.concat([res, t], axis=1)
+        # Store res data
+        if apdm_gait_stage == 'initial':
+            initial = res
+        if apdm_gait_stage == 'initial_lhs':
+            initial_lhs = res
+        if apdm_gait_stage == 'initial_rhs':
+            initial_rhs = res
+        if apdm_gait_stage == 'off':
+            off = res
+        if apdm_gait_stage == 'off_lhs':
+            off_lhs = res
+        if apdm_gait_stage == 'off_rhs':
+            off_rhs = res
+
+    return initial, initial_lhs, initial_rhs, off, off_lhs, off_rhs

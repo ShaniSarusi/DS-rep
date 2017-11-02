@@ -4,6 +4,7 @@ import pandas as pd
 import Gait.Resources.config as c
 import pickle
 import numpy as np
+from scipy.stats.stats import pearsonr
 
 
 def plot_sc_error(data_file, save_name='sc_err.png', hide_splines=False, sc_label='apdm', whisk='5_95'):
@@ -44,27 +45,30 @@ def plot_sc_error(data_file, save_name='sc_err.png', hide_splines=False, sc_labe
             true_vals = data.loc[data['SampleId'].isin(sample_ids)]['sc_manual'].as_matrix()
             alg_vals = data.loc[data['SampleId'].isin(sample_ids)][algs[i]].as_matrix()
         vals.append(100 * (alg_vals - true_vals) / true_vals)
+        print('Correlation for ' + algs[i] + ' is: ' + str(pearsonr(alg_vals, true_vals)[0]))
 
     # Plotting
     fig, ax = plt.subplots()
     x = [1, 1.5, 2.5, 3, 4, 4.5]
     if whisk == '5_95':
         box = plt.boxplot([vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]], 0, '', positions=x,
-                labels=['L', 'R', 'Sum', 'Diff', 'Int', 'Union'], widths=0.4, whis=[5, 95], patch_artist=True)
+                          labels=['L', 'R', 'Sum', 'Diff', 'Int', 'Union'], widths=0.4, whis=[5, 95], patch_artist=True)
     else:
         box = plt.boxplot([vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]], 0, '+', positions=x,
                           labels=['Left', 'Right', 'Sum', 'Diff', 'Int', 'Union'], widths=0.4, patch_artist=True)
-    colors = ['cyan', 'cyan', 'lightgreen', 'lightgreen', 'magenta', 'magenta']
+    # colors = ['cyan', 'cyan', 'lightgreen', 'lightgreen', 'magenta', 'magenta']
+    # colors = ['lightgray'] * 6
+    colors = ['whitesmoke'] * 6
     for patch, color in zip(box['boxes'], colors):
         patch.set_facecolor(color)
     plt.setp(box['medians'], color='k')
     # x-axis stuff
     plt.xticks(fontsize=9.5)
-    plt.xlabel('No fusion      Low-level        High-level\n                   fusion             fusion')
+    plt.xlabel('No fusion      Low-level      High-level \n                     fusion            fusion', fontsize=10.5)
     ax.xaxis.set_label_coords(0.52, -0.2)
     # y-axis stuff
     plt.yticks(np.arange(-15, 40, 5), fontsize=10)
-    plt.ylim(-15,20)
+    plt.ylim(-11, 11)
     plt.ylabel('Step count error (%)', fontsize=10)
     ax.yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
     # Hide the right and top spines
@@ -88,7 +92,5 @@ def plot_sc_error(data_file, save_name='sc_err.png', hide_splines=False, sc_labe
 if __name__ == '__main__':
     dirpath = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
     input_file = join(dirpath, 'a_cad10k_param4small_oct22_final', 'gait_measures.csv')
-    show_plot = True
-    save_name = join(dirpath, 'sc_err.png')
-    plot_sc_error(input_file, save_name)
-
+    save_name = join(dirpath, 'sc_err2.png')
+    plot_sc_error(input_file, save_name, hide_splines=True)

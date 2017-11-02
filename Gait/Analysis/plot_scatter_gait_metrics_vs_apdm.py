@@ -98,7 +98,7 @@ def plot_scatter_gait_metrics_vs_apdm(alg_data_file, algs, apdm_metrics, name_pr
                 axarr[a, b].set_xlim(ax_min, ax_max)
                 axarr[a, b].set_ylim(ax_min, ax_max)
                 axarr[a, b].text(ax_min + 0.05 * ax_range, ax_min + 0.8 * ax_range, 'R= ' + str(round(corr_j, 3)))
-        #plt.tight_layout()
+        # plt.tight_layout()
         plt.suptitle(name_prefix + metric + ' comparison')
         plt.subplots_adjust(wspace=.4)
 
@@ -110,7 +110,7 @@ def plot_scatter_gait_metrics_vs_apdm(alg_data_file, algs, apdm_metrics, name_pr
             plt.show()
 
 if __name__ == '__main__':
-    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','a_cad10k_param4small_oct22_final')
+    save_path = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper', 'a_cad10k_param4small_oct22_final')
 
     # Which algorithms to compare
     algorithms = ['fusion_high_level_union_two_stages', 'fusion_high_level_union_one_stage']

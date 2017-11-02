@@ -12,7 +12,7 @@ do_train_or_excluded = 'train'
 #do_train_or_excluded = 'excluded'
 do_algorithm = True
 dirpath = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper')
-input_file = join(dirpath,'aa_param3small_5000_195_sc_1008_v1', 'gait_measures.csv')
+input_file = join(dirpath, 'a_cad10k_param4small_oct22_final', 'gait_measures.csv')
 
 ###################################################################
 # read data
@@ -22,7 +22,7 @@ with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     manual_sc = sample['CadenceWithCrop'].tolist()
 
 # get train and excluded ids
-with open(join(dirpath,'aa_param3small_5000_195_sc_1008_v1', 'ids'), 'rb') as fp:
+with open(join(dirpath,'a_cad10k_param4small_oct22_final', 'ids'), 'rb') as fp:
     tr_exc_ids = pickle.load(fp)
     if do_train_or_excluded == 'train':
         ids = tr_exc_ids['train']
@@ -31,7 +31,7 @@ with open(join(dirpath,'aa_param3small_5000_195_sc_1008_v1', 'ids'), 'rb') as fp
         alg_sc = alg_data['cadence_apdm_rhs'].tolist()
     else:
         ids = tr_exc_ids['excluded']
-        input_file = join(dirpath, 'aa_param3small_5000_195_sc_1008_v1',
+        input_file = join(dirpath, 'a_cad10k_param4small_oct22_final',
                           'step_detection_fusion_high_level_union_one_stage_walk_taskall_all.csv')
         alg_sc = calc_sc_for_excluded_ids(input_file, ids)
 

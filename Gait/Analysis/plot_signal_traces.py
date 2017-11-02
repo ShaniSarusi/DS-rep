@@ -164,7 +164,7 @@ if __name__ == '__main__':
     elif do_all_plots:
         plot_channels_all_options(id, start_time=8, time_range=5)
     else:
-        #plot_type = 'left_leg_events'
+        # plot_type = 'left_leg_events'
         # plot_type = 'initial_contacts'
         plot_type = 'toes_off'
         # plot_type = 'nothing'
@@ -175,4 +175,3 @@ if __name__ == '__main__':
         plot_channels_and_events(id, file=input_file, alg='fusion_high_level_union_two_stages',
                                  start_time=30, time_range=3, plot_type=plot_type, save=False, show_plot=True,
                                  do_channels=False)
-

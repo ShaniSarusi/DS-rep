@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import Gait.Resources.config as c
 from Utils.DataHandling.data_processing import string_to_float_list
 
-input_file = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','aa_param1_10k_sc_story', 'gait_measures.csv')
+input_file = join('C:', sep, 'Users', 'zwaks', 'Desktop', 'GaitPaper','a_cad10k_param4small_oct22_final', 'gait_measures.csv')
 
 with open(join(c.pickle_path, 'metadata_sample'), 'rb') as fp:
     sample = pickle.load(fp)
