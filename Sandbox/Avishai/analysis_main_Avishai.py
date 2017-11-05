@@ -34,9 +34,9 @@ tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,
 
 
 #######
-res = pd.read_csv('/home/lfaivish/PycharmProjects/Deepshit/DATA_FOLDER/'+'AllLabData.csv')
+res = pd.read_csv('C:/Users/awagner/Desktop/For_Tom/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
-res = data_reading.arrange_res(res,path = '/home/lfaivish/Desktop/mapTasksClusters.csv')
+res = data_reading.arrange_res(res,path = 'C:/Users/awagner/Documents/DataScientists/LDopa/DataReading/Resources/mapTasksClusters.csv')
 res['X'] = lmap(lambda x: round(x, 3), res['X'])
 res['Y'] = lmap(lambda x: round(x, 3), res['Y'])
 res['Z'] = lmap(lambda x: round(x, 3), res['Z'])
@@ -90,7 +90,7 @@ Prepare the data for the classification process:
 task_names = tags_df.Task.as_matrix()
 task_clusters = tags_df.TaskClusterId.as_matrix()
 relevant_task_names = []
-relevant_task_clusters = [0, 1] # 1=resting, 4=periodic hand movement, 5=walking
+relevant_task_clusters = [0, 1, 2, 3, 4, 5] # 1=resting, 4=periodic hand movement, 5=walking
 cond = np.asarray(lmap(lambda x: x in relevant_task_clusters, task_clusters))
 
 #Create features and labels data frames, according to the condition indicator:

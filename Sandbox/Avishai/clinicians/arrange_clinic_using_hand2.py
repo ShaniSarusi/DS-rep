@@ -5,19 +5,19 @@ Created on Thu Sep 28 09:35:10 2017
 @author: awagner
 """
 
-pateint_63_hand_rotation = pd.read_csv('C:/Users/awagner/Documents/clinicion/hand_movement_files/user_142563.csv')
+pateint_63_hand_rotation = pd.read_csv('C:/Users/awagner/Documents/clinicion/hand_movement_files/user_142561.csv')
 
-pateint_63_hand_rotation['date_start'] = pateint_63_hand_rotation['date_start'].apply(lambda x: dt.datetime.strptime(x, '%m/%d/%Y %H:%M.%S'))
-pateint_63_hand_rotation['date_end'] = pateint_63_hand_rotation['date_end'].apply(lambda x: dt.datetime.strptime(x, '%m/%d/%Y %H:%M.%S'))
+pateint_63_hand_rotation['date_start'] = pateint_63_hand_rotation['date_start'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
+pateint_63_hand_rotation['date_end'] = pateint_63_hand_rotation['date_end'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
 
-pateint_63_hand_rotation_only = pateint_63_hand_rotation[pateint_63_hand_rotation.task == 'alternating right hand movements']
+pateint_63_hand_rotation_only = pateint_63_hand_rotation[pateint_63_hand_rotation['task name'] == 'alternating left hand movements']
 
 
 
 Tagging_63 = meta_pateint.copy()
 Tagging_63['diss_from_hand'] = 0
 Tagging_63['duration'] = 30
-Tagging_63['cycle'] = 1
+Tagging_63['cycle'] = 2
 
 Tagging_63 = Tagging_63.reset_index()
           
@@ -25,9 +25,9 @@ count = 0
 
 
 ##############################
-cycle = 6
-my_diff_num = 11.47
-end_time = 33
+cycle = 3
+my_diff_num = 11.05
+end_time = 18
 Tagging_63['diss_from_hand'].loc[Tagging_63.date_start == Tagging_63.date_start[count]] = np.floor(my_diff_num) * 60 + (my_diff_num*100)%100
 Tagging_63['duration'].loc[Tagging_63.date_start == Tagging_63.date_start[count]] = end_time
 Tagging_63['cycle'].loc[Tagging_63.date_start == Tagging_63.date_start[count]] = cycle
@@ -37,7 +37,7 @@ while  Tagging_63.date_start.iloc[curr] ==  Tagging_63.date_start.iloc[count]:
     count = count + 1
     curr = count + 1  
 count = count + 1
-print(Tagging_63[['diss_from_hand', 'task', 'date_start', 'duration', 'cycle']].loc[count - 1])
+print(Tagging_63[['diss_from_hand', 'task name', 'date_start', 'duration', 'cycle']].loc[count - 1])
 ###############################
 
 keep_in_copy = Tagging_63.copy()

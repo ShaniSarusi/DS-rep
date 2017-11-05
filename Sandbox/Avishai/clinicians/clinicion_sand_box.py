@@ -5,6 +5,11 @@ Created on Tue Sep 12 10:32:16 2017
 
 @author: HealthLOB
 """
+
+import os
+os.chdir('C:/Users/awagner/Documents/DataScientists')
+
+import pickle
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -12,27 +17,27 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from Utils.Connections.connections import read_from_s3
 
-pateint = 142563
+pateint = 142580
 
-meta = read_from_s3('aws-athena-query-results-726895906399-us-west-2', 'clinic_users/Musc_data/MUSC data/CSV uploaded to S3/musc_motor_tasks.csv', 
+meta = read_from_s3('aws-athena-query-results-726895906399-us-west-2', 'clinic_users/Musc_data/MUSC data/CSV uploaded to S3/F509_MotorTask_INTEL_20170925_V2.csv', 
 'AKIAIEOL4GFG77QPNLCA', '06/OfU2vRMAkLGt69PjvVOSRfe1seABRQzhErL++', encoding = 'latin-1' )
-meta = meta.dropna(axis = 0, how = 'any', thresh = 3)
+meta = meta.dropna(axis = 0, how = 'any', thresh = 16)
 
 my_data = read_from_s3('aws-athena-query-results-726895906399-us-west-2',
                        'clinic_users/Tagging_files_clinic/user_'+ str(pateint)+'_ses1.csv', 
 'AKIAIEOL4GFG77QPNLCA', '06/OfU2vRMAkLGt69PjvVOSRfe1seABRQzhErL++' )
 
 my_data['date'] = my_data['timestamp'].apply(lambda x: dt.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'))
-meta['date_start'] = meta['TSstart'].apply(lambda x: dt.datetime.strptime(x, '%m/%d/%Y %H:%M.%S'))
-meta['date_end'] = meta['Tsend'].apply(lambda x: dt.datetime.strptime(x, '%m/%d/%Y %H:%M.%S'))
+meta['date_start'] = meta['reported timestamp start'].apply(lambda x: dt.datetime.strptime(str(x), '%d%b%Y:%H:%M:%S.%f'))#'%m/%d/%Y %H:%M.%S'
+meta['date_end'] = meta['reported timestamp end'].apply(lambda x: dt.datetime.strptime(str(x), '%d%b%Y:%H:%M:%S.%f'))
 
 
 
-np.unique(meta.task)
+np.unique(meta['task name'])
 date_border_up = my_data['date'][len(my_data['date']) - 1]
 date_border_low = my_data['date'][0]
 
-meta_pateint = meta.iloc[np.where((meta.user_id == pateint) & (meta['date_start'] > date_border_low) &
+meta_pateint = meta.iloc[np.where((meta.user_id_intel == pateint) & (meta['date_start'] > date_border_low) &
                                   (meta['date_end'] < date_border_up))]
 meta_pateint = meta_pateint.sort('date_start')
 num = 1
@@ -40,8 +45,8 @@ num = 1
 
 print(meta_pateint.iloc[num])
 
-index = np.where((my_data['date'] > meta_pateint['date_start'].iloc[num ]-dt.timedelta(0,15)) & 
-                 (my_data['date'] < meta_pateint['date_end'].iloc[num ]+dt.timedelta(0,15)))
+index = np.where((my_data['date'] > meta_pateint['date_start'].iloc[num ]-dt.timedelta(0,10)) & 
+                 (my_data['date'] < meta_pateint['date_end'].iloc[num ]+dt.timedelta(0,10)))
 
 index2 = np.where((my_data['date'] >= meta_pateint['date_start'].iloc[num]) & 
                  (my_data['date'] <= meta_pateint['date_end'].iloc[num ]))
@@ -49,17 +54,17 @@ index2 = np.where((my_data['date'] >= meta_pateint['date_start'].iloc[num]) &
 
 print(num)
 alpha = 0.5
-plt.plot(range(len(my_data.loc[index]['x'])),my_data.loc[index]['x'], alpha = alpha)
-plt.plot(range(len(my_data.loc[index]['x'])),my_data.loc[index]['y'], alpha = alpha)
-plt.plot(range(len(my_data.loc[index]['x'])),my_data.loc[index]['z'], alpha = alpha)
+plt.plot(my_data.loc[index]['x'], alpha = alpha)
+plt.plot(my_data.loc[index]['y'], alpha = alpha)
+plt.plot(my_data.loc[index]['z'], alpha = alpha)
 currentAxis = plt.gca()
-currentAxis.set_title(meta_pateint.task.iloc[num])
+currentAxis.set_title(meta_pateint['task name'].iloc[num])
 currentAxis.set_ylim([-2,2])
-currentAxis.add_patch(Rectangle((750, -2), len(index2[0]), 4, fill=None, alpha=1, edgecolor ="red"))
+currentAxis.add_patch(Rectangle((index2[0][0], -2), len(index2[0]), 4, fill=None, alpha=1, edgecolor ="red"))
 plt.show()
 
 curr = num + 1
-while  meta_pateint.TSstart.iloc[curr] ==  meta_pateint.TSstart.iloc[num]:
+while  meta_pateint.date_start.iloc[curr] ==  meta_pateint.date_start.iloc[num]:
     num = num + 1
     curr = num + 1
     

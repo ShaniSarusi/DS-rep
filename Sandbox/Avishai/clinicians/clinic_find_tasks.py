@@ -60,10 +60,14 @@ clinic_y_features = WavFeatures.createWavFeatures(y_data)
 clinic_z_features = WavFeatures.createWavFeatures(z_data)
 features_clinic = np.column_stack((clinic_x_features, clinic_y_features, clinic_z_features))
 
-pred_task = optimized_model.predict_proba(features_clinic)
+model_5_sec = open('C:/Users/awagner/Documents/clinicion/model_task_classifier/task_classifier.pkl', 'rb')
+class_hand = pickle.load(model_5_sec)
+model_5_sec.close()
+pred_task = class_hand.predict_proba(features_clinic)
 
 meta_to_save = pd.DataFrame(columns = meta_pateint.columns)
-tagg_vec = np.zeros(len(pred_task[:,4]))
+
+tagg_vec = np.zeros(len(pred_task[:,3]))
 for i in range(1, len(tagg_vec)):
     if(pred_task[i,3]>0.3):
         tagg_vec[i] = tagg_vec[i-1] + 1 
@@ -76,16 +80,19 @@ time_data_start =  lmap(lambda x: dt.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'
                         time_data_start)
 
 time_data_end =  lmap(lambda x: dt.datetime.strptime(x, '%Y-%m-%d %H:%M:%S.%f'),
-                        time_data_end)
+                      time_data_end)
 
 c = 0
-index = np.where((my_data['date'] > time_data_start[c]-dt.timedelta(0,263)) & 
-                 (my_data['date'] < time_data_end[c]-dt.timedelta(0,257)))
+
+
+index = np.where((my_data['date'] > time_data_start[c]+dt.timedelta(0,305)) & 
+                 (my_data['date'] < time_data_end[c]+dt.timedelta(0,322)))
 
 index2 = np.where((my_data['date'] >= time_data_start[c]) & 
                  (my_data['date'] <= time_data_end[c]))
 
 
+cons = 0
 alpha = 0.5
 plt.plot(my_data.loc[index]['x'], alpha = alpha)
 plt.plot(my_data.loc[index]['y'], alpha = alpha)
@@ -93,27 +100,31 @@ plt.plot(my_data.loc[index]['z'], alpha = alpha)
 currentAxis = plt.gca()
 currentAxis.set_title('fuck')
 currentAxis.set_ylim([-2,2])
-currentAxis.add_patch(Rectangle((index2[0][0], -2), len(index2[0]), 4, fill=None, alpha=1, edgecolor ="red"))
+currentAxis.add_patch(Rectangle((index2[0][0] - cons , -2),len(index2[0]), 4, fill=None, alpha=1, edgecolor ="red"))
 plt.show()
 
-print(meta_pateint.task[((meta_pateint['date_start'] < time_data_start[c]+dt.timedelta(0,2)) & 
+print(meta_pateint['task name'][((meta_pateint['date_start'] < time_data_start[c]+dt.timedelta(0,3)) & 
                  (meta_pateint['date_end'] > time_data_end[c]))].iloc[0])
 
-meta_temp = meta_pateint[((meta_pateint['date_start'] < time_data_start[c]+dt.timedelta(0,5)) & 
-                 (meta_pateint['date_end'] > time_data_end[c]))]
+meta_temp = (meta_pateint[((meta_pateint['date_start'] < time_data_start[c]+dt.timedelta(0,3)) & 
+                 (meta_pateint['date_end'] > time_data_end[c]))])
+
+
+meta_temp = meta_pateint[((meta_pateint['date_start'] < meta_pateint['date_start'].loc[5113] +dt.timedelta(0,1))) & 
+                 (meta_pateint['date_end'] >  meta_pateint['date_end'].loc[5113] -dt.timedelta(0,1))]
 
 meta_temp = meta_pateint[((meta_pateint['date_start'] < meta_pateint['date_start'][meta_pateint.task == np.unique(meta_pateint.task)[1]].iloc[27]+dt.timedelta(0,5)) & 
                  (meta_pateint['date_end'] > meta_pateint['date_end'][meta_pateint.task == np.unique(meta_pateint.task)[1]].iloc[27] - dt.timedelta(0,5)))]
 
 if meta_temp.empty:
-    meta_temp = meta_to_save.iloc[[0,1,2,3,4,5]]  
-    #meta_temp = meta_to_save.iloc[[6,7,8,9,10,11]]  
-    meta_temp.score = np.NaN
-    meta_temp['ON/OFF'] = np.NaN
-    meta_temp['task'] = 'shake'
+    #meta_temp = meta_pateint.iloc[[0,1,2,3,4]]  
+    meta_temp = meta_to_save.iloc[[0,1,2,3,4]]  
+    meta_temp.Value = np.NaN
+    meta_temp['participants state'] = np.NaN
+    meta_temp['task name'] = 'shake'
 
-meta_temp['date_start'] = (time_data_start[c] - dt.timedelta(0, 263)).replace(microsecond=0)
-meta_temp['date_end'] =  (meta_temp['date_start'] + dt.timedelta(0, 5))
+meta_temp['date_start'] = (time_data_start[c] - dt.timedelta(0, 1)).replace(microsecond=0)
+meta_temp['date_end'] =  (meta_temp['date_start'] + dt.timedelta(0, 15))
 meta_to_save = meta_to_save.append(meta_temp, ignore_index=True)
 c = c+1
 

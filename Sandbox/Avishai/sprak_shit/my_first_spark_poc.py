@@ -51,10 +51,11 @@ df2 = df.select('*', rank().over(window).alias('rank')) \
   .sort("interval") 
   
 parse = udf(lambda s: Vectors.dense([float(c) for c in s.replace("[","").replace("]","").split(",")]), VectorUDT())
+parse2 = udf(lambda s: Vectors.dense(eval(str(s))), VectorUDT())
 
-df2 = df2.withColumn("X", parse("X"))
-df2 = df2.withColumn("Y", parse("Y"))
-df2 = df2.withColumn("Z", parse("Z"))
+df2 = df2.withColumn("X", parse2("X"))
+df2 = df2.withColumn("Y", parse2("Y"))
+df2 = df2.withColumn("Z", parse2("Z"))
 
 df2.cache()
 
@@ -67,6 +68,55 @@ def squared(x, y, z):
 
 squared_udf = udf(squared)
 df3 = df2['X', 'Y', 'Z', 'interval'].withColumn('norma', squared_udf("X","Y","Z"))
+df3 = df3.filter(df3.norma != df3.take(1)[0]['norma'])
+
+########################################################################################
+schema = StructType([
+    StructField("proj_ver", VectorUDT(), False),
+    StructField("proj_hor", VectorUDT(), False)
+])
+
+#proj_new = partial(project_gravity_core, rel = True)
+proj_func = udf(project_gravity_xyz, schema)
+
+df_proj = df3['X', 'Y', 'Z', 'interval'] .withColumn('proj', proj_func("X", "Y", "Z"))
+df_proj = df_proj.select('interval',
+                 'proj.proj_ver', 
+                 'proj.proj_hor')
+df_proj.show(2)
+
+
+########################################################################################
+from scipy.signal import butter, filtfilt
+from future.utils import lmap
+import numpy as np
+import pywt
+import pandas as pd
+
+
+def denoise(data):
+    """
+    Denoise the data with wavelet and
+    Input:
+        data - time signal
+    Output:
+        result - signal after denoising
+    """
+    data = data - np.mean(data) + 0.1
+    WC = pywt.wavedec(data, 'sym8')
+    threshold = 0.01*np.sqrt(2*np.log2(256))
+    NWC = lmap(lambda x: pywt.threshold(x, threshold, 'soft'), WC)
+    result = pywt.waverec(NWC, 'sym8')
+    return  Vectors.dense(result)
+
+denoise_func = udf(denoise, VectorUDT())
+
+
+
+df_denoise = df_proj['proj_ver','proj_hor', 'interval'].withColumn('denoised_ver',
+                    denoise_func("proj_ver")).withColumn('denoised_hor',denoise_func("proj_hor"))
+df_denoise = df_denoise.select('interval', "denoised_ver", "denoised_hor") 
+df_denoise.show(2)
 
 
 ########################################################################################
@@ -76,9 +126,8 @@ from future.utils import lmap
 import numpy as np
 from functools import partial
 
-#some_test = df3.toPandas()
-df4 = df3.filter(df3.norma != some_test['norma'][0])
-df4 = df4.withColumn("norma", parse("norma"))
+
+#df4 = df3.withColumn("norma", parse2("norma"))
 
 def toDWT(sig, rel = False):
 
@@ -113,21 +162,24 @@ schema = StructType([
     StructField("F9", FloatType(), False)
 ])
 
-toDWT_new = partial(toDWT, rel = True)
-toDWT_udf = udf(toDWT_new,  schema)
+toDWT_relative = partial(toDWT, rel = True)
+toDWT_cont = partial(toDWT, rel = False)
 
-df4 = df4['norma', 'interval'].withColumn('wav_features', toDWT_udf("norma"))
-df4 = df4.select('interval',
-                 'wav_features.F1', 
-                 'wav_features.F2',
-                 'wav_features.F3',
-                 'wav_features.F4',
-                 'wav_features.F5',
-                 'wav_features.F6',
-                 'wav_features.F7',
-                 'wav_features.F8',
-                 'wav_features.F9')
-df4.show(2)
+toDWT_relative_udf = udf(toDWT_relative,  schema)
+toDWT_cont_udf = udf(toDWT_cont,  schema)
+
+df_features = df_denoise["denoised_ver", "denoised_hor", 'interval'].withColumn('rel_features_ver', 
+                        toDWT_relative_udf("denoised_ver")).withColumn('cont_features_ver',
+                                          toDWT_cont_udf("denoised_ver"))
+
+df_features = df_features["rel_features_ver", "cont_features_ver", "denoised_hor", 'interval'].withColumn('rel_features_hor', 
+                        toDWT_relative_udf("denoised_hor")).withColumn('cont_features_hor',
+                                          toDWT_cont_udf("denoised_hor"))
+
+
+df_features = df_features.select('interval', 'rel_features_ver', 'cont_features_ver',
+                                 'rel_features_hor', 'cont_features_hor')
+df_features.show(2)
 
 ####################################################################################
 
@@ -138,3 +190,6 @@ df4=df3.select('norma', 'interval', percent_rank().over(Window.orderBy(df3.inter
               percent_rank().over(Window.orderBy(df.DEBIT)).alias("debit_perc"))\
   .where('debit_perc >=0.99 or debit_perc <=0.01 ').where\
         ('credit_perc >=0.99 or credit_perc <=0.91')
+
+####################################################################################
+

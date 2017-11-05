@@ -57,7 +57,7 @@ def save_pickle_file_to_s3(p_region_name, p_bucket, p_local_file):
     s3client.upload_file(p_local_file, p_bucket, 'param_opt_results-' + time_string)
 
 
-def read_from_s3(bucket_name, key, aws_access_key_id, aws_secret_access_key ):
+def read_from_s3(bucket_name, key, aws_access_key_id, aws_secret_access_key, encoding = None ):
     """
     Download file from s3 to pandas
     
@@ -72,6 +72,6 @@ def read_from_s3(bucket_name, key, aws_access_key_id, aws_secret_access_key ):
                               aws_secret_access_key = aws_secret_access_key )
     obj = s3client.get_object(Bucket = bucket_name, 
                               Key = key)
-    df = pd.read_csv(obj['Body'])
+    df = pd.read_csv(obj['Body'],  encoding = encoding)
 
     return df
