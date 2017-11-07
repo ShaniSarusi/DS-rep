@@ -32,31 +32,21 @@ df = spark.read.format('com.databricks.spark.csv').option("header", "True").opti
 df = df.withColumn("X", df["X"].cast("double"))
 df = df.withColumn("Y", df["Y"].cast("double"))
 df = df.withColumn("Z", df["Z"].cast("double"))
+df = df.withColumn("TremorGA", df["TremorGA"].cast("double"))
+df = df.withColumn("BradykinesiaGA", df["BradykinesiaGA"].cast("double"))
+df = df.withColumn("DyskinesiaGA", df["DyskinesiaGA"].cast("double"))
+df = df.withColumn("TSStart", df["TSStart"].cast("timestamp"))
+df = df.withColumn("TSEnd", df["TSEnd"].cast("timestamp"))
+df = df.withColumn("interval_start", ((ceil(unix_timestamp(df["TSStart"]).cast("long")))%)) 
+df = df.withColumn("interval_end", ((ceil(unix_timestamp(df["TSEnd"]).cast("long"))))) 
 
 
 schema = ArrayType(FloatType(), False)
-#parse2 = udf(lambda s: Vectors.dense(eval(str(s))), VectorUDT())
 parse2 = udf(lambda s: eval(str(s)), schema)
-
-
-#df = df.withColumn("date", df["TS"].cast("timestamp"))
-df = df.withColumn("TSStart", df["TSStart"].cast("timestamp"))
-df = df.withColumn("TSEnd", df["TSEnd"].cast("timestamp"))
-
-#df = df.sort(unix_timestamp(df["date"], "dd-MMM-yy hh.mm.ss.S a").cast("timestamp"))
-
-df = df.withColumn("interval_start", ((ceil(unix_timestamp(df["TSStart"]).cast("long")))%10**4)) 
-
-df = df.withColumn("interval_end", ((ceil(unix_timestamp(df["TSEnd"]).cast("long")))%10**4)) 
-
 find_milisec = udf(lambda raw: (raw)[(raw.find('.')+1):(raw.find('.')+3)])
 merge_integers = udf(lambda raw1, raw2: int(str(raw1) + str(raw2)))
-
-
 df = df.withColumn("temp", find_milisec('TS')) 
-
 df = df.withColumn("interval", (((unix_timestamp(df["TS"]).cast("long"))))) 
-
 df = df.withColumn("interval", merge_integers('interval', 'temp'))
 
 
@@ -74,16 +64,17 @@ df = df.withColumn("key", give_my_key_udf("interval_start", "interval_end", 'Sub
 df = df.withColumn("key", df["key"].cast("double"))
 
 df.cache()
-rdd_test = df.select('key','X', 'Y', 'Z', 'interval').rdd.map\
-                 (lambda raw: (raw[0],([raw[1]], [raw[2]],  [raw[3]],  [raw[4]])))
+rdd_test = df.select('key','TremorGA', 'BradykinesiaGA', 'DyskinesiaGA','X', 'Y', 'Z', 'interval').rdd.map\
+                 (lambda raw: ((raw[0], raw[1], raw[2], raw[3]),
+                               ([raw[4]], [raw[5]],  [raw[6]],  [raw[7]])))
                  
 
 rdd_test2 = rdd_test.reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1], x[2] + y[2], x[3] + y[3]))
 
 
 
-df_test = rdd_test2.map(lambda row : (row[0] ,row[1][0], row[1][1], row[1][2], row[1][3])).\
-                       toDF(['key', 'X', 'Y', 'Z', 'interval'])
+df_test = rdd_test2.map(lambda row : (row[0][0], row[0][1], row[0][2], row[0][3] ,row[1][0], row[1][1], row[1][2], row[1][3])).\
+                       toDF(['key', 'TremorGA', 'BradykinesiaGA', 'DyskinesiaGA','X', 'Y', 'Z', 'interval'])
                        
                        
 sort_vec = udf(lambda X, Y: [x for _,x in sorted(zip(Y,X))])
@@ -111,19 +102,21 @@ def slidind_window(axis, time_stamp, slide, window_size):
 
 schema = ArrayType(ArrayType(FloatType(), False), False)
 
-slidind_window_new = partial(slidind_window, slide = 2.5, window_size = 5)
+sliding_window_new = partial(slidind_window, slide = 2.5, window_size = 5)
 
-sliding_window_udf = udf(slidind_window_new, schema)
+sliding_window_udf = udf(sliding_window_new, schema)
                
 df_test3 = df_test2.withColumn('X', sliding_window_udf('X', 'interval'))
 df_test3 = df_test3.withColumn('Y', sliding_window_udf('Y', 'interval'))
 df_test3 = df_test3.withColumn('Z', sliding_window_udf('Z', 'interval'))
 
 
-df_flat = df_test3.rdd.map(lambda raw:  (raw[0] , list(zip(raw[1], raw[2], raw[3])))).\
+df_flat = df_test3.rdd.map(lambda raw:  ((raw[0], raw[1], raw[2], raw[3]) , 
+                                         list(zip(raw[4], raw[5], raw[6])))).\
                           flatMapValues(lambda raw :raw)
 
-df_flat = df_flat.map(lambda raw: (raw[0],raw[1][0],raw[1][1],raw[1][2])).toDF(['key', 'X', 'Y', 'Z'])
+df_flat = df_flat.map(lambda raw: (raw[0],raw[1][0],raw[1][1],raw[1][2])).\
+                     toDF(['key', 'X', 'Y', 'Z'])
 
    
 
@@ -257,3 +250,18 @@ ready_for_model = (df_features
             [col("cont_features_ver")[i] for i in range(9)] + 
             [col("rel_features_hor")[i] for i in range(9)] +
             [col("cont_features_hor")[i] for i in range(9)]))
+
+
+#########################################################################################
+meta_data = df.select('key','TremorGA', 'BradykinesiaGA', 'DyskinesiaGA').\
+                     rdd.map(lambda raw: (raw[0], (raw[1], raw[2], raw[3]))).\
+                     reduceByKey(lambda x, y: (x[0], x[1], x[2])).\
+                     map(lambda raw: (raw[0],raw[1][0], raw[1][1], raw[1][2])).\
+                     toDF(['key', 'TremorGA', 'BradykinesiaGA', 'DyskinesiaGA'])
+                     
+    
+joined_df = df_flat.join(meta_data, ['key'], 'inner')
+
+
+####################3
+ready_for_model = df_features.select('key.*', '*')
