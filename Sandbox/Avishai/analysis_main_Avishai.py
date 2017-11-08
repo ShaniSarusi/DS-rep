@@ -34,6 +34,7 @@ tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.MakeIntervalFromAllData(res,5,
 
 
 #######
+t = time.time()
 res = pd.read_csv('C:/Users/awagner/Desktop/For_Tom/'+'AllLabData.csv')
 res = res.drop('Unnamed: 0', 1)
 res = data_reading.arrange_res(res,path = 'C:/Users/awagner/Documents/DataScientists/LDopa/DataReading/Resources/mapTasksClusters.csv')
@@ -46,6 +47,7 @@ tags_df, lab_x, lab_y, lab_z,lab_n = data_reading.make_interval_from_all_data(re
 lab_x_numpy = lab_x.as_matrix(); lab_x = lab_x_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_y_numpy = lab_y.as_matrix(); lab_y = lab_y_numpy[:,range(len(lab_x_numpy[0])-1)]
 lab_z_numpy = lab_z.as_matrix(); lab_z = lab_z_numpy[:,range(len(lab_x_numpy[0])-1)]
+print(np.abs(t - time.time))
 ####
 
 '''
